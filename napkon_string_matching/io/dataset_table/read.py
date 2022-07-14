@@ -33,6 +33,6 @@ def read(xlsx_file: str) -> List[dict]:
     data = []
     for sheet_name in sheet_names:
         data_list = parser.parse(file, sheet_name)
-        data.append(data_list)
+        data += data_list
 
     return data
