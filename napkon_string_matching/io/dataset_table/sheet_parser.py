@@ -2,8 +2,6 @@
 Module for the SheetParser
 """
 
-__author__ = "Alexander Schulze"
-
 from typing import Any, Dict, List
 
 import numpy as np

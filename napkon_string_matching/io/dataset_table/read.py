@@ -2,8 +2,6 @@
 Module to handle reading of `Datensatztabelle` files
 """
 
-__author__ = "Alexander Schulze"
-
 from typing import List
 
 import pandas as pd

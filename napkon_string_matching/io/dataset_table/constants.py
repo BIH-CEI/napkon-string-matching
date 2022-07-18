@@ -2,8 +2,6 @@
 Constants used for handling dataset tables
 """
 
-__author__ = "Alexander Schulze"
-
 COLUMN_DB_COLUMN = "Datenbankspalte"
 COLUMN_FILE = "FileName"
 COLUMN_ITEM = "Item"
