@@ -70,6 +70,19 @@ class PostgresMeshConnector(MeshConnector):
     """
 
     def __init__(self, **kwargs) -> None:
+        self._connect(**kwargs)
+
+    def _del__(self):
+        self._disconnect()
+
+    def __enter__(self, **kwargs):
+        self._connect(**kwargs)
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self._disconnect()
+
+    def _connect(self, **kwargs):
         connection_config = {
             "host": kwargs.pop("host", "localhost"),
             "port": kwargs.pop("port", 5432),
@@ -80,12 +93,10 @@ class PostgresMeshConnector(MeshConnector):
 
         self.connection = psycopg2.connect(**connection_config)
 
-    def __enter__(self, **kwargs):
-        self.__init__(**kwargs)
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.connection.close()
+    def _disconnect(self):
+        # if connection is open
+        if self.connection.closed == 0:
+            self.connection.close()
 
     def _execute(self, statement: str) -> List[tuple]:
         cursor = None

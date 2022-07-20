@@ -5,7 +5,7 @@ from napkon_string_matching.terminology import REQUEST_TERMS, PostgresMeshConnec
 
 class TestPostgresMeshConnector(unittest.TestCase):
     def setUp(self):
-        config = {
+        self.config = {
             "host": "localhost",
             "port": 5432,
             "db": "mesh",
@@ -13,12 +13,11 @@ class TestPostgresMeshConnector(unittest.TestCase):
             "passwd": "meshterms",
         }
 
-        self.connector = PostgresMeshConnector(**config)
-
     @unittest.skip("db container may not be available")
     def test_read_tables(self):
-        tables = self.connector.read_tables(REQUEST_TERMS)
-        self.assertIsNotNone(tables)
-        self.assertIn("term", tables)
-        self.assertIn("id", tables)
-        self.assertTrue(tables.count()["id"] > 0)
+        with PostgresMeshConnector(**self.config) as connector:
+            tables = connector.read_tables(REQUEST_TERMS)
+            self.assertIsNotNone(tables)
+            self.assertIn("term", tables)
+            self.assertIn("id", tables)
+            self.assertTrue(tables.count()["id"] > 0)
