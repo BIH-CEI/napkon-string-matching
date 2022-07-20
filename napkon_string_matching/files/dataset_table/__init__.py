@@ -4,7 +4,7 @@ Module for handling dataset tables
 Dataset table files are prefixed with `Datensatztabelle`
 """
 
-from napkon_string_matching.io.dataset_table.constants import (
+from napkon_string_matching.files.dataset_table.constants import (
     COLUMN_DB_COLUMN,
     COLUMN_FILE,
     COLUMN_ITEM,
@@ -19,5 +19,5 @@ from napkon_string_matching.io.dataset_table.constants import (
     TYPE_GROUP_HORIZONAL,
     TYPE_HEADER,
 )
-from napkon_string_matching.io.dataset_table.read import read
-from napkon_string_matching.io.dataset_table.sheet_parser import SheetParser
+from napkon_string_matching.files.dataset_table.read import read
+from napkon_string_matching.files.dataset_table.sheet_parser import SheetParser

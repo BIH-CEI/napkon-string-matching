@@ -5,7 +5,7 @@ Module to handle reading of `Datensatztabelle` files
 from pathlib import Path
 
 import pandas as pd
-from napkon_string_matching.io.dataset_table import sheet_parser
+from napkon_string_matching.files.dataset_table import sheet_parser
 
 
 def read(xlsx_file: str | Path) -> pd.DataFrame:

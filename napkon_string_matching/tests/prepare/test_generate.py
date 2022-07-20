@@ -8,7 +8,7 @@ from napkon_string_matching.prepare import gen_token
 
 class TestGenToken(unittest.TestCase):
     def setUp(self):
-        data_dir = Path("napkon_string_matching/test/prepare/data")
+        data_dir = Path("napkon_string_matching/tests/prepare/data")
 
         self.references = pd.DataFrame(
             json.loads((data_dir / "references.json").read_text())
