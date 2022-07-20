@@ -2,7 +2,7 @@
 Module for the SheetParser
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import numpy as np
 import pandas as pd
@@ -18,7 +18,7 @@ class SheetParser:
         self.current_categories = []
         self.current_question = None
 
-    def parse(self, file: pd.ExcelFile, sheet_name: str) -> List[dict]:
+    def parse(self, file: pd.ExcelFile, sheet_name: str) -> pd.DataFrame:
         """
         Parses a single sheet
 
@@ -51,14 +51,15 @@ class SheetParser:
 
         # Add meta information to each row
         sheet[tc.COLUMN_SHEET_NAME] = sheet_name
-        sheet[tc.COLUMN_FILE] = file.io
+        sheet[tc.COLUMN_FILE] = str(file.io)
 
-        results = []
+        rows = []
         for _, row in sheet.iterrows():
             if item := self._parse_row(row):
-                results.append(item)
+                rows.append(item)
 
-        return results
+        result = pd.DataFrame(rows)
+        return result
 
     def _parse_row(self, row: pd.Series) -> Dict[str, Any] | None:
         # Extract information like header and question for following entries

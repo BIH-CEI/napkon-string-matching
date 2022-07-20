@@ -2,13 +2,13 @@
 Module to handle reading of `Datensatztabelle` files
 """
 
-from typing import List
+from pathlib import Path
 
 import pandas as pd
 from napkon_string_matching.io.dataset_table import sheet_parser
 
 
-def read(xlsx_file: str) -> List[dict]:
+def read(xlsx_file: str | Path) -> pd.DataFrame:
     """
     Read a xlsx file
 
@@ -17,7 +17,7 @@ def read(xlsx_file: str) -> List[dict]:
 
     attr
     ---
-        xlsx_file (str): file to read
+        xlsx_file (str|Path): file to read
 
     returns
     ---
@@ -27,9 +27,10 @@ def read(xlsx_file: str) -> List[dict]:
     sheet_names = file.sheet_names[2:]
 
     parser = sheet_parser.SheetParser()
-    data = []
+    sheets = []
     for sheet_name in sheet_names:
         data_list = parser.parse(file, sheet_name)
-        data += data_list
+        sheets.append(data_list)
 
-    return data
+    result = pd.concat(sheets)
+    return result
