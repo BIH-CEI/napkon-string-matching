@@ -66,3 +66,14 @@ class TestMatchPreparator(unittest.TestCase):
         self.assertIn(DATA_COLUMN_TERM, data)
         self.assertEqual(1, len(data[DATA_COLUMN_TERM].values))
         self.assertEqual(f"{QUESTION} {ITEM}", data[DATA_COLUMN_TERM].values[0])
+
+    @unittest.skip("requires active db contianer and test file")
+    def test_add_terms_live(self):
+        self.preparator.load_terms()
+
+        file = Path("hap_test.xlsx")
+        data = read(file)
+
+        self.preparator.add_terms(data)
+
+        self.assertIn(DATA_COLUMN_TERM, data)

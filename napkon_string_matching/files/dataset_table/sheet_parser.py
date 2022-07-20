@@ -111,10 +111,12 @@ class SheetParser:
             DATA_COLUMN_FILE: row[COLUMN_FILE],
         }
 
-        if self.current_categories:
-            item[DATA_COLUMN_CATEGORIES] = self.current_categories
-        if self.current_question:
-            item[DATA_COLUMN_QUESTION] = self.current_question
+        item[DATA_COLUMN_CATEGORIES] = (
+            self.current_categories if self.current_categories else None
+        )
+        item[DATA_COLUMN_QUESTION] = (
+            self.current_question if self.current_question else None
+        )
 
         if options := row.get(COLUMN_OPTIONS, None):
             # When reading these value they are not actually only separated by
@@ -123,5 +125,7 @@ class SheetParser:
             item[DATA_COLUMN_OPTIONS] = (
                 options.replace(";", "\n").replace("\n\n", "\n").splitlines()
             )
+        else:
+            item[DATA_COLUMN_OPTIONS] = None
 
         return item
