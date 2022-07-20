@@ -6,8 +6,7 @@ from typing import Any, Dict, List
 
 import numpy as np
 import pandas as pd
-
-from . import constants as tc
+from napkon_string_matching.io.dataset_table import constants as tc
 
 
 class SheetParser:

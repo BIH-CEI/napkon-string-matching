@@ -3,11 +3,7 @@ from typing import List
 
 import pandas as pd
 import psycopg2
-
-if __package__ == "":
-    from table_request import TableRequest
-else:
-    from .table_request import TableRequest
+from napkon_string_matching.terminology.table_request import TableRequest
 
 
 class MeshConnector:
@@ -84,7 +80,11 @@ class PostgresMeshConnector(MeshConnector):
 
         self.connection = psycopg2.connect(**connection_config)
 
-    def __del__(self):
+    def __enter__(self, **kwargs):
+        self.__init__(**kwargs)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
         self.connection.close()
 
     def _execute(self, statement: str) -> List[tuple]:
@@ -100,40 +100,3 @@ class PostgresMeshConnector(MeshConnector):
 
         finally:
             cursor.close()
-
-
-if __name__ == "__main__":
-    config = {
-        "host": "localhost",
-        "port": 5432,
-        "db": "mesh",
-        "user": "postgres",
-        "passwd": "meshterms",
-    }
-
-    connector = PostgresMeshConnector(**config)
-
-    requests = [
-        TableRequest(
-            table_name="EntryTerms",
-            id_column="MainHeadingsId",
-            term_column="DescriptionEnglish",
-        ),
-        TableRequest(
-            table_name="EntryTerms",
-            id_column="MainHeadingsId",
-            term_column="DescriptionGerman",
-        ),
-        TableRequest(
-            table_name="MainHeadings",
-            id_column="Id",
-            term_column="DescriptionEnglish",
-        ),
-        TableRequest(
-            table_name="MainHeadings",
-            id_column="Id",
-            term_column="DescriptionGerman",
-        ),
-    ]
-    tables = connector.read_tables(requests)
-    pass

@@ -1,5 +1,3 @@
-from datetime import timedelta
-
 import numpy as np
 import pandas as pd
 from rapidfuzz import fuzz
@@ -27,32 +25,3 @@ def gen_token(
     }
 
     return result
-
-
-if __name__ == "__main__":
-
-    from time import perf_counter
-
-    from terminology.constants import REQUEST_HEADINGS, REQUEST_TERMS
-    from terminology.mesh import PostgresMeshConnector
-    from terminology.table_request import TableRequest
-
-    config = {
-        "host": "localhost",
-        "port": 5432,
-        "db": "mesh",
-        "user": "postgres",
-        "passwd": "meshterms",
-    }
-
-    connector = PostgresMeshConnector(**config)
-
-    references = connector.read_tables(REQUEST_TERMS)
-    headings = connector.read_tables(REQUEST_HEADINGS)
-
-    term = "Dialyse nach Entlassung"
-    start = perf_counter()
-    result = gen_token(term, references, headings, score_threshold=90)
-    end = perf_counter()
-    print(timedelta(seconds=end - start))
-    pass

@@ -1,0 +1,1 @@
+from napkon_string_matching.prepare.token import gen_token

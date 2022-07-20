@@ -5,8 +5,7 @@ Module to handle reading of `Datensatztabelle` files
 from typing import List
 
 import pandas as pd
-
-from .sheet_parser import SheetParser
+from napkon_string_matching.io.dataset_table import sheet_parser
 
 
 def read(xlsx_file: str) -> List[dict]:
@@ -27,7 +26,7 @@ def read(xlsx_file: str) -> List[dict]:
     file = pd.ExcelFile(xlsx_file)
     sheet_names = file.sheet_names[2:]
 
-    parser = SheetParser()
+    parser = sheet_parser.SheetParser()
     data = []
     for sheet_name in sheet_names:
         data_list = parser.parse(file, sheet_name)

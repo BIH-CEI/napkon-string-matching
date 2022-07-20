@@ -1,8 +1,4 @@
-if __package__ == "":
-    from table_request import TableRequest
-else:
-    from .table_request import TableRequest
-
+from napkon_string_matching.terminology.table_request import TableRequest
 
 REQUEST_TERMS = [
     TableRequest(
