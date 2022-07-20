@@ -33,6 +33,7 @@ if __name__ == "__main__":
 
     from time import perf_counter
 
+    from terminology.constants import REQUEST_HEADINGS, REQUEST_TERMS
     from terminology.mesh import PostgresMeshConnector
     from terminology.table_request import TableRequest
 
@@ -46,30 +47,8 @@ if __name__ == "__main__":
 
     connector = PostgresMeshConnector(**config)
 
-    requests = [
-        TableRequest(
-            table_name="EntryTerms",
-            id_column="MainHeadingsId",
-            term_column="DescriptionGerman",
-        ),
-        TableRequest(
-            table_name="MainHeadings",
-            id_column="Id",
-            term_column="DescriptionGerman",
-        ),
-    ]
-
-    references = connector.read_tables(requests)
-
-    requests = [
-        TableRequest(
-            table_name="MainHeadings",
-            id_column="Id",
-            term_column="DescriptionGerman",
-        ),
-    ]
-
-    headings = connector.read_tables(requests)
+    references = connector.read_tables(REQUEST_TERMS)
+    headings = connector.read_tables(REQUEST_HEADINGS)
 
     term = "Dialyse nach Entlassung"
     start = perf_counter()
