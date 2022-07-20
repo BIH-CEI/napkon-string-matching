@@ -1,10 +1,7 @@
+from typing import List
+
 import numpy as np
 import pandas as pd
-from napkon_string_matching.constants import (
-    DATA_COLUMN_CATEGORIES,
-    DATA_COLUMN_ITEM,
-    DATA_COLUMN_QUESTION,
-)
 from rapidfuzz import fuzz
 
 
@@ -32,14 +29,14 @@ def gen_token(
     return result
 
 
-def gen_term(series: pd.Series) -> str:
+def gen_term(categories: List[str], question: str, item: str) -> str:
     term_parts = []
 
-    if entry := series.get(DATA_COLUMN_CATEGORIES, None):
-        term_parts += entry
-    if entry := series.get(DATA_COLUMN_QUESTION, None):
-        term_parts.append(entry)
-    if entry := series.get(DATA_COLUMN_ITEM, None):
-        term_parts.append(entry)
+    if categories:
+        term_parts += categories
+    if question:
+        term_parts.append(question)
+    if item:
+        term_parts.append(item)
 
     return " ".join(term_parts)
