@@ -11,6 +11,7 @@ from napkon_string_matching.constants import (
     DATA_COLUMN_SHEET,
     DATA_COLUMN_TERM,
 )
+from napkon_string_matching.files.dataset_table import read
 from napkon_string_matching.prepare import MatchPreparator
 
 
@@ -25,6 +26,7 @@ class TestMatchPreparator(unittest.TestCase):
         }
 
         self.preparator = MatchPreparator(dbConfig)
+        self.test_file = Path("hap_test.xlsx")
 
     @unittest.skip("requires active db contianer")
     def test_load_terms(self):
@@ -32,20 +34,7 @@ class TestMatchPreparator(unittest.TestCase):
         self.assertIsNotNone(self.preparator.terms)
         self.assertIsNotNone(self.preparator.headings)
 
-    def test_add_terms_and_token_not_initialized(self):
-        self.assertRaises(RuntimeError, self.preparator.add_terms, None)
-
     def test_add_terms(self):
-        data_dir = Path("napkon_string_matching/tests/prepare/data")
-
-        references = pd.DataFrame(
-            json.loads((data_dir / "references.json").read_text())
-        )
-        headings = pd.DataFrame(json.loads((data_dir / "headings.json").read_text()))
-
-        self.preparator.terms = references
-        self.preparator.headings = headings
-
         QUESTION = "This is another question"
         ITEM = "An item without categories"
 
@@ -58,22 +47,26 @@ class TestMatchPreparator(unittest.TestCase):
                     DATA_COLUMN_CATEGORIES: None,
                     DATA_COLUMN_QUESTION: QUESTION,
                 },
+                {
+                    DATA_COLUMN_ITEM: ITEM + "1",
+                    DATA_COLUMN_SHEET: "Test Sheet",
+                    DATA_COLUMN_FILE: "Testfile",
+                    DATA_COLUMN_CATEGORIES: None,
+                    DATA_COLUMN_QUESTION: QUESTION + "1",
+                },
             ]
         )
 
         self.preparator.add_terms(data)
 
         self.assertIn(DATA_COLUMN_TERM, data)
-        self.assertEqual(1, len(data[DATA_COLUMN_TERM].values))
+        self.assertEqual(2, len(data[DATA_COLUMN_TERM].values))
         self.assertEqual(f"{QUESTION} {ITEM}", data[DATA_COLUMN_TERM].values[0])
+        self.assertEqual(f"{QUESTION}1 {ITEM}1", data[DATA_COLUMN_TERM].values[1])
 
     @unittest.skip("requires active db contianer and test file")
     def test_add_terms_live(self):
-        self.preparator.load_terms()
-
-        file = Path("hap_test.xlsx")
-        data = read(file)
+        data = read(self.test_file)
 
         self.preparator.add_terms(data)
-
         self.assertIn(DATA_COLUMN_TERM, data)

@@ -33,9 +33,12 @@ class MatchPreparator:
             self.headings = connector.read_tables(heading_requests)
 
     def add_terms(self, df: pd.DataFrame):
-        if self.terms is None or self.headings is None:
-            raise RuntimeError("'terms' and/or 'headings' not initialized")
-
-        df[DATA_COLUMN_TERM] = np.vectorize(gen_term)(
-            df[DATA_COLUMN_CATEGORIES], df[DATA_COLUMN_QUESTION], df[DATA_COLUMN_ITEM]
-        )
+        result = [
+            gen_term(category, question, item)
+            for category, question, item in zip(
+                df[DATA_COLUMN_CATEGORIES],
+                df[DATA_COLUMN_QUESTION],
+                df[DATA_COLUMN_ITEM],
+            )
+        ]
+        df[DATA_COLUMN_TERM] = result
