@@ -11,7 +11,7 @@ from napkon_string_matching.constants import (
     DATA_COLUMN_QUESTION,
     DATA_COLUMN_SHEET,
 )
-from napkon_string_matching.prepare import gen_term, gen_token
+from napkon_string_matching.prepare import gen_term, gen_tokens
 
 
 class TestGenToken(unittest.TestCase):
@@ -24,11 +24,18 @@ class TestGenToken(unittest.TestCase):
         headings = pd.DataFrame(json.loads((data_dir / "headings.json").read_text()))
 
         term = "Dialyse nach Entlassung"
-        result = gen_token(term, references, headings, score_threshold=90)
-        self.assertIsNotNone(result)
-        self.assertIn("terms", result)
-        self.assertEqual(len(result["terms"]), 1)
-        self.assertIn("Dialyse", result["terms"])
+        tokens, ids, matches = gen_tokens(
+            term, references, headings, score_threshold=90
+        )
+        self.assertIsNotNone(tokens)
+        self.assertIsNotNone(ids)
+        self.assertIsNotNone(matches)
+
+        self.assertEqual(len(tokens), 1)
+        self.assertEqual(len(ids), 1)
+        self.assertEqual(len(matches), 1)
+
+        self.assertIn("Dialyse", tokens)
 
     def test_gen_term(self):
         input_list = [
