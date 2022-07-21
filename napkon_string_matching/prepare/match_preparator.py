@@ -7,8 +7,11 @@ from napkon_string_matching.constants import (
     DATA_COLUMN_ITEM,
     DATA_COLUMN_QUESTION,
     DATA_COLUMN_TERM,
+    DATA_COLUMN_TOKEN_IDS,
+    DATA_COLUMN_TOKEN_MATCH,
+    DATA_COLUMN_TOKENS,
 )
-from napkon_string_matching.prepare.generate import gen_term
+from napkon_string_matching.prepare.generate import gen_term, gen_tokens
 from napkon_string_matching.terminology import (
     REQUEST_HEADINGS,
     REQUEST_TERMS,
@@ -42,3 +45,16 @@ class MatchPreparator:
             )
         ]
         df[DATA_COLUMN_TERM] = result
+
+    def add_tokens(self, df: pd.DataFrame, score_threshold: int):
+        if self.terms is None or self.headings is None:
+            raise RuntimeError("'terms' and/or 'headings' not initialized")
+
+        result = [
+            gen_tokens(term, self.terms, self.headings, score_threshold)
+            for term in df[DATA_COLUMN_TERM]
+        ]
+
+        df[DATA_COLUMN_TOKENS] = [tokens for tokens, _, _ in result]
+        df[DATA_COLUMN_TOKEN_IDS] = [ids for _, ids, _ in result]
+        df[DATA_COLUMN_TOKEN_MATCH] = [match for _, _, match in result]
