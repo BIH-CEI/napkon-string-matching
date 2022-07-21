@@ -77,6 +77,7 @@ class TestSheetParser(unittest.TestCase):
                 DATA_COLUMN_FILE: "Testfile",
                 DATA_COLUMN_CATEGORIES: ["Header", "Subheader"],
                 DATA_COLUMN_QUESTION: "This is a question",
+                DATA_COLUMN_OPTIONS: None,
             },
         ]
 

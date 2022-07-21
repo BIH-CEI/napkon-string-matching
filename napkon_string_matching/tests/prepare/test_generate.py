@@ -65,7 +65,11 @@ class TestGenToken(unittest.TestCase):
         ]
 
         for input, expected in zip(input_list, expected_list):
-            result = gen_term(input)
+            result = gen_term(
+                input[DATA_COLUMN_CATEGORIES],
+                input[DATA_COLUMN_QUESTION],
+                input[DATA_COLUMN_ITEM],
+            )
             self.assertEqual(expected, result)
 
 
