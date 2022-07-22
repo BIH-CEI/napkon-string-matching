@@ -1,8 +1,15 @@
 from typing import Dict, List, Tuple
 
+import nltk
 import numpy as np
 import pandas as pd
 from rapidfuzz import fuzz
+
+nltk.download("punkt")
+nltk.download("stopwords")
+
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
 
 
 def gen_tokens(
@@ -34,7 +41,9 @@ def gen_tokens(
     )
 
 
-def gen_term(categories: List[str], question: str, item: str) -> str:
+def gen_term(
+    categories: List[str], question: str, item: str, language: str = "german"
+) -> str:
     term_parts = []
 
     if categories:
@@ -44,4 +53,9 @@ def gen_term(categories: List[str], question: str, item: str) -> str:
     if item:
         term_parts.append(item)
 
-    return " ".join(term_parts)
+    tokens = word_tokenize(" ".join(term_parts))
+
+    stop_words = set(stopwords.words(language))
+    tokens = [word for word in tokens if word.casefold() not in stop_words]
+
+    return " ".join(tokens)

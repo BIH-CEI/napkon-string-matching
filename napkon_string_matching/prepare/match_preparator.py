@@ -35,9 +35,9 @@ class MatchPreparator:
             self.terms = connector.read_tables(term_requests)
             self.headings = connector.read_tables(heading_requests)
 
-    def add_terms(self, df: pd.DataFrame):
+    def add_terms(self, df: pd.DataFrame, language: str = "german"):
         result = [
-            gen_term(category, question, item)
+            gen_term(category, question, item, language)
             for category, question, item in zip(
                 df[DATA_COLUMN_CATEGORIES],
                 df[DATA_COLUMN_QUESTION],

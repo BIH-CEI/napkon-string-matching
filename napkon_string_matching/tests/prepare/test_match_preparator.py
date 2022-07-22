@@ -38,34 +38,36 @@ class TestMatchPreparator(unittest.TestCase):
         self.assertIsNotNone(self.preparator.headings)
 
     def test_add_terms(self):
-        QUESTION = "This is another question"
-        ITEM = "An item without categories"
-
         data = pd.DataFrame(
             [
                 {
-                    DATA_COLUMN_ITEM: ITEM,
+                    DATA_COLUMN_ITEM: "An item without categories",
                     DATA_COLUMN_SHEET: "Test Sheet",
                     DATA_COLUMN_FILE: "Testfile",
                     DATA_COLUMN_CATEGORIES: None,
-                    DATA_COLUMN_QUESTION: QUESTION,
+                    DATA_COLUMN_QUESTION: "This is a question",
                 },
                 {
-                    DATA_COLUMN_ITEM: ITEM + "1",
+                    DATA_COLUMN_ITEM: "An item without categories 1",
                     DATA_COLUMN_SHEET: "Test Sheet",
                     DATA_COLUMN_FILE: "Testfile",
                     DATA_COLUMN_CATEGORIES: None,
-                    DATA_COLUMN_QUESTION: QUESTION + "1",
+                    DATA_COLUMN_QUESTION: "This is another question 1",
                 },
             ]
         )
 
-        self.preparator.add_terms(data)
+        self.preparator.add_terms(data, language="english")
 
         self.assertIn(DATA_COLUMN_TERM, data)
         self.assertEqual(2, len(data[DATA_COLUMN_TERM].values))
-        self.assertEqual(f"{QUESTION} {ITEM}", data[DATA_COLUMN_TERM].values[0])
-        self.assertEqual(f"{QUESTION}1 {ITEM}1", data[DATA_COLUMN_TERM].values[1])
+        self.assertEqual(
+            "question item without categories", data[DATA_COLUMN_TERM].values[0]
+        )
+        self.assertEqual(
+            "another question 1 item without categories 1",
+            data[DATA_COLUMN_TERM].values[1],
+        )
 
     @unittest.skip("requires active db contianer and test file")
     def test_add_terms_live(self):
