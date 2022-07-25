@@ -13,8 +13,8 @@ from napkon_string_matching.constants import (
 )
 from napkon_string_matching.prepare.generate import gen_term, gen_tokens
 from napkon_string_matching.terminology import (
-    REQUEST_HEADINGS,
-    REQUEST_TERMS,
+    TERMINOLOGY_REQUEST_HEADINGS,
+    TERMINOLOG_REQUEST_TERMS,
     PostgresMeshConnector,
     TableRequest,
 )
@@ -28,8 +28,8 @@ class MatchPreparator:
 
     def load_terms(
         self,
-        term_requests: List[TableRequest] = REQUEST_TERMS,
-        heading_requests: List[TableRequest] = REQUEST_HEADINGS,
+        term_requests: List[TableRequest] = TERMINOLOG_REQUEST_TERMS,
+        heading_requests: List[TableRequest] = TERMINOLOGY_REQUEST_HEADINGS,
     ):
         with PostgresMeshConnector(**self.dbConfig) as connector:
             self.terms = connector.read_tables(term_requests)

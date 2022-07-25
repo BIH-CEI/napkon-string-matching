@@ -5,19 +5,19 @@ Dataset table files are prefixed with `Datensatztabelle`
 """
 
 from napkon_string_matching.files.dataset_table.constants import (
-    COLUMN_DB_COLUMN,
-    COLUMN_FILE,
-    COLUMN_ITEM,
-    COLUMN_NUMBER,
-    COLUMN_OPTIONS,
-    COLUMN_PROJECT,
-    COLUMN_QUESTION,
-    COLUMN_SHEET_NAME,
-    COLUMN_TYPE,
-    ITEM_SKIPABLE,
-    TYPE_GROUP_DEFAULT,
-    TYPE_GROUP_HORIZONAL,
-    TYPE_HEADER,
+    DATASETTABLE_COLUMN_DB_COLUMN,
+    DATASETTABLE_COLUMN_FILE,
+    DATASETTABLE_COLUMN_ITEM,
+    DATASETTABLE_COLUMN_NUMBER,
+    DATASETTABLE_COLUMN_OPTIONS,
+    DATASETTABLE_COLUMN_PROJECT,
+    DATASETTABLE_COLUMN_QUESTION,
+    DATASETTABLE_COLUMN_SHEET_NAME,
+    DATASETTABLE_COLUMN_TYPE,
+    DATASETTABLE_ITEM_SKIPABLE,
+    DATASETTABLE_TYPE_GROUP_DEFAULT,
+    DATASETTABLE_TYPE_GROUP_HORIZONAL,
+    DATASETTABLE_TYPE_HEADER,
 )
 from napkon_string_matching.files.dataset_table.read import read
 from napkon_string_matching.files.dataset_table.sheet_parser import SheetParser

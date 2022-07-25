@@ -16,17 +16,17 @@ from napkon_string_matching.constants import (
     DATA_COLUMN_SHEET,
 )
 from napkon_string_matching.files.dataset_table import (
-    COLUMN_DB_COLUMN,
-    COLUMN_FILE,
-    COLUMN_ITEM,
-    COLUMN_NUMBER,
-    COLUMN_OPTIONS,
-    COLUMN_PROJECT,
-    COLUMN_QUESTION,
-    COLUMN_SHEET_NAME,
-    COLUMN_TYPE,
-    ITEM_SKIPABLE,
-    TYPE_HEADER,
+    DATASETTABLE_COLUMN_DB_COLUMN,
+    DATASETTABLE_COLUMN_FILE,
+    DATASETTABLE_COLUMN_ITEM,
+    DATASETTABLE_COLUMN_NUMBER,
+    DATASETTABLE_COLUMN_OPTIONS,
+    DATASETTABLE_COLUMN_PROJECT,
+    DATASETTABLE_COLUMN_QUESTION,
+    DATASETTABLE_COLUMN_SHEET_NAME,
+    DATASETTABLE_COLUMN_TYPE,
+    DATASETTABLE_ITEM_SKIPABLE,
+    DATASETTABLE_TYPE_HEADER,
 )
 
 
@@ -59,11 +59,13 @@ class SheetParser:
         self.current_question = None
 
         sheet: pd.DataFrame = pd.read_excel(
-            file, sheet_name=sheet_name, na_values=ITEM_SKIPABLE
+            file, sheet_name=sheet_name, na_values=DATASETTABLE_ITEM_SKIPABLE
         )
 
         # Remove leading meta information block on sheet
-        start_index = np.where(sheet[COLUMN_PROJECT] == COLUMN_NUMBER)[0][0]
+        start_index = np.where(
+            sheet[DATASETTABLE_COLUMN_PROJECT] == DATASETTABLE_COLUMN_NUMBER
+        )[0][0]
         sheet.columns = sheet.iloc[start_index]
         sheet = sheet.iloc[(start_index) + 1 :, :].reset_index(drop=True)
 
@@ -71,8 +73,8 @@ class SheetParser:
         sheet.where(pd.notnull(sheet), None, inplace=True)
 
         # Add meta information to each row
-        sheet[COLUMN_SHEET_NAME] = sheet_name
-        sheet[COLUMN_FILE] = str(file.io)
+        sheet[DATASETTABLE_COLUMN_SHEET_NAME] = sheet_name
+        sheet[DATASETTABLE_COLUMN_FILE] = str(file.io)
 
         rows = []
         for _, row in sheet.iterrows():
@@ -84,9 +86,9 @@ class SheetParser:
 
     def _parse_row(self, row: pd.Series) -> Dict[str, Any] | None:
         # Extract information like header and question for following entries
-        if type_ := row.get(COLUMN_TYPE, None):
-            question_entry = row[COLUMN_QUESTION]
-            if type_ == TYPE_HEADER:
+        if type_ := row.get(DATASETTABLE_COLUMN_TYPE, None):
+            question_entry = row[DATASETTABLE_COLUMN_QUESTION]
+            if type_ == DATASETTABLE_TYPE_HEADER:
                 # If header the category is reset
                 self.current_categories = (
                     [question_entry]
@@ -103,14 +105,14 @@ class SheetParser:
                     self.current_categories.pop()
                 self.current_categories.append(question_entry)
 
-        if not row[COLUMN_ITEM] or not row[COLUMN_DB_COLUMN]:
+        if not row[DATASETTABLE_COLUMN_ITEM] or not row[DATASETTABLE_COLUMN_DB_COLUMN]:
             return None
 
         item = {
-            DATA_COLUMN_ITEM: row[COLUMN_ITEM],
-            DATA_COLUMN_SHEET: row[COLUMN_SHEET_NAME],
-            DATA_COLUMN_FILE: row[COLUMN_FILE],
-            DATA_COLUMN_IDENTIFIER: f"{row[COLUMN_FILE]}_{row[COLUMN_SHEET_NAME]}_{row.name}".replace(
+            DATA_COLUMN_ITEM: row[DATASETTABLE_COLUMN_ITEM],
+            DATA_COLUMN_SHEET: row[DATASETTABLE_COLUMN_SHEET_NAME],
+            DATA_COLUMN_FILE: row[DATASETTABLE_COLUMN_FILE],
+            DATA_COLUMN_IDENTIFIER: f"{row[DATASETTABLE_COLUMN_FILE]}_{row[DATASETTABLE_COLUMN_SHEET_NAME]}_{row.name}".replace(
                 " ", "-"
             ),
         }
@@ -122,7 +124,7 @@ class SheetParser:
             self.current_question if self.current_question else None
         )
 
-        if options := row.get(COLUMN_OPTIONS, None):
+        if options := row.get(DATASETTABLE_COLUMN_OPTIONS, None):
             # When reading these value they are not actually only separated by
             # semicolons but also by linebreaks. Special handling for cases
             # where only one of them is present

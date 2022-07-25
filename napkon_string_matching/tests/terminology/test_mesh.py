@@ -1,9 +1,9 @@
 import unittest
 
 from napkon_string_matching.terminology import (
-    COLUMN_ID,
-    COLUMN_TERM,
-    REQUEST_TERMS,
+    TERMINOLOGY_COLUMN_ID,
+    TERMINOLOGY_COLUMN_TERM,
+    TERMINOLOG_REQUEST_TERMS,
     PostgresMeshConnector,
 )
 
@@ -21,8 +21,8 @@ class TestPostgresMeshConnector(unittest.TestCase):
     @unittest.skip("db container may not be available")
     def test_read_tables(self):
         with PostgresMeshConnector(**self.config) as connector:
-            tables = connector.read_tables(REQUEST_TERMS)
+            tables = connector.read_tables(TERMINOLOG_REQUEST_TERMS)
             self.assertIsNotNone(tables)
-            self.assertIn(COLUMN_TERM, tables)
-            self.assertIn(COLUMN_ID, tables)
-            self.assertTrue(tables.count()[COLUMN_ID] > 0)
+            self.assertIn(TERMINOLOGY_COLUMN_TERM, tables)
+            self.assertIn(TERMINOLOGY_COLUMN_ID, tables)
+            self.assertTrue(tables.count()[TERMINOLOGY_COLUMN_ID] > 0)

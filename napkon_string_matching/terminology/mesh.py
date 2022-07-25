@@ -3,7 +3,10 @@ from typing import List
 
 import pandas as pd
 import psycopg2
-from napkon_string_matching.terminology.constants import COLUMN_ID, COLUMN_TERM
+from napkon_string_matching.terminology.constants import (
+    TERMINOLOGY_COLUMN_ID,
+    TERMINOLOGY_COLUMN_TERM,
+)
 from napkon_string_matching.terminology.table_request import TableRequest
 
 
@@ -29,7 +32,10 @@ class MeshConnector:
         results = self._execute(statement)
 
         terms = pd.DataFrame(
-            [{COLUMN_ID: id, COLUMN_TERM: term} for id, term in results]
+            [
+                {TERMINOLOGY_COLUMN_ID: id, TERMINOLOGY_COLUMN_TERM: term}
+                for id, term in results
+            ]
         )
 
         # Drop rows that may not contain an ID or a term
