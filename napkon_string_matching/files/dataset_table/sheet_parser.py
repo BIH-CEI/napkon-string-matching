@@ -9,6 +9,7 @@ import pandas as pd
 from napkon_string_matching.constants import (
     DATA_COLUMN_CATEGORIES,
     DATA_COLUMN_FILE,
+    DATA_COLUMN_IDENTIFIER,
     DATA_COLUMN_ITEM,
     DATA_COLUMN_OPTIONS,
     DATA_COLUMN_QUESTION,
@@ -109,6 +110,9 @@ class SheetParser:
             DATA_COLUMN_ITEM: row[COLUMN_ITEM],
             DATA_COLUMN_SHEET: row[COLUMN_SHEET_NAME],
             DATA_COLUMN_FILE: row[COLUMN_FILE],
+            DATA_COLUMN_IDENTIFIER: f"{row[COLUMN_FILE]}_{row[COLUMN_SHEET_NAME]}_{row.name}".replace(
+                " ", "-"
+            ),
         }
 
         item[DATA_COLUMN_CATEGORIES] = (
