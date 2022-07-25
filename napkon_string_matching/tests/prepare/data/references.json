@@ -1,10 +1,10 @@
 {
-    "id": {
+    "Id": {
         "0": "A000002",
         "1": "A000002",
         "2": "A000003"
     },
-    "term": {
+    "Term": {
         "0": "Dialyse",
         "1": "Dialyse, weitere",
         "2": "Sonstiges"

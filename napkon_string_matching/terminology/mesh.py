@@ -3,6 +3,7 @@ from typing import List
 
 import pandas as pd
 import psycopg2
+from napkon_string_matching.terminology.constants import COLUMN_ID, COLUMN_TERM
 from napkon_string_matching.terminology.table_request import TableRequest
 
 
@@ -27,7 +28,9 @@ class MeshConnector:
         statement = f'SELECT "{request.id_column}", "{request.term_column}" FROM "{request.table_name}";'
         results = self._execute(statement)
 
-        terms = pd.DataFrame([{"id": id, "term": term} for id, term in results])
+        terms = pd.DataFrame(
+            [{COLUMN_ID: id, COLUMN_TERM: term} for id, term in results]
+        )
 
         # Drop rows that may not contain an ID or a term
         terms = terms.dropna(how="any")

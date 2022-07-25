@@ -1,5 +1,8 @@
 from napkon_string_matching.terminology.table_request import TableRequest
 
+COLUMN_TERM = "Term"
+COLUMN_ID = "Id"
+
 REQUEST_TERMS = [
     TableRequest(
         table_name="EntryTerms",
