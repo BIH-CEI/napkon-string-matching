@@ -1,6 +1,6 @@
+from multiprocessing import Pool
 from typing import List
 
-import numpy as np
 import pandas as pd
 from napkon_string_matching.constants import (
     DATA_COLUMN_CATEGORIES,
@@ -50,10 +50,15 @@ class MatchPreparator:
         if self.terms is None or self.headings is None:
             raise RuntimeError("'terms' and/or 'headings' not initialized")
 
-        result = [
-            gen_tokens(term, self.terms, self.headings, score_threshold)
-            for term in df[DATA_COLUMN_TERM]
-        ]
+        # Generate the tokens using multiple processes to reduce computational time
+        with Pool() as pool:
+            multiple_results = [
+                pool.apply_async(
+                    gen_tokens, (term, self.terms, self.headings, score_threshold)
+                )
+                for term in df[DATA_COLUMN_TERM]
+            ]
+            result = [res.get(timeout=10) for res in multiple_results]
 
         df[DATA_COLUMN_TOKENS] = [tokens for tokens, _, _ in result]
         df[DATA_COLUMN_TOKEN_IDS] = [ids for _, ids, _ in result]

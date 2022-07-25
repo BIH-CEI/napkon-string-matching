@@ -10,6 +10,7 @@ from napkon_string_matching.constants import (
     DATA_COLUMN_OPTIONS,
     DATA_COLUMN_QUESTION,
     DATA_COLUMN_SHEET,
+    DATA_COLUMN_TERM,
 )
 from napkon_string_matching.prepare import gen_term, gen_tokens
 

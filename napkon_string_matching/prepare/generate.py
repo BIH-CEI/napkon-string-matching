@@ -1,8 +1,17 @@
+from itertools import product
 from typing import Dict, List, Tuple
 
 import nltk
 import numpy as np
 import pandas as pd
+from napkon_string_matching.constants import (
+    DATA_COLUMN_IDENTIFIER,
+    DATA_COLUMN_TERM,
+    DATA_COLUMN_TOKEN_IDS,
+    DATA_COLUMN_TOKENS,
+)
+from napkon_string_matching.prepare import PREPARE_COLUMN_SCORE
+from napkon_string_matching.terminology import COLUMN_ID, COLUMN_TERM
 from rapidfuzz import fuzz
 
 nltk.download("punkt")
@@ -24,19 +33,22 @@ def gen_tokens(
     """
     ref_copy = reference.copy(deep=True)
 
-    ref_copy["score"] = np.vectorize(fuzz.WRatio)(ref_copy["term"], term)
-
-    # Get IDs above threshold
-    ref_copy = ref_copy[ref_copy["score"] >= score_threshold].drop_duplicates(
-        subset="id"
+    # Calculate the score for each combination
+    ref_copy[PREPARE_COLUMN_SCORE] = np.vectorize(fuzz.partial_token_sort_ratio)(
+        ref_copy[COLUMN_TERM], term
     )
 
+    # Get IDs above threshold
+    ref_copy = ref_copy[
+        ref_copy[PREPARE_COLUMN_SCORE] >= score_threshold
+    ].drop_duplicates(subset=COLUMN_ID)
+
     # Get the corsponding headings
-    ref_copy = ref_copy.merge(headings, on="id", suffixes=(None, "_heading"))
+    ref_copy = ref_copy.merge(headings, on=COLUMN_ID, suffixes=(None, "_heading"))
 
     return (
-        list(ref_copy["term_heading"].values),
-        list(ref_copy["id"].values),
+        list(ref_copy["Term_heading"].values),
+        list(ref_copy[COLUMN_ID].values),
         list(ref_copy.values),
     )
 

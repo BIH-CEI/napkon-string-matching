@@ -29,7 +29,7 @@ class TestMatchPreparator(unittest.TestCase):
         }
 
         self.preparator = MatchPreparator(dbConfig)
-        self.test_file = Path("hap_test.xlsx")
+        self.test_file = Path("pop_test.xlsx")
 
     @unittest.skip("requires active db contianer")
     def test_load_terms(self):
@@ -113,11 +113,9 @@ class TestMatchPreparator(unittest.TestCase):
     def test_add_terms_and_tokens_live(self):
         data = read(self.test_file)
 
-        # Full file is curently to large to handle
-        data = data[:100]
-
         self.preparator.load_terms()
         self.preparator.add_terms(data)
+
         self.preparator.add_tokens(data, 90)
 
         self.assertIn(DATA_COLUMN_TOKENS, data)

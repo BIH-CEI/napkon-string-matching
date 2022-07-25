@@ -4,6 +4,7 @@ import pandas as pd
 from napkon_string_matching.constants import (
     DATA_COLUMN_CATEGORIES,
     DATA_COLUMN_FILE,
+    DATA_COLUMN_IDENTIFIER,
     DATA_COLUMN_ITEM,
     DATA_COLUMN_OPTIONS,
     DATA_COLUMN_QUESTION,
@@ -64,6 +65,7 @@ class TestSheetParser(unittest.TestCase):
             None,
             None,
             {
+                DATA_COLUMN_IDENTIFIER: "Testfile_Test-Sheet_None",
                 DATA_COLUMN_ITEM: "This is an item with options",
                 DATA_COLUMN_SHEET: "Test Sheet",
                 DATA_COLUMN_FILE: "Testfile",
@@ -72,6 +74,7 @@ class TestSheetParser(unittest.TestCase):
                 DATA_COLUMN_OPTIONS: ["Option A", "Option B"],
             },
             {
+                DATA_COLUMN_IDENTIFIER: "Testfile_Test-Sheet_None",
                 DATA_COLUMN_ITEM: "Another item for same question",
                 DATA_COLUMN_SHEET: "Test Sheet",
                 DATA_COLUMN_FILE: "Testfile",

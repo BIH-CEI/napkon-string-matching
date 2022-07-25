@@ -1,6 +1,11 @@
 import unittest
 
-from napkon_string_matching.terminology import REQUEST_TERMS, PostgresMeshConnector
+from napkon_string_matching.terminology import (
+    COLUMN_ID,
+    COLUMN_TERM,
+    REQUEST_TERMS,
+    PostgresMeshConnector,
+)
 
 
 class TestPostgresMeshConnector(unittest.TestCase):
@@ -18,6 +23,6 @@ class TestPostgresMeshConnector(unittest.TestCase):
         with PostgresMeshConnector(**self.config) as connector:
             tables = connector.read_tables(REQUEST_TERMS)
             self.assertIsNotNone(tables)
-            self.assertIn("term", tables)
-            self.assertIn("id", tables)
-            self.assertTrue(tables.count()["id"] > 0)
+            self.assertIn(COLUMN_TERM, tables)
+            self.assertIn(COLUMN_ID, tables)
+            self.assertTrue(tables.count()[COLUMN_ID] > 0)
