@@ -10,6 +10,7 @@ from napkon_string_matching.constants import (
     DATA_COLUMN_OPTIONS,
     DATA_COLUMN_QUESTION,
     DATA_COLUMN_SHEET,
+    DATA_COLUMN_TERM,
 )
 from napkon_string_matching.prepare import gen_term, gen_tokens
 
@@ -60,8 +61,8 @@ class TestGenToken(unittest.TestCase):
             ),
         ]
         expected_list = [
-            "Header Subheader This is a question This is an item with options",
-            "This is another question An item without categories",
+            "Header Subheader question item options",
+            "another question item without categories",
         ]
 
         for input, expected in zip(input_list, expected_list):
@@ -69,6 +70,7 @@ class TestGenToken(unittest.TestCase):
                 input[DATA_COLUMN_CATEGORIES],
                 input[DATA_COLUMN_QUESTION],
                 input[DATA_COLUMN_ITEM],
+                language="english",
             )
             self.assertEqual(expected, result)
 

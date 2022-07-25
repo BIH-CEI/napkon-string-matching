@@ -1,6 +1,6 @@
+from multiprocessing import Pool
 from typing import List
 
-import numpy as np
 import pandas as pd
 from napkon_string_matching.constants import (
     DATA_COLUMN_CATEGORIES,
@@ -13,8 +13,8 @@ from napkon_string_matching.constants import (
 )
 from napkon_string_matching.prepare.generate import gen_term, gen_tokens
 from napkon_string_matching.terminology import (
-    REQUEST_HEADINGS,
-    REQUEST_TERMS,
+    TERMINOLOGY_REQUEST_HEADINGS,
+    TERMINOLOG_REQUEST_TERMS,
     PostgresMeshConnector,
     TableRequest,
 )
@@ -28,16 +28,16 @@ class MatchPreparator:
 
     def load_terms(
         self,
-        term_requests: List[TableRequest] = REQUEST_TERMS,
-        heading_requests: List[TableRequest] = REQUEST_HEADINGS,
+        term_requests: List[TableRequest] = TERMINOLOG_REQUEST_TERMS,
+        heading_requests: List[TableRequest] = TERMINOLOGY_REQUEST_HEADINGS,
     ):
         with PostgresMeshConnector(**self.dbConfig) as connector:
             self.terms = connector.read_tables(term_requests)
             self.headings = connector.read_tables(heading_requests)
 
-    def add_terms(self, df: pd.DataFrame):
+    def add_terms(self, df: pd.DataFrame, language: str = "german"):
         result = [
-            gen_term(category, question, item)
+            gen_term(category, question, item, language)
             for category, question, item in zip(
                 df[DATA_COLUMN_CATEGORIES],
                 df[DATA_COLUMN_QUESTION],
@@ -50,10 +50,15 @@ class MatchPreparator:
         if self.terms is None or self.headings is None:
             raise RuntimeError("'terms' and/or 'headings' not initialized")
 
-        result = [
-            gen_tokens(term, self.terms, self.headings, score_threshold)
-            for term in df[DATA_COLUMN_TERM]
-        ]
+        # Generate the tokens using multiple processes to reduce computational time
+        with Pool() as pool:
+            multiple_results = [
+                pool.apply_async(
+                    gen_tokens, (term, self.terms, self.headings, score_threshold)
+                )
+                for term in df[DATA_COLUMN_TERM]
+            ]
+            result = [res.get(timeout=10) for res in multiple_results]
 
         df[DATA_COLUMN_TOKENS] = [tokens for tokens, _, _ in result]
         df[DATA_COLUMN_TOKEN_IDS] = [ids for _, ids, _ in result]

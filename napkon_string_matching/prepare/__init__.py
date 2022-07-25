@@ -1,2 +1,3 @@
+from napkon_string_matching.prepare.constants import PREPARE_COLUMN_SCORE
 from napkon_string_matching.prepare.generate import gen_term, gen_tokens
 from napkon_string_matching.prepare.match_preparator import MatchPreparator

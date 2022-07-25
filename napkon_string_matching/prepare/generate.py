@@ -1,8 +1,27 @@
+from itertools import product
 from typing import Dict, List, Tuple
 
+import nltk
 import numpy as np
 import pandas as pd
+from napkon_string_matching.constants import (
+    DATA_COLUMN_IDENTIFIER,
+    DATA_COLUMN_TERM,
+    DATA_COLUMN_TOKEN_IDS,
+    DATA_COLUMN_TOKENS,
+)
+from napkon_string_matching.prepare import PREPARE_COLUMN_SCORE
+from napkon_string_matching.terminology import (
+    TERMINOLOGY_COLUMN_ID,
+    TERMINOLOGY_COLUMN_TERM,
+)
 from rapidfuzz import fuzz
+
+nltk.download("punkt")
+nltk.download("stopwords")
+
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
 
 
 def gen_tokens(
@@ -17,24 +36,31 @@ def gen_tokens(
     """
     ref_copy = reference.copy(deep=True)
 
-    ref_copy["score"] = np.vectorize(fuzz.WRatio)(ref_copy["term"], term)
-
-    # Get IDs above threshold
-    ref_copy = ref_copy[ref_copy["score"] >= score_threshold].drop_duplicates(
-        subset="id"
+    # Calculate the score for each combination
+    ref_copy[PREPARE_COLUMN_SCORE] = np.vectorize(fuzz.partial_token_sort_ratio)(
+        ref_copy[TERMINOLOGY_COLUMN_TERM], term
     )
 
+    # Get IDs above threshold
+    ref_copy = ref_copy[
+        ref_copy[PREPARE_COLUMN_SCORE] >= score_threshold
+    ].drop_duplicates(subset=TERMINOLOGY_COLUMN_ID)
+
     # Get the corsponding headings
-    ref_copy = ref_copy.merge(headings, on="id", suffixes=(None, "_heading"))
+    ref_copy = ref_copy.merge(
+        headings, on=TERMINOLOGY_COLUMN_ID, suffixes=(None, "_heading")
+    )
 
     return (
-        list(ref_copy["term_heading"].values),
-        list(ref_copy["id"].values),
+        list(ref_copy["Term_heading"].values),
+        list(ref_copy[TERMINOLOGY_COLUMN_ID].values),
         list(ref_copy.values),
     )
 
 
-def gen_term(categories: List[str], question: str, item: str) -> str:
+def gen_term(
+    categories: List[str], question: str, item: str, language: str = "german"
+) -> str:
     term_parts = []
 
     if categories:
@@ -44,4 +70,9 @@ def gen_term(categories: List[str], question: str, item: str) -> str:
     if item:
         term_parts.append(item)
 
-    return " ".join(term_parts)
+    tokens = word_tokenize(" ".join(term_parts))
+
+    stop_words = set(stopwords.words(language))
+    tokens = [word for word in tokens if word.casefold() not in stop_words]
+
+    return " ".join(tokens)

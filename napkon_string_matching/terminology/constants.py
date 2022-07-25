@@ -1,6 +1,9 @@
 from napkon_string_matching.terminology.table_request import TableRequest
 
-REQUEST_TERMS = [
+TERMINOLOGY_COLUMN_TERM = "Term"
+TERMINOLOGY_COLUMN_ID = "Id"
+
+TERMINOLOG_REQUEST_TERMS = [
     TableRequest(
         table_name="EntryTerms",
         id_column="MainHeadingsId",
@@ -14,7 +17,7 @@ REQUEST_TERMS = [
 ]
 
 
-REQUEST_HEADINGS = [
+TERMINOLOGY_REQUEST_HEADINGS = [
     TableRequest(
         table_name="MainHeadings",
         id_column="Id",
