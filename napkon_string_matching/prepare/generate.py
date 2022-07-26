@@ -4,12 +4,6 @@ from typing import Dict, List, Tuple
 import nltk
 import numpy as np
 import pandas as pd
-from napkon_string_matching.constants import (
-    DATA_COLUMN_IDENTIFIER,
-    DATA_COLUMN_TERM,
-    DATA_COLUMN_TOKEN_IDS,
-    DATA_COLUMN_TOKENS,
-)
 from napkon_string_matching.prepare import PREPARE_COLUMN_SCORE
 from napkon_string_matching.terminology import (
     TERMINOLOGY_COLUMN_ID,
@@ -37,7 +31,7 @@ def gen_tokens(
     ref_copy = reference.copy(deep=True)
 
     # Calculate the score for each combination
-    ref_copy[PREPARE_COLUMN_SCORE] = np.vectorize(fuzz.partial_token_sort_ratio)(
+    ref_copy[PREPARE_COLUMN_SCORE] = np.vectorize(fuzz.partial_token_set_ratio)(
         ref_copy[TERMINOLOGY_COLUMN_TERM], term
     )
 
@@ -74,5 +68,7 @@ def gen_term(
 
     stop_words = set(stopwords.words(language))
     tokens = [word for word in tokens if word.casefold() not in stop_words]
+
+    tokens.sort()
 
     return " ".join(tokens)

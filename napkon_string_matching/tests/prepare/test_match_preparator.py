@@ -127,7 +127,7 @@ class TestMatchPreparator(unittest.TestCase):
         self.preparator.load_terms()
         self.preparator.add_terms(data)
 
-        self.preparator.add_tokens(data, 90)
+        self.preparator.add_tokens(data, 90, verbose=False, timeout=None)
 
         self.assertIn(DATA_COLUMN_TOKENS, data)
         self.assertIn(DATA_COLUMN_TOKEN_IDS, data)

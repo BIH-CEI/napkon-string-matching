@@ -52,7 +52,9 @@ class MatchPreparator:
         df[DATA_COLUMN_TERM] = result
         logger.info("...done")
 
-    def add_tokens(self, df: pd.DataFrame, score_threshold: int):
+    def add_tokens(
+        self, df: pd.DataFrame, score_threshold: int, verbose: bool = True, timeout=10
+    ):
         if self.terms is None or self.headings is None:
             raise RuntimeError("'terms' and/or 'headings' not initialized")
 
@@ -66,7 +68,11 @@ class MatchPreparator:
                 )
                 for term in df[DATA_COLUMN_TERM]
             ]
-            result = [res.get(timeout=10) for res in tqdm(multiple_results)]
+
+            if verbose:
+                result = [res.get(timeout=timeout) for res in tqdm(multiple_results)]
+            else:
+                result = [res.get(timeout=timeout) for res in multiple_results]
 
         df[DATA_COLUMN_TOKENS] = [tokens for tokens, _, _ in result]
         df[DATA_COLUMN_TOKEN_IDS] = [ids for _, ids, _ in result]
