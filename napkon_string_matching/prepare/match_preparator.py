@@ -1,3 +1,4 @@
+import logging
 from multiprocessing import Pool
 from typing import List
 
@@ -18,6 +19,9 @@ from napkon_string_matching.terminology import (
     PostgresMeshConnector,
     TableRequest,
 )
+from tqdm import tqdm
+
+logger = logging.getLogger(__name__)
 
 
 class MatchPreparator:
@@ -36,6 +40,7 @@ class MatchPreparator:
             self.headings = connector.read_tables(heading_requests)
 
     def add_terms(self, df: pd.DataFrame, language: str = "german"):
+        logger.info("add terms...")
         result = [
             gen_term(category, question, item, language)
             for category, question, item in zip(
@@ -45,10 +50,13 @@ class MatchPreparator:
             )
         ]
         df[DATA_COLUMN_TERM] = result
+        logger.info("...done")
 
     def add_tokens(self, df: pd.DataFrame, score_threshold: int):
         if self.terms is None or self.headings is None:
             raise RuntimeError("'terms' and/or 'headings' not initialized")
+
+        logger.info("add tokens...")
 
         # Generate the tokens using multiple processes to reduce computational time
         with Pool() as pool:
@@ -58,8 +66,9 @@ class MatchPreparator:
                 )
                 for term in df[DATA_COLUMN_TERM]
             ]
-            result = [res.get(timeout=10) for res in multiple_results]
+            result = [res.get(timeout=10) for res in tqdm(multiple_results)]
 
         df[DATA_COLUMN_TOKENS] = [tokens for tokens, _, _ in result]
         df[DATA_COLUMN_TOKEN_IDS] = [ids for _, ids, _ in result]
         df[DATA_COLUMN_TOKEN_MATCH] = [match for _, _, match in result]
+        logger.info("...done")
