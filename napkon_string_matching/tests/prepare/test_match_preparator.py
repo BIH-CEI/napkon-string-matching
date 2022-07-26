@@ -16,6 +16,11 @@ from napkon_string_matching.constants import (
 )
 from napkon_string_matching.files.dataset_table import read
 from napkon_string_matching.prepare import MatchPreparator
+from napkon_string_matching.tests import (
+    DISABLE_DB_TESTS,
+    DISABLE_LOCAL_FILE_TESTS,
+    DISABLE_LONG_LASTING_TESTS,
+)
 
 
 class TestMatchPreparator(unittest.TestCase):
@@ -31,7 +36,7 @@ class TestMatchPreparator(unittest.TestCase):
         self.preparator = MatchPreparator(dbConfig)
         self.test_file = Path("pop_test.xlsx")
 
-    @unittest.skip("requires active db contianer")
+    @unittest.skipIf(DISABLE_DB_TESTS, "requires active db contianer")
     def test_load_terms(self):
         self.preparator.load_terms()
         self.assertIsNotNone(self.preparator.terms)
@@ -69,7 +74,10 @@ class TestMatchPreparator(unittest.TestCase):
             data[DATA_COLUMN_TERM].values[1],
         )
 
-    @unittest.skip("requires active db contianer and test file")
+    @unittest.skipIf(
+        DISABLE_DB_TESTS or DISABLE_LOCAL_FILE_TESTS,
+        "requires active db contianer and local test file",
+    )
     def test_add_terms_live(self):
         data = read(self.test_file)
 
@@ -109,14 +117,17 @@ class TestMatchPreparator(unittest.TestCase):
 
         self.assertIn("Dialyse", data[DATA_COLUMN_TOKENS][0])
 
-    @unittest.skip("takes long time and requires active db contianer and test file")
+    @unittest.skipIf(
+        DISABLE_DB_TESTS or DISABLE_LOCAL_FILE_TESTS or DISABLE_LONG_LASTING_TESTS,
+        "takes long time and requires active db contianer and local test file",
+    )
     def test_add_terms_and_tokens_live(self):
         data = read(self.test_file)
 
         self.preparator.load_terms()
         self.preparator.add_terms(data)
 
-        self.preparator.add_tokens(data, 90)
+        self.preparator.add_tokens(data, 90, verbose=False, timeout=None)
 
         self.assertIn(DATA_COLUMN_TOKENS, data)
         self.assertIn(DATA_COLUMN_TOKEN_IDS, data)

@@ -3,7 +3,7 @@ from napkon_string_matching.terminology.table_request import TableRequest
 TERMINOLOGY_COLUMN_TERM = "Term"
 TERMINOLOGY_COLUMN_ID = "Id"
 
-TERMINOLOG_REQUEST_TERMS = [
+TERMINOLOGY_REQUEST_TERMS = [
     TableRequest(
         table_name="EntryTerms",
         id_column="MainHeadingsId",

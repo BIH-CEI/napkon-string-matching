@@ -1,3 +1,4 @@
+import logging
 from multiprocessing import Pool
 from typing import List
 
@@ -14,10 +15,13 @@ from napkon_string_matching.constants import (
 from napkon_string_matching.prepare.generate import gen_term, gen_tokens
 from napkon_string_matching.terminology import (
     TERMINOLOGY_REQUEST_HEADINGS,
-    TERMINOLOG_REQUEST_TERMS,
+    TERMINOLOGY_REQUEST_TERMS,
     PostgresMeshConnector,
     TableRequest,
 )
+from tqdm import tqdm
+
+logger = logging.getLogger(__name__)
 
 
 class MatchPreparator:
@@ -28,7 +32,7 @@ class MatchPreparator:
 
     def load_terms(
         self,
-        term_requests: List[TableRequest] = TERMINOLOG_REQUEST_TERMS,
+        term_requests: List[TableRequest] = TERMINOLOGY_REQUEST_TERMS,
         heading_requests: List[TableRequest] = TERMINOLOGY_REQUEST_HEADINGS,
     ):
         with PostgresMeshConnector(**self.dbConfig) as connector:
@@ -36,6 +40,7 @@ class MatchPreparator:
             self.headings = connector.read_tables(heading_requests)
 
     def add_terms(self, df: pd.DataFrame, language: str = "german"):
+        logger.info("add terms...")
         result = [
             gen_term(category, question, item, language)
             for category, question, item in zip(
@@ -45,10 +50,15 @@ class MatchPreparator:
             )
         ]
         df[DATA_COLUMN_TERM] = result
+        logger.info("...done")
 
-    def add_tokens(self, df: pd.DataFrame, score_threshold: int):
+    def add_tokens(
+        self, df: pd.DataFrame, score_threshold: int, verbose: bool = True, timeout=10
+    ):
         if self.terms is None or self.headings is None:
             raise RuntimeError("'terms' and/or 'headings' not initialized")
+
+        logger.info("add tokens...")
 
         # Generate the tokens using multiple processes to reduce computational time
         with Pool() as pool:
@@ -58,8 +68,13 @@ class MatchPreparator:
                 )
                 for term in df[DATA_COLUMN_TERM]
             ]
-            result = [res.get(timeout=10) for res in multiple_results]
+
+            if verbose:
+                result = [res.get(timeout=timeout) for res in tqdm(multiple_results)]
+            else:
+                result = [res.get(timeout=timeout) for res in multiple_results]
 
         df[DATA_COLUMN_TOKENS] = [tokens for tokens, _, _ in result]
         df[DATA_COLUMN_TOKEN_IDS] = [ids for _, ids, _ in result]
         df[DATA_COLUMN_TOKEN_MATCH] = [match for _, _, match in result]
+        logger.info("...done")
