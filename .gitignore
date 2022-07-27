@@ -14,3 +14,4 @@ Output*/
 
 *.xlsx
 *.csv
+*_prepared.json

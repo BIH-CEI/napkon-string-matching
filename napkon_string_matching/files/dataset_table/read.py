@@ -33,4 +33,6 @@ def read(xlsx_file: str | Path) -> pd.DataFrame:
         sheets.append(data_list)
 
     result = pd.concat(sheets)
-    return result
+
+    # Reset to get a valid continous index at the end
+    return result.reset_index(drop=True)
