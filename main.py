@@ -10,6 +10,7 @@ from napkon_string_matching.files import dataframe, dataset_table
 from napkon_string_matching.prepare import MatchPreparator
 
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def get_preparator():
@@ -29,9 +30,15 @@ def get_preparator():
 
 def prepare(file_name: str, preparator: MatchPreparator) -> pd.DataFrame:
     file = Path(file_name)
+    logger.info(f"prepare file {file.name}")
 
-    prepared_file = Path(".") / (file.stem + "_prepared.json")
+    prepared_file = Path("prepared") / (file.stem + "_prepared.json")
+
+    if not prepared_file.parent.exists():
+        prepared_file.parent.mkdir(parents=True)
+
     if prepared_file.exists():
+        logger.info(f"using previously prepared file")
         data = dataframe.read(prepared_file)
         return data
 
@@ -39,6 +46,7 @@ def prepare(file_name: str, preparator: MatchPreparator) -> pd.DataFrame:
     preparator.add_terms(data)
     preparator.add_tokens(data, score_threshold=90)
 
+    logger.info(f"writing prepared data")
     dataframe.write(prepared_file, data)
 
     return data
