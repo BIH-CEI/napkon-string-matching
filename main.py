@@ -55,9 +55,9 @@ def prepare(file_name: str, preparator: MatchPreparator) -> pd.DataFrame:
 def main():
     preparator = get_preparator()
 
-    hap = prepare("hap_test.xlsx", preparator)
-    pop = prepare("pop_test.xlsx", preparator)
-    suep = prepare("suep_test.xlsx", preparator)
+    hap = prepare("input/hap_test.xlsx", preparator)
+    pop = prepare("input/pop_test.xlsx", preparator)
+    suep = prepare("input/suep_test.xlsx", preparator)
 
 
 if __name__ == "__main__":

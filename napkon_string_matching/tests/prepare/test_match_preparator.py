@@ -34,7 +34,7 @@ class TestMatchPreparator(unittest.TestCase):
         }
 
         self.preparator = MatchPreparator(dbConfig)
-        self.test_file = Path("pop_test.xlsx")
+        self.test_file = Path("input/pop_test.xlsx")
 
     @unittest.skipIf(DISABLE_DB_TESTS, "requires active db contianer")
     def test_load_terms(self):
