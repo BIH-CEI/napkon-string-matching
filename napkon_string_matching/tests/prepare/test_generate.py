@@ -61,8 +61,8 @@ class TestGenToken(unittest.TestCase):
             ),
         ]
         expected_list = [
-            "Header Subheader question item options",
-            "another question item without categories",
+            "Header Subheader item options question",
+            "another categories item question without",
         ]
 
         for input, expected in zip(input_list, expected_list):
