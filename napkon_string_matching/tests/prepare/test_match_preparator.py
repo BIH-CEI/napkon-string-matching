@@ -34,7 +34,7 @@ class TestMatchPreparator(unittest.TestCase):
         }
 
         self.preparator = MatchPreparator(dbConfig)
-        self.test_file = Path("pop_test.xlsx")
+        self.test_file = Path("input/pop_test.xlsx")
 
     @unittest.skipIf(DISABLE_DB_TESTS, "requires active db contianer")
     def test_load_terms(self):
@@ -67,10 +67,10 @@ class TestMatchPreparator(unittest.TestCase):
         self.assertIn(DATA_COLUMN_TERM, data)
         self.assertEqual(2, len(data[DATA_COLUMN_TERM].values))
         self.assertEqual(
-            "question item without categories", data[DATA_COLUMN_TERM].values[0]
+            "categories item question without", data[DATA_COLUMN_TERM].values[0]
         )
         self.assertEqual(
-            "another question 1 item without categories 1",
+            "1 1 another categories item question without",
             data[DATA_COLUMN_TERM].values[1],
         )
 

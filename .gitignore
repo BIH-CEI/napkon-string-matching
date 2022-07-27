@@ -10,7 +10,8 @@ __pycache__
 .devcontainer
 .history
 
-Output*/
+[Oo]utput*/
+prepared/
 
 *.xlsx
 *.csv
