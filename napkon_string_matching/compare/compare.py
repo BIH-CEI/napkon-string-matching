@@ -1,4 +1,6 @@
+from hashlib import md5
 from itertools import product
+from pathlib import Path
 from typing import List
 
 import pandas as pd
@@ -6,7 +8,12 @@ from napkon_string_matching.constants import (
     DATA_COLUMN_IDENTIFIER,
     DATA_COLUMN_TOKEN_IDS,
 )
+from napkon_string_matching.files import dataframe
 from tqdm import tqdm
+
+
+def _hash_dataframes(*dfs) -> str:
+    return "_".join([md5(df.to_csv().encode("utf-8")).hexdigest() for df in dfs])
 
 
 def compare(dataset_left: pd.DataFrame, dataset_right: pd.DataFrame):
@@ -15,21 +22,34 @@ def compare(dataset_left: pd.DataFrame, dataset_right: pd.DataFrame):
 
     COMPARE_COLUMN = DATA_COLUMN_TOKEN_IDS
 
-    df1_filtered = _get_na_filtered(dataset_left, column=COMPARE_COLUMN)
-    df2_filtered = _get_na_filtered(dataset_right, column=COMPARE_COLUMN)
+    df_hash = _hash_dataframes(dataset_left, dataset_right)
+    cache_score_file = Path("compare") / ("cache_score_" + df_hash + ".json")
+    if cache_score_file.exists():
+        compare_df = dataframe.read(cache_score_file)
+    else:
+        df1_filtered = _get_na_filtered(dataset_left, column=COMPARE_COLUMN)
+        df2_filtered = _get_na_filtered(dataset_right, column=COMPARE_COLUMN)
 
-    compare_df = _gen_permutation(
-        df1_filtered,
-        df2_filtered,
-        columns=[DATA_COLUMN_IDENTIFIER, COMPARE_COLUMN],
-        suffix_left=SUFFIX_LEFT,
-        suffix_right=SUFFIX_RIGHT,
-    )
+        compare_df = _gen_permutation(
+            df1_filtered,
+            df2_filtered,
+            columns=[DATA_COLUMN_IDENTIFIER, COMPARE_COLUMN],
+            suffix_left=SUFFIX_LEFT,
+            suffix_right=SUFFIX_RIGHT,
+        )
 
-    compare_df["Score"] = [
-        _calc_score(row, SUFFIX_LEFT, SUFFIX_RIGHT)
-        for _, row in tqdm(compare_df.iterrows(), total=len(compare_df))
-    ]
+        compare_df["Score"] = [
+            _calc_score(row, SUFFIX_LEFT, SUFFIX_RIGHT)
+            for _, row in tqdm(compare_df.iterrows(), total=len(compare_df))
+        ]
+
+        compare_df = compare_df[compare_df["Score"] > 0]
+
+        if not cache_score_file.parent.exists():
+            cache_score_file.parent.mkdir(parents=True)
+
+        dataframe.write(cache_score_file, compare_df)
+
 
 def _get_na_filtered(df: pd.DataFrame, column: str) -> pd.DataFrame:
     return df.dropna(subset=[column]).reset_index(drop=True)
