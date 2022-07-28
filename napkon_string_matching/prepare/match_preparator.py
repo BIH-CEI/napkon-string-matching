@@ -74,7 +74,9 @@ class MatchPreparator:
             else:
                 result = [res.get(timeout=timeout) for res in multiple_results]
 
-        df[DATA_COLUMN_TOKENS] = [tokens for tokens, _, _ in result]
-        df[DATA_COLUMN_TOKEN_IDS] = [ids for _, ids, _ in result]
-        df[DATA_COLUMN_TOKEN_MATCH] = [match for _, _, match in result]
+        df[DATA_COLUMN_TOKENS] = [tokens if tokens else None for tokens, _, _ in result]
+        df[DATA_COLUMN_TOKEN_IDS] = [ids if ids else None for _, ids, _ in result]
+        df[DATA_COLUMN_TOKEN_MATCH] = [
+            match if match else None for _, _, match in result
+        ]
         logger.info("...done")
