@@ -2,6 +2,7 @@
 Module to handle reading of `Datensatztabelle` files
 """
 
+import warnings
 from pathlib import Path
 
 import pandas as pd
@@ -23,7 +24,10 @@ def read(xlsx_file: str | Path) -> pd.DataFrame:
     ---
         List[dict]: parsed result
     """
-    file = pd.ExcelFile(xlsx_file)
+
+    with warnings.catch_warnings(record=True):
+        warnings.simplefilter("always")
+        file = pd.ExcelFile(xlsx_file, engine="openpyxl")
     sheet_names = file.sheet_names[2:]
 
     parser = sheet_parser.SheetParser()
