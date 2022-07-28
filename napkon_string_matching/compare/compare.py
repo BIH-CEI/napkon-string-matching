@@ -6,6 +6,7 @@ from napkon_string_matching.constants import (
     DATA_COLUMN_IDENTIFIER,
     DATA_COLUMN_TOKEN_IDS,
 )
+from tqdm import tqdm
 
 
 def compare(dataset_left: pd.DataFrame, dataset_right: pd.DataFrame):
@@ -25,6 +26,10 @@ def compare(dataset_left: pd.DataFrame, dataset_right: pd.DataFrame):
         suffix_right=SUFFIX_RIGHT,
     )
 
+    compare_df["Score"] = [
+        _calc_score(row, SUFFIX_LEFT, SUFFIX_RIGHT)
+        for _, row in tqdm(compare_df.iterrows(), total=len(compare_df))
+    ]
 
 def _get_na_filtered(df: pd.DataFrame, column: str) -> pd.DataFrame:
     return df.dropna(subset=[column]).reset_index(drop=True)
@@ -69,3 +74,15 @@ def _merge_df(
     return df1.merge(
         df2[columns].add_suffix(suffix_right), left_on=left_on, right_index=True
     )
+
+
+def _calc_score(row: pd.Series, suffix_left: str, suffix_right: str) -> float:
+    INSPECT_COLUMN = DATA_COLUMN_TOKEN_IDS
+
+    INSPECT_COLUMN_LEFT = INSPECT_COLUMN + suffix_left
+    INSPECT_COLUMN_RIGHT = INSPECT_COLUMN + suffix_right
+
+    set_left = set(row[INSPECT_COLUMN_LEFT])
+    set_right = set(row[INSPECT_COLUMN_RIGHT])
+
+    return len(set_left.intersection(set_right)) / len(set_left.union(set_right))
