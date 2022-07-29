@@ -1,3 +1,4 @@
+import logging
 from hashlib import md5
 from itertools import product
 from pathlib import Path
@@ -10,6 +11,8 @@ from napkon_string_matching.constants import (
 )
 from napkon_string_matching.files import dataframe
 from tqdm import tqdm
+
+logger = logging.getLogger(__name__)
 
 
 def _hash_dataframes(*dfs) -> str:
@@ -25,7 +28,10 @@ def compare(dataset_left: pd.DataFrame, dataset_right: pd.DataFrame):
     df_hash = _hash_dataframes(dataset_left, dataset_right)
     cache_score_file = Path("compare") / ("cache_score_" + df_hash + ".json")
     if cache_score_file.exists():
+        logger.info("using cached score")
+        logger.debug("reading from %s", cache_score_file)
         compare_df = dataframe.read(cache_score_file)
+        logger.debug("got %i entries", len(compare_df))
     else:
         df1_filtered = _get_na_filtered(dataset_left, column=COMPARE_COLUMN)
         df2_filtered = _get_na_filtered(dataset_right, column=COMPARE_COLUMN)
@@ -38,16 +44,20 @@ def compare(dataset_left: pd.DataFrame, dataset_right: pd.DataFrame):
             suffix_right=SUFFIX_RIGHT,
         )
 
+        logger.info("calculate score")
         compare_df["Score"] = [
             _calc_score(row, SUFFIX_LEFT, SUFFIX_RIGHT)
             for _, row in tqdm(compare_df.iterrows(), total=len(compare_df))
         ]
 
         compare_df = compare_df[compare_df["Score"] > 0]
+        logger.debug("got %i entries", len(compare_df))
 
         if not cache_score_file.parent.exists():
             cache_score_file.parent.mkdir(parents=True)
 
+        logger.info("write cache to file")
+        logger.debug("write to %s", cache_score_file)
         dataframe.write(cache_score_file, compare_df)
 
 
