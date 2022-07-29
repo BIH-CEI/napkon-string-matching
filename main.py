@@ -2,14 +2,16 @@
 # distance between the item names from SUEP, HAP and POP.
 
 import logging
+from itertools import product
 from pathlib import Path
 
 import pandas as pd
 
+from napkon_string_matching.compare import compare
 from napkon_string_matching.files import dataframe, dataset_table
 from napkon_string_matching.prepare import MatchPreparator
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -38,15 +40,15 @@ def prepare(file_name: str, preparator: MatchPreparator) -> pd.DataFrame:
         prepared_file.parent.mkdir(parents=True)
 
     if prepared_file.exists():
-        logger.info(f"using previously prepared file")
+        logger.info("using previously prepared file")
         data = dataframe.read(prepared_file)
         return data
 
     data = dataset_table.read(file)
     preparator.add_terms(data)
-    preparator.add_tokens(data, score_threshold=90)
+    preparator.add_tokens(data, score_threshold=90, timeout=30)
 
-    logger.info(f"writing prepared data")
+    logger.info("writing prepared data")
     dataframe.write(prepared_file, data)
 
     return data
@@ -55,9 +57,26 @@ def prepare(file_name: str, preparator: MatchPreparator) -> pd.DataFrame:
 def main():
     preparator = get_preparator()
 
-    hap = prepare("input/hap_test.xlsx", preparator)
-    pop = prepare("input/pop_test.xlsx", preparator)
-    suep = prepare("input/suep_test.xlsx", preparator)
+    files = ["input/hap_test.xlsx", "input/pop_test.xlsx", "input/suep_test.xlsx"]
+
+    datasets = []
+    for file in files:
+        name = Path(file).stem
+        dataset = prepare(file, preparator)
+        datasets.append((name, dataset))
+
+    comparisons = {}
+    for entry_left, entry_right in product(datasets, datasets):
+        name_left, dataset_left = entry_left
+        name_right, dataset_right = entry_right
+
+        if name_left == name_right:
+            continue
+
+        key = tuple({name_left, name_right})
+        if key not in comparisons:
+            logger.info("compare %s and %s", name_left, name_right)
+            comparisons[key] = compare(dataset_left, dataset_right)
 
 
 if __name__ == "__main__":
