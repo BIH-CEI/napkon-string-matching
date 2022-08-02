@@ -24,29 +24,13 @@ SUFFIX_RIGHT = "_right"
 COLUMN_COMPARE = DATA_COLUMN_TOKEN_IDS
 COLUMN_SCORE = "Score"
 
-
-def _hash_dataframes(*dfs) -> str:
-    return "_".join(
-        [
-            md5(df.to_csv().encode("utf-8"), usedforsecurity=False).hexdigest()
-            for df in dfs
-        ]
-    )
+CACHE_FILE_PATTERN = "compared/cache_score_{}.json"
 
 
 def compare(dataset_left: pd.DataFrame, dataset_right: pd.DataFrame):
-
-    df_hash = _hash_dataframes(dataset_left, dataset_right)
-    cache_score_file = Path("compared") / ("cache_score_" + df_hash + ".json")
-
     # Get the compare dataframe that holds the score to match all entries from
     # the left with each from right dataset
-    if cache_score_file.exists():
-        compare_df = _read_compare_dataframe(cache_score_file)
-    else:
-        compare_df = _gen_compare_dataframe(
-            dataset_left, dataset_right, cache_score_file
-        )
+    compare_df = _gen_compare_dataframe_cached(dataset_left, dataset_right)
 
     _enhance_dataset_with_matches(
         dataset=dataset_left,
@@ -64,6 +48,44 @@ def compare(dataset_left: pd.DataFrame, dataset_right: pd.DataFrame):
     )
 
 
+def _gen_compare_dataframe_cached(
+    df_left: pd.DataFrame, df_right: pd.DataFrame, *args, **kwargs
+) -> pd.DataFrame:
+    df_hash = _hash_dataframes(dfs=[df_left, df_right], *args, **kwargs)
+    cache_score_file = Path(CACHE_FILE_PATTERN.format(df_hash))
+
+    if cache_score_file.exists():
+        compare_df = _read_compare_dataframe(cache_score_file)
+    else:
+        compare_df = _gen_compare_dataframe(df_left, df_right, *args, **kwargs)
+
+        if not cache_score_file.parent.exists():
+            cache_score_file.parent.mkdir(parents=True)
+
+        logger.info("write cache to file")
+        logger.debug("write to %s", cache_score_file)
+        dataframe.write(cache_score_file, compare_df)
+
+    return compare_df
+
+
+def _hash_dataframes(dfs, *args, **kwargs) -> str:
+    hashes = [
+        md5(df.to_csv().encode("utf-8"), usedforsecurity=False).hexdigest()
+        for df in dfs
+    ]
+
+    hashes += [
+        md5(str(arg).encode("utf-8"), usedforsecurity=False).hexdigest() for arg in args
+    ]
+    hashes += [
+        md5(str(kwargs).encode("utf-8"), usedforsecurity=False).hexdigest()
+        for kwargs in kwargs
+    ]
+
+    return "".join(hashes)
+
+
 def _read_compare_dataframe(cache_file: Path) -> pd.DataFrame:
     logger.info("using cached score")
     logger.debug("reading from %s", cache_file)
@@ -73,7 +95,7 @@ def _read_compare_dataframe(cache_file: Path) -> pd.DataFrame:
 
 
 def _gen_compare_dataframe(
-    df_left: pd.DataFrame, df_right: pd.DataFrame, cache_file: Path
+    df_left: pd.DataFrame, df_right: pd.DataFrame
 ) -> pd.DataFrame:
     df1_filtered = _get_na_filtered(df_left, column=COLUMN_COMPARE)
     df2_filtered = _get_na_filtered(df_right, column=COLUMN_COMPARE)
@@ -88,13 +110,6 @@ def _gen_compare_dataframe(
 
     compare_df = compare_df[compare_df[COLUMN_SCORE] > 0]
     logger.debug("got %i entries", len(compare_df))
-
-    if not cache_file.parent.exists():
-        cache_file.parent.mkdir(parents=True)
-
-    logger.info("write cache to file")
-    logger.debug("write to %s", cache_file)
-    dataframe.write(cache_file, compare_df)
 
     return compare_df
 
