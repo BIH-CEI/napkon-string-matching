@@ -65,18 +65,26 @@ def main():
         dataset = prepare(file, preparator)
         datasets.append((name, dataset))
 
-    comparisons = {}
+    comparisons = set()
     for entry_left, entry_right in product(datasets, datasets):
-        name_left, dataset_left = entry_left
-        name_right, dataset_right = entry_right
+        # Sort key entries to prevent processing of entries in both orders
+        # e.g. 1 and 2 but not 2 and 1
+        sorted_entries = tuple(
+            sorted([entry_left, entry_right], key=lambda tup: tup[0].lower())
+        )
+        entry_first, entry_second = sorted_entries
 
-        if name_left == name_right:
+        name_first, dataset_first = entry_first
+        name_second, dataset_second = entry_second
+
+        if name_first == name_second:
             continue
 
-        key = tuple({name_left, name_right})
+        key = tuple(sorted([name_first, name_second], key=str.lower))
         if key not in comparisons:
-            logger.info("compare %s and %s", name_left, name_right)
-            comparisons[key] = compare(dataset_left, dataset_right)
+            logger.info("compare %s and %s", name_first, name_second)
+            compare(dataset_first, dataset_second)
+            comparisons.add(key)
 
 
 if __name__ == "__main__":
