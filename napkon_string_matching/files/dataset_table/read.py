@@ -6,6 +6,7 @@ import warnings
 from pathlib import Path
 
 import pandas as pd
+from napkon_string_matching.constants import DATA_COLUMN_IDENTIFIER
 from napkon_string_matching.files.dataset_table import sheet_parser
 
 
@@ -39,4 +40,4 @@ def read(xlsx_file: str | Path) -> pd.DataFrame:
     result = pd.concat(sheets)
 
     # Reset to get a valid continous index at the end
-    return result.reset_index(drop=True)
+    return result.set_index(DATA_COLUMN_IDENTIFIER)

@@ -17,7 +17,8 @@ logger = logging.getLogger(__name__)
 SUFFIX_LEFT = "_left"
 SUFFIX_RIGHT = "_right"
 
-COMPARE_COLUMN = DATA_COLUMN_TOKEN_IDS
+COLUMN_COMPARE = DATA_COLUMN_TOKEN_IDS
+COLUMN_SCORE = "Score"
 
 
 def _hash_dataframes(*dfs) -> str:
@@ -55,24 +56,18 @@ def _read_compare_dataframe(cache_file: Path) -> pd.DataFrame:
 def _gen_compare_dataframe(
     df_left: pd.DataFrame, df_right: pd.DataFrame, cache_file: Path
 ) -> pd.DataFrame:
-    df1_filtered = _get_na_filtered(df_left, column=COMPARE_COLUMN)
-    df2_filtered = _get_na_filtered(df_right, column=COMPARE_COLUMN)
+    df1_filtered = _get_na_filtered(df_left, column=COLUMN_COMPARE)
+    df2_filtered = _get_na_filtered(df_right, column=COLUMN_COMPARE)
 
-    compare_df = _gen_permutation(
-        df1_filtered,
-        df2_filtered,
-        columns=[DATA_COLUMN_IDENTIFIER, COMPARE_COLUMN],
-        suffix_left=SUFFIX_LEFT,
-        suffix_right=SUFFIX_RIGHT,
-    )
+    compare_df = _gen_permutation(df1_filtered, df2_filtered)
 
     logger.info("calculate score")
-    compare_df["Score"] = [
-        _calc_score(row, SUFFIX_LEFT, SUFFIX_RIGHT)
+    compare_df[COLUMN_SCORE] = [
+        _calc_score(row)
         for _, row in tqdm(compare_df.iterrows(), total=len(compare_df))
     ]
 
-    compare_df = compare_df[compare_df["Score"] > 0]
+    compare_df = compare_df[compare_df[COLUMN_SCORE] > 0]
     logger.debug("got %i entries", len(compare_df))
 
     if not cache_file.parent.exists():
@@ -86,34 +81,27 @@ def _gen_compare_dataframe(
 
 
 def _get_na_filtered(df: pd.DataFrame, column: str) -> pd.DataFrame:
-    return df.dropna(subset=[column]).reset_index(drop=True)
+    return df.dropna(subset=[column])
 
 
 def _gen_permutation(
     df_left: pd.DataFrame,
     df_right: pd.DataFrame,
-    columns: List[str],
-    suffix_left: str,
-    suffix_right: str,
 ) -> pd.DataFrame:
-    IDX_LEFT = "idx" + suffix_left
-    IDX_RIGHT = "idx" + suffix_right
+    IDX_LEFT = DATA_COLUMN_IDENTIFIER + SUFFIX_LEFT
+    IDX_RIGHT = DATA_COLUMN_IDENTIFIER + SUFFIX_RIGHT
 
     join_df = pd.DataFrame(
         product(df_left.index, df_right.index), columns=[IDX_LEFT, IDX_RIGHT]
     )
 
+    # Merge the product of both indices with their dataframes
     permutation = _merge_df(
-        _merge_df(
-            join_df, df_left, columns, left_on=IDX_LEFT, suffix_right=suffix_left
-        ),
+        _merge_df(join_df, df_left, left_on=IDX_LEFT, suffix_right=SUFFIX_LEFT),
         df_right,
-        columns,
         left_on=IDX_RIGHT,
-        suffix_right=suffix_right,
+        suffix_right=SUFFIX_RIGHT,
     )
-
-    permutation.drop(columns=[IDX_LEFT, IDX_RIGHT], inplace=True)
 
     return permutation
 
@@ -121,20 +109,21 @@ def _gen_permutation(
 def _merge_df(
     df1: pd.DataFrame,
     df2: pd.DataFrame,
-    columns: List[str],
     left_on: str,
     suffix_right: str,
 ) -> pd.DataFrame:
     return df1.merge(
-        df2[columns].add_suffix(suffix_right), left_on=left_on, right_index=True
+        df2[[COLUMN_COMPARE]].add_suffix(suffix_right),
+        left_on=left_on,
+        right_index=True,
     )
 
 
-def _calc_score(row: pd.Series, suffix_left: str, suffix_right: str) -> float:
+def _calc_score(row: pd.Series) -> float:
     INSPECT_COLUMN = DATA_COLUMN_TOKEN_IDS
 
-    INSPECT_COLUMN_LEFT = INSPECT_COLUMN + suffix_left
-    INSPECT_COLUMN_RIGHT = INSPECT_COLUMN + suffix_right
+    INSPECT_COLUMN_LEFT = INSPECT_COLUMN + SUFFIX_LEFT
+    INSPECT_COLUMN_RIGHT = INSPECT_COLUMN + SUFFIX_RIGHT
 
     set_left = set(row[INSPECT_COLUMN_LEFT])
     set_right = set(row[INSPECT_COLUMN_RIGHT])

@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 import pandas as pd
+from napkon_string_matching.constants import DATA_COLUMN_IDENTIFIER
 
 
 def read(file_path: str | Path) -> pd.DataFrame:
@@ -20,4 +21,5 @@ def read(file_path: str | Path) -> pd.DataFrame:
     file = Path(file_path)
     content = json.loads(file.read_text())
     df = pd.DataFrame.from_dict(content)
-    return df.reset_index(drop=True)
+    df.index.name = DATA_COLUMN_IDENTIFIER
+    return df
