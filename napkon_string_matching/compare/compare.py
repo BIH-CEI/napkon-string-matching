@@ -6,7 +6,11 @@ from typing import List
 
 import pandas as pd
 from napkon_string_matching.constants import (
+    DATA_COLUMN_CATEGORIES,
     DATA_COLUMN_IDENTIFIER,
+    DATA_COLUMN_ITEM,
+    DATA_COLUMN_MATCHES,
+    DATA_COLUMN_QUESTION,
     DATA_COLUMN_TOKEN_IDS,
 )
 from napkon_string_matching.files import dataframe
@@ -43,6 +47,21 @@ def compare(dataset_left: pd.DataFrame, dataset_right: pd.DataFrame):
         compare_df = _gen_compare_dataframe(
             dataset_left, dataset_right, cache_score_file
         )
+
+    _enhance_dataset_with_matches(
+        dataset=dataset_left,
+        column_suffix=SUFFIX_LEFT,
+        other=dataset_right,
+        other_suffix=SUFFIX_RIGHT,
+        matches=compare_df,
+    )
+    _enhance_dataset_with_matches(
+        dataset=dataset_right,
+        column_suffix=SUFFIX_RIGHT,
+        other=dataset_left,
+        other_suffix=SUFFIX_LEFT,
+        matches=compare_df,
+    )
 
 
 def _read_compare_dataframe(cache_file: Path) -> pd.DataFrame:
@@ -129,3 +148,63 @@ def _calc_score(row: pd.Series) -> float:
     set_right = set(row[INSPECT_COLUMN_RIGHT])
 
     return len(set_left.intersection(set_right)) / len(set_left.union(set_right))
+
+
+def _enhance_dataset_with_matches(
+    dataset: pd.DataFrame,
+    column_suffix: str,
+    other: pd.DataFrame,
+    other_suffix: str,
+    matches: pd.DataFrame,
+) -> None:
+    group_column = DATA_COLUMN_IDENTIFIER + column_suffix
+    other_column = DATA_COLUMN_IDENTIFIER + other_suffix
+
+    other_filtered = other[
+        [
+            DATA_COLUMN_CATEGORIES,
+            DATA_COLUMN_QUESTION,
+            DATA_COLUMN_ITEM,
+        ]
+    ]
+
+    grouping = matches.groupby(by=group_column)
+    for identifier in grouping.groups:
+        match_information = grouping.get_group(identifier)
+
+        # Get entries from `other` that where matched
+        matched_entries = match_information.merge(
+            other_filtered,
+            how="left",
+            left_on=other_column,
+            right_on=DATA_COLUMN_IDENTIFIER,
+        )
+
+        match = [
+            (
+                score,
+                identifier,
+                (f"{','.join(categories)}:" if categories else "")
+                + f"{question}:{item}",
+            )
+            for score, identifier, categories, question, item in zip(
+                matched_entries[COLUMN_SCORE],
+                matched_entries[other_column],
+                matched_entries[DATA_COLUMN_CATEGORIES],
+                matched_entries[DATA_COLUMN_QUESTION],
+                matched_entries[DATA_COLUMN_ITEM],
+            )
+        ]
+
+        if DATA_COLUMN_MATCHES not in dataset:
+            dataset[DATA_COLUMN_MATCHES] = None
+
+        # Get previous matches, get `None` if column does not exist
+        previous = dataset.loc[identifier, DATA_COLUMN_MATCHES]
+
+        # If cell did not include any values before, initialize with empty list for consistent
+        # adding of new entries
+        if not previous:
+            previous = []
+
+        dataset.at[identifier, DATA_COLUMN_MATCHES] = previous + match
