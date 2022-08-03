@@ -15,7 +15,7 @@ class TestGenToken(unittest.TestCase):
         )
         headings = pd.DataFrame(json.loads((data_dir / "headings.json").read_text()))
 
-        term = "Dialyse nach Entlassung"
+        term = "Dialyse nach Entlassung".split()
         tokens, ids, matches = gen_tokens(
             term, references, headings, score_threshold=90
         )

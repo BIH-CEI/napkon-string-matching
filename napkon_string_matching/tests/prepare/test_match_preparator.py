@@ -104,7 +104,7 @@ class TestMatchPreparator(unittest.TestCase):
                     DATA_COLUMN_SHEET: "Test Sheet",
                     DATA_COLUMN_FILE: "Testfile",
                     DATA_COLUMN_CATEGORIES: None,
-                    DATA_COLUMN_TERM: "Hatte Sie Dialyse oder sonstiges?",
+                    DATA_COLUMN_TERM: "Hatte Sie Dialyse oder sonstiges?".split(),
                 },
             ]
         )
