@@ -5,6 +5,12 @@ from pathlib import Path
 from typing import List
 
 import pandas as pd
+from napkon_string_matching.compare.constants import (
+    CACHE_FILE_PATTERN,
+    COLUMN_SCORE,
+    SUFFIX_LEFT,
+    SUFFIX_RIGHT,
+)
 from napkon_string_matching.constants import (
     DATA_COLUMN_CATEGORIES,
     DATA_COLUMN_IDENTIFIER,
@@ -17,14 +23,6 @@ from napkon_string_matching.files import dataframe
 from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
-
-SUFFIX_LEFT = "_left"
-SUFFIX_RIGHT = "_right"
-
-COLUMN_COMPARE = DATA_COLUMN_TOKEN_IDS
-COLUMN_SCORE = "Score"
-
-CACHE_FILE_PATTERN = "compared/cache_score_{}.json"
 
 
 def compare(
