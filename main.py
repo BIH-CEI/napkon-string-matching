@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from napkon_string_matching.compare import compare
+from napkon_string_matching.compare import compare, score_functions
 from napkon_string_matching.constants import DATA_COLUMN_TOKEN_IDS
 from napkon_string_matching.files import dataframe, dataset_table, results
 from napkon_string_matching.prepare import MatchPreparator
@@ -16,7 +16,7 @@ FORMAT = "%(asctime)s\t%(levelname)s\t%(name)s\t%(message)s"
 logging.basicConfig(level=logging.DEBUG, format=FORMAT)
 logger = logging.getLogger(__name__)
 
-RESULTS_FILE_PATTERN = "output/{file_name}_{score_threshold}.csv"
+RESULTS_FILE_PATTERN = "output/{file_name}_{score_threshold}_{score_func}.csv"
 
 
 def get_preparator():
@@ -60,7 +60,11 @@ def prepare(file_name: str, preparator: MatchPreparator) -> pd.DataFrame:
 
 def main():
 
-    config = {"score_threshold": 0.9, "compare_column": DATA_COLUMN_TOKEN_IDS}
+    config = {
+        "score_threshold": 0.9,
+        "compare_column": DATA_COLUMN_TOKEN_IDS,
+        "score_func": score_functions.intersection_vs_union,
+    }
 
     preparator = get_preparator()
 
@@ -94,7 +98,11 @@ def main():
             comparisons.add(key)
 
     for name, dataset in datasets:
-        format_args = {**config, "file_name": name}
+        format_args = {
+            **config,
+            "file_name": name,
+            "score_func": config["score_func"].__name__.replace("_", "-"),
+        }
         results.write(RESULTS_FILE_PATTERN.format(**format_args), dataset)
 
 

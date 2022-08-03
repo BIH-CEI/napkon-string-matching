@@ -2,6 +2,7 @@ import logging
 from hashlib import md5
 from itertools import product
 from pathlib import Path
+from typing import Callable
 
 import pandas as pd
 from napkon_string_matching.compare.constants import (
@@ -39,6 +40,8 @@ def compare(
         dataset_right,
         score_threshold=score_threshold,
         compare_column=compare_column,
+        *args,
+        **kwargs,
     )
 
     _enhance_dataset_with_matches(
@@ -116,6 +119,7 @@ def _read_compare_dataframe(cache_file: Path) -> pd.DataFrame:
 def _gen_compare_dataframe(
     df_left: pd.DataFrame,
     df_right: pd.DataFrame,
+    score_func: Callable,
     score_threshold: float = 0.1,
     compare_column: str = DATA_COLUMN_TOKEN_IDS,
 ) -> pd.DataFrame:
@@ -128,7 +132,7 @@ def _gen_compare_dataframe(
 
     logger.info("calculate score")
     compare_df[COLUMN_SCORE] = [
-        _calc_score(row, compare_column=compare_column)
+        _calc_score(score_func, row, compare_column=compare_column)
         for _, row in tqdm(compare_df.iterrows(), total=len(compare_df))
     ]
 
@@ -186,14 +190,11 @@ def _merge_df(
     )
 
 
-def _calc_score(row: pd.Series, compare_column: str) -> float:
+def _calc_score(score_func: Callable, row: pd.Series, compare_column: str) -> float:
     INSPECT_COLUMN_LEFT = compare_column + SUFFIX_LEFT
     INSPECT_COLUMN_RIGHT = compare_column + SUFFIX_RIGHT
 
-    set_left = set(row[INSPECT_COLUMN_LEFT])
-    set_right = set(row[INSPECT_COLUMN_RIGHT])
-
-    return len(set_left.intersection(set_right)) / len(set_left.union(set_right))
+    return score_func(row[INSPECT_COLUMN_LEFT], row[INSPECT_COLUMN_RIGHT])
 
 
 def _enhance_dataset_with_matches(
