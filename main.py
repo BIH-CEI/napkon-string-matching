@@ -8,11 +8,13 @@ from pathlib import Path
 import pandas as pd
 
 from napkon_string_matching.compare import compare
-from napkon_string_matching.files import dataframe, dataset_table
+from napkon_string_matching.files import dataframe, dataset_table, results
 from napkon_string_matching.prepare import MatchPreparator
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+RESULTS_FILE_PATTERN = "output/{file_name}_{score_threshold}.csv"
 
 
 def get_preparator():
@@ -87,6 +89,10 @@ def main():
             logger.info("compare %s and %s", name_first, name_second)
             compare(dataset_first, dataset_second, **config)
             comparisons.add(key)
+
+    for name, dataset in datasets:
+        format_args = {**config, "file_name": name}
+        results.write(RESULTS_FILE_PATTERN.format(**format_args), dataset)
 
 
 if __name__ == "__main__":
