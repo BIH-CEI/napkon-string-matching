@@ -10,6 +10,7 @@ import pandas as pd
 from napkon_string_matching.compare import compare, score_functions
 from napkon_string_matching.constants import (
     CONFIG_FIELD_DB,
+    CONFIG_FIELD_FILES,
     CONFIG_FIELD_MATCHING,
     DATA_COLUMN_TOKEN_IDS,
     LOG_FORMAT,
@@ -69,14 +70,17 @@ def main():
             "compare_column": DATA_COLUMN_TOKEN_IDS,
             "score_func": score_functions.intersection_vs_union,
         },
+        CONFIG_FIELD_FILES: [
+            "input/hap_test.xlsx",
+            "input/pop_test.xlsx",
+            "input/suep_test.xlsx",
+        ],
     }
 
     preparator = get_preparator(config[CONFIG_FIELD_DB])
 
-    files = ["input/hap_test.xlsx", "input/pop_test.xlsx", "input/suep_test.xlsx"]
-
     datasets = []
-    for file in files:
+    for file in config[CONFIG_FIELD_FILES]:
         name = Path(file).stem
         dataset = prepare(file, preparator)
         datasets.append((name, dataset))
