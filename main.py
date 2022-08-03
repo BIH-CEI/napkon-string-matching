@@ -16,7 +16,9 @@ FORMAT = "%(asctime)s\t%(levelname)s\t%(name)s\t%(message)s"
 logging.basicConfig(level=logging.DEBUG, format=FORMAT)
 logger = logging.getLogger(__name__)
 
-RESULTS_FILE_PATTERN = "output/{file_name}_{score_threshold}_{score_func}.csv"
+RESULTS_FILE_PATTERN = (
+    "output/{file_name}_{score_threshold}_{compare_column}_{score_func}.csv"
+)
 
 
 def get_preparator():
