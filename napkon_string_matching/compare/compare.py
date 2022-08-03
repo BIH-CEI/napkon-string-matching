@@ -2,7 +2,6 @@ import logging
 from hashlib import md5
 from itertools import product
 from pathlib import Path
-from typing import List
 
 import pandas as pd
 from napkon_string_matching.compare.constants import (
@@ -29,13 +28,17 @@ def compare(
     dataset_left: pd.DataFrame,
     dataset_right: pd.DataFrame,
     score_threshold: float = 0.1,
+    compare_column: str = DATA_COLUMN_TOKEN_IDS,
     *args,
     **kwargs,
 ):
     # Get the compare dataframe that holds the score to match all entries from
     # the left with each from right dataset
     compare_df = _gen_compare_dataframe_cached(
-        dataset_left, dataset_right, score_threshold=score_threshold
+        dataset_left,
+        dataset_right,
+        score_threshold=score_threshold,
+        compare_column=compare_column,
     )
 
     _enhance_dataset_with_matches(
@@ -114,15 +117,18 @@ def _gen_compare_dataframe(
     df_left: pd.DataFrame,
     df_right: pd.DataFrame,
     score_threshold: float = 0.1,
+    compare_column: str = DATA_COLUMN_TOKEN_IDS,
 ) -> pd.DataFrame:
-    df1_filtered = _get_na_filtered(df_left, column=COLUMN_COMPARE)
-    df2_filtered = _get_na_filtered(df_right, column=COLUMN_COMPARE)
+    df1_filtered = _get_na_filtered(df_left, column=compare_column)
+    df2_filtered = _get_na_filtered(df_right, column=compare_column)
 
-    compare_df = _gen_permutation(df1_filtered, df2_filtered)
+    compare_df = _gen_permutation(
+        df1_filtered, df2_filtered, compare_column=compare_column
+    )
 
     logger.info("calculate score")
     compare_df[COLUMN_SCORE] = [
-        _calc_score(row)
+        _calc_score(row, compare_column=compare_column)
         for _, row in tqdm(compare_df.iterrows(), total=len(compare_df))
     ]
 
@@ -139,6 +145,7 @@ def _get_na_filtered(df: pd.DataFrame, column: str) -> pd.DataFrame:
 def _gen_permutation(
     df_left: pd.DataFrame,
     df_right: pd.DataFrame,
+    compare_column: str,
 ) -> pd.DataFrame:
     IDX_LEFT = DATA_COLUMN_IDENTIFIER + SUFFIX_LEFT
     IDX_RIGHT = DATA_COLUMN_IDENTIFIER + SUFFIX_RIGHT
@@ -149,10 +156,17 @@ def _gen_permutation(
 
     # Merge the product of both indices with their dataframes
     permutation = _merge_df(
-        _merge_df(join_df, df_left, left_on=IDX_LEFT, suffix_right=SUFFIX_LEFT),
+        _merge_df(
+            join_df,
+            df_left,
+            left_on=IDX_LEFT,
+            suffix_right=SUFFIX_LEFT,
+            compare_column=compare_column,
+        ),
         df_right,
         left_on=IDX_RIGHT,
         suffix_right=SUFFIX_RIGHT,
+        compare_column=compare_column,
     )
 
     return permutation
@@ -163,19 +177,18 @@ def _merge_df(
     df2: pd.DataFrame,
     left_on: str,
     suffix_right: str,
+    compare_column: str,
 ) -> pd.DataFrame:
     return df1.merge(
-        df2[[COLUMN_COMPARE]].add_suffix(suffix_right),
+        df2[[compare_column]].add_suffix(suffix_right),
         left_on=left_on,
         right_index=True,
     )
 
 
-def _calc_score(row: pd.Series) -> float:
-    INSPECT_COLUMN = DATA_COLUMN_TOKEN_IDS
-
-    INSPECT_COLUMN_LEFT = INSPECT_COLUMN + SUFFIX_LEFT
-    INSPECT_COLUMN_RIGHT = INSPECT_COLUMN + SUFFIX_RIGHT
+def _calc_score(row: pd.Series, compare_column: str) -> float:
+    INSPECT_COLUMN_LEFT = compare_column + SUFFIX_LEFT
+    INSPECT_COLUMN_RIGHT = compare_column + SUFFIX_RIGHT
 
     set_left = set(row[INSPECT_COLUMN_LEFT])
     set_right = set(row[INSPECT_COLUMN_RIGHT])

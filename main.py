@@ -8,10 +8,12 @@ from pathlib import Path
 import pandas as pd
 
 from napkon_string_matching.compare import compare
+from napkon_string_matching.constants import DATA_COLUMN_TOKEN_IDS
 from napkon_string_matching.files import dataframe, dataset_table, results
 from napkon_string_matching.prepare import MatchPreparator
 
-logging.basicConfig(level=logging.DEBUG)
+FORMAT = "%(asctime)s\t%(levelname)s\t%(name)s\t%(message)s"
+logging.basicConfig(level=logging.DEBUG, format=FORMAT)
 logger = logging.getLogger(__name__)
 
 RESULTS_FILE_PATTERN = "output/{file_name}_{score_threshold}.csv"
@@ -57,7 +59,8 @@ def prepare(file_name: str, preparator: MatchPreparator) -> pd.DataFrame:
 
 
 def main():
-    config = {"score_threshold": 0.9}
+
+    config = {"score_threshold": 0.9, "compare_column": DATA_COLUMN_TOKEN_IDS}
 
     preparator = get_preparator()
 
