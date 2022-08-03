@@ -55,6 +55,8 @@ def prepare(file_name: str, preparator: MatchPreparator) -> pd.DataFrame:
 
 
 def main():
+    config = {"score_threshold": 0.9}
+
     preparator = get_preparator()
 
     files = ["input/hap_test.xlsx", "input/pop_test.xlsx", "input/suep_test.xlsx"]
@@ -83,7 +85,7 @@ def main():
         key = tuple(sorted([name_first, name_second], key=str.lower))
         if key not in comparisons:
             logger.info("compare %s and %s", name_first, name_second)
-            compare(dataset_first, dataset_second)
+            compare(dataset_first, dataset_second, **config)
             comparisons.add(key)
 
 

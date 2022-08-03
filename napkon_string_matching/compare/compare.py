@@ -27,10 +27,18 @@ COLUMN_SCORE = "Score"
 CACHE_FILE_PATTERN = "compared/cache_score_{}.json"
 
 
-def compare(dataset_left: pd.DataFrame, dataset_right: pd.DataFrame):
+def compare(
+    dataset_left: pd.DataFrame,
+    dataset_right: pd.DataFrame,
+    score_threshold: int = 1,
+    *args,
+    **kwargs,
+):
     # Get the compare dataframe that holds the score to match all entries from
     # the left with each from right dataset
-    compare_df = _gen_compare_dataframe_cached(dataset_left, dataset_right)
+    compare_df = _gen_compare_dataframe_cached(
+        dataset_left, dataset_right, score_threshold=score_threshold
+    )
 
     _enhance_dataset_with_matches(
         dataset=dataset_left,
@@ -95,7 +103,7 @@ def _read_compare_dataframe(cache_file: Path) -> pd.DataFrame:
 
 
 def _gen_compare_dataframe(
-    df_left: pd.DataFrame, df_right: pd.DataFrame
+    df_left: pd.DataFrame, df_right: pd.DataFrame, score_threshold: int = 1
 ) -> pd.DataFrame:
     df1_filtered = _get_na_filtered(df_left, column=COLUMN_COMPARE)
     df2_filtered = _get_na_filtered(df_right, column=COLUMN_COMPARE)
@@ -108,7 +116,7 @@ def _gen_compare_dataframe(
         for _, row in tqdm(compare_df.iterrows(), total=len(compare_df))
     ]
 
-    compare_df = compare_df[compare_df[COLUMN_SCORE] > 0]
+    compare_df = compare_df[compare_df[COLUMN_SCORE] >= 0]
     logger.debug("got %i entries", len(compare_df))
 
     return compare_df
