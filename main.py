@@ -20,15 +20,11 @@ RESULTS_FILE_PATTERN = (
     "output/{file_name}_{score_threshold}_{compare_column}_{score_func}.csv"
 )
 
+CONFIG_FIELD_DB = "db"
+CONFIG_FIELD_MATCHING = "matching"
 
-def get_preparator():
-    dbConfig = {
-        "host": "localhost",
-        "port": 5432,
-        "db": "mesh",
-        "user": "postgres",
-        "passwd": "meshterms",
-    }
+
+def get_preparator(dbConfig):
 
     preparator = MatchPreparator(dbConfig)
     preparator.load_terms()
@@ -63,12 +59,21 @@ def prepare(file_name: str, preparator: MatchPreparator) -> pd.DataFrame:
 def main():
 
     config = {
-        "score_threshold": 0.9,
-        "compare_column": DATA_COLUMN_TOKEN_IDS,
-        "score_func": score_functions.intersection_vs_union,
+        CONFIG_FIELD_DB: {
+            "host": "localhost",
+            "port": 5432,
+            "db": "mesh",
+            "user": "postgres",
+            "passwd": "meshterms",
+        },
+        CONFIG_FIELD_MATCHING: {
+            "score_threshold": 0.9,
+            "compare_column": DATA_COLUMN_TOKEN_IDS,
+            "score_func": score_functions.intersection_vs_union,
+        },
     }
 
-    preparator = get_preparator()
+    preparator = get_preparator(config[CONFIG_FIELD_DB])
 
     files = ["input/hap_test.xlsx", "input/pop_test.xlsx", "input/suep_test.xlsx"]
 
@@ -96,14 +101,16 @@ def main():
         key = tuple(sorted([name_first, name_second], key=str.lower))
         if key not in comparisons:
             logger.info("compare %s and %s", name_first, name_second)
-            compare(dataset_first, dataset_second, **config)
+            compare(dataset_first, dataset_second, **config[CONFIG_FIELD_MATCHING])
             comparisons.add(key)
 
     for name, dataset in datasets:
         format_args = {
-            **config,
+            **config[CONFIG_FIELD_MATCHING],
             "file_name": name,
-            "score_func": config["score_func"].__name__.replace("_", "-"),
+            "score_func": config[CONFIG_FIELD_MATCHING]["score_func"].__name__.replace(
+                "_", "-"
+            ),
         }
         results.write(RESULTS_FILE_PATTERN.format(**format_args), dataset)
 
