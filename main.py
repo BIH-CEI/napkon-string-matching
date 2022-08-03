@@ -8,20 +8,18 @@ from pathlib import Path
 import pandas as pd
 
 from napkon_string_matching.compare import compare, score_functions
-from napkon_string_matching.constants import DATA_COLUMN_TOKEN_IDS
+from napkon_string_matching.constants import (
+    CONFIG_FIELD_DB,
+    CONFIG_FIELD_MATCHING,
+    DATA_COLUMN_TOKEN_IDS,
+    LOG_FORMAT,
+    RESULTS_FILE_PATTERN,
+)
 from napkon_string_matching.files import dataframe, dataset_table, results
 from napkon_string_matching.prepare import MatchPreparator
 
-FORMAT = "%(asctime)s\t%(levelname)s\t%(name)s\t%(message)s"
-logging.basicConfig(level=logging.DEBUG, format=FORMAT)
+logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
-
-RESULTS_FILE_PATTERN = (
-    "output/{file_name}_{score_threshold}_{compare_column}_{score_func}.csv"
-)
-
-CONFIG_FIELD_DB = "db"
-CONFIG_FIELD_MATCHING = "matching"
 
 
 def get_preparator(dbConfig):
