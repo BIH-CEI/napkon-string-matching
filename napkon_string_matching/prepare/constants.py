@@ -1,1 +1,3 @@
 PREPARE_COLUMN_SCORE = "Score"
+
+PREPARE_REMOVE_SYMBOLS = "!?,.()[]:;*"

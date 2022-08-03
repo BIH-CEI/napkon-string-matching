@@ -67,10 +67,10 @@ class TestMatchPreparator(unittest.TestCase):
         self.assertIn(DATA_COLUMN_TERM, data)
         self.assertEqual(2, len(data[DATA_COLUMN_TERM].values))
         self.assertEqual(
-            "categories item question without", data[DATA_COLUMN_TERM].values[0]
+            "categories item question without".split(), data[DATA_COLUMN_TERM].values[0]
         )
         self.assertEqual(
-            "1 1 another categories item question without",
+            "1 another categories item question without".split(),
             data[DATA_COLUMN_TERM].values[1],
         )
 
@@ -104,7 +104,7 @@ class TestMatchPreparator(unittest.TestCase):
                     DATA_COLUMN_SHEET: "Test Sheet",
                     DATA_COLUMN_FILE: "Testfile",
                     DATA_COLUMN_CATEGORIES: None,
-                    DATA_COLUMN_TERM: "Hatte Sie Dialyse oder sonstiges?",
+                    DATA_COLUMN_TERM: "Hatte Sie Dialyse oder sonstiges?".split(),
                 },
             ]
         )
@@ -115,7 +115,40 @@ class TestMatchPreparator(unittest.TestCase):
         self.assertIn(DATA_COLUMN_TOKEN_IDS, data)
         self.assertIn(DATA_COLUMN_TOKEN_MATCH, data)
 
-        self.assertIn("Dialyse", data[DATA_COLUMN_TOKENS][0])
+        self.assertEqual("Dialyse Sonstiges".split(), data[DATA_COLUMN_TOKENS][0])
+
+    def test_add_terms_and_tokens(self):
+        data = pd.DataFrame(
+            [
+                {
+                    DATA_COLUMN_ITEM: "Hatte Sie Dialyse oder sonstiges?",
+                    DATA_COLUMN_SHEET: "Test Sheet",
+                    DATA_COLUMN_FILE: "Testfile",
+                    DATA_COLUMN_CATEGORIES: None,
+                    DATA_COLUMN_QUESTION: "Dialyse",
+                }
+            ]
+        )
+
+        data_dir = Path("napkon_string_matching/tests/prepare/data")
+
+        references = pd.DataFrame(
+            json.loads((data_dir / "references.json").read_text())
+        )
+        headings = pd.DataFrame(json.loads((data_dir / "headings.json").read_text()))
+
+        self.preparator.terms = references
+        self.preparator.headings = headings
+
+        self.preparator.add_terms(data)
+
+        self.preparator.add_tokens(data, 90, verbose=False, timeout=None)
+
+        self.assertIn(DATA_COLUMN_TOKENS, data)
+        self.assertIn(DATA_COLUMN_TOKEN_IDS, data)
+        self.assertIn(DATA_COLUMN_TOKEN_MATCH, data)
+
+        self.assertEqual("Dialyse Sonstiges".split(), data[DATA_COLUMN_TOKENS][0])
 
     @unittest.skipIf(
         DISABLE_DB_TESTS or DISABLE_LOCAL_FILE_TESTS or DISABLE_LONG_LASTING_TESTS,

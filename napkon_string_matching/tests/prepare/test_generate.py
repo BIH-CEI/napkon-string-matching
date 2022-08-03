@@ -3,15 +3,6 @@ import unittest
 from pathlib import Path
 
 import pandas as pd
-from napkon_string_matching.constants import (
-    DATA_COLUMN_CATEGORIES,
-    DATA_COLUMN_FILE,
-    DATA_COLUMN_ITEM,
-    DATA_COLUMN_OPTIONS,
-    DATA_COLUMN_QUESTION,
-    DATA_COLUMN_SHEET,
-    DATA_COLUMN_TERM,
-)
 from napkon_string_matching.prepare import gen_term, gen_tokens
 
 
@@ -24,7 +15,7 @@ class TestGenToken(unittest.TestCase):
         )
         headings = pd.DataFrame(json.loads((data_dir / "headings.json").read_text()))
 
-        term = "Dialyse nach Entlassung"
+        term = "Dialyse nach Entlassung".split()
         tokens, ids, matches = gen_tokens(
             term, references, headings, score_threshold=90
         )
@@ -40,38 +31,60 @@ class TestGenToken(unittest.TestCase):
 
     def test_gen_term(self):
         input_list = [
-            pd.Series(
-                {
-                    DATA_COLUMN_ITEM: "This is an item with options",
-                    DATA_COLUMN_SHEET: "Test Sheet",
-                    DATA_COLUMN_FILE: "Testfile",
-                    DATA_COLUMN_CATEGORIES: ["Header", "Subheader"],
-                    DATA_COLUMN_QUESTION: "This is a question",
-                    DATA_COLUMN_OPTIONS: ["Option A", "Option B"],
-                },
+            (
+                ["Header", "Subheader"],
+                "This is a question",
+                "This is an item with options",
             ),
-            pd.Series(
-                {
-                    DATA_COLUMN_ITEM: "An item without categories",
-                    DATA_COLUMN_SHEET: "Test Sheet",
-                    DATA_COLUMN_FILE: "Testfile",
-                    DATA_COLUMN_CATEGORIES: None,
-                    DATA_COLUMN_QUESTION: "This is another question",
-                },
-            ),
+            ([], "This is another question", "An item without categories"),
         ]
         expected_list = [
-            "Header Subheader item options question",
-            "another categories item question without",
+            "Header item options question Subheader".split(),
+            "another categories item question without".split(),
         ]
 
         for input, expected in zip(input_list, expected_list):
+            categories, question, item = input
+
             result = gen_term(
-                input[DATA_COLUMN_CATEGORIES],
-                input[DATA_COLUMN_QUESTION],
-                input[DATA_COLUMN_ITEM],
+                categories,
+                question,
+                item,
                 language="english",
             )
+            self.assertEqual(expected, result)
+
+    def test_gen_term_german(self):
+        input_list = [
+            (["Einschlusskriterien!"], "[Ursache]", "Andere Ursache, bitte angeben:"),
+            (
+                ["Patienteninformationen"],
+                "Hatte der/die Patient*in in den letzten 14 Tagen vor Beginn seiner/ihrer Beschwerden wissentlich Kontakt mit einer wahrscheinlich oder nachgewiesenermaßen mit SARS-CoV-2 infizierten Person?",
+                "Hatte der/die Patient*in in den letzten 14 Tagen vor Beginn seiner/ihrer Beschwerden wissentlich Kontakt mit einer wahrscheinlich oder nachgewiesenermaßen mit SARS-CoV-2 infizierten Person?",
+            ),
+            (
+                ["Patienteninformationen"],
+                "Welche Altersgruppen gibt es im Haushalt?",
+                "Wieviele Kinder <1",
+            ),
+        ]
+
+        expected_list = [
+            "angeben bitte Einschlusskriterien Ursache".split(),
+            "14 Beginn Beschwerden der/die infizierten Kontakt letzten nachgewiesenermaßen Patient Patienteninformationen Person SARS-CoV-2 seiner/ihrer Tagen wahrscheinlich wissentlich".split(),
+            "1 < Altersgruppen gibt Haushalt Kinder Patienteninformationen Wieviele".split(),
+        ]
+
+        for input, expected in zip(input_list, expected_list):
+            categories, question, item = input
+
+            result = gen_term(
+                categories,
+                question,
+                item,
+                language="german",
+            )
+
             self.assertEqual(expected, result)
 
 

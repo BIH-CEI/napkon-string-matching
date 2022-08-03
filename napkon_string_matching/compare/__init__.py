@@ -1,0 +1,1 @@
+from napkon_string_matching.compare.compare import compare
