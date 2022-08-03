@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 def compare(
     dataset_left: pd.DataFrame,
     dataset_right: pd.DataFrame,
-    score_threshold: int = 1,
+    score_threshold: float = 0.1,
     *args,
     **kwargs,
 ):
@@ -55,7 +55,11 @@ def compare(
 
 
 def _gen_compare_dataframe_cached(
-    df_left: pd.DataFrame, df_right: pd.DataFrame, *args, **kwargs
+    df_left: pd.DataFrame,
+    df_right: pd.DataFrame,
+    score_threshold: float = 0.1,
+    *args,
+    **kwargs,
 ) -> pd.DataFrame:
     df_hash = _hash_dataframes(dfs=[df_left, df_right], *args, **kwargs)
     cache_score_file = Path(CACHE_FILE_PATTERN.format(df_hash))
@@ -63,7 +67,9 @@ def _gen_compare_dataframe_cached(
     if cache_score_file.exists():
         compare_df = _read_compare_dataframe(cache_score_file)
     else:
-        compare_df = _gen_compare_dataframe(df_left, df_right, *args, **kwargs)
+        compare_df = _gen_compare_dataframe(
+            df_left, df_right, score_threshold=0.1, *args, **kwargs
+        )
 
         if not cache_score_file.parent.exists():
             cache_score_file.parent.mkdir(parents=True)
@@ -71,6 +77,10 @@ def _gen_compare_dataframe_cached(
         logger.info("write cache to file")
         logger.debug("write to %s", cache_score_file)
         dataframe.write(cache_score_file, compare_df)
+
+    # Filter outside of the caching to reuse same cache with different thresholds
+    compare_df = compare_df[compare_df[COLUMN_SCORE] >= score_threshold]
+    logger.debug("got %i filtered entries", len(compare_df))
 
     return compare_df
 
@@ -101,7 +111,9 @@ def _read_compare_dataframe(cache_file: Path) -> pd.DataFrame:
 
 
 def _gen_compare_dataframe(
-    df_left: pd.DataFrame, df_right: pd.DataFrame, score_threshold: int = 1
+    df_left: pd.DataFrame,
+    df_right: pd.DataFrame,
+    score_threshold: float = 0.1,
 ) -> pd.DataFrame:
     df1_filtered = _get_na_filtered(df_left, column=COLUMN_COMPARE)
     df2_filtered = _get_na_filtered(df_right, column=COLUMN_COMPARE)
@@ -114,7 +126,7 @@ def _gen_compare_dataframe(
         for _, row in tqdm(compare_df.iterrows(), total=len(compare_df))
     ]
 
-    compare_df = compare_df[compare_df[COLUMN_SCORE] >= 0]
+    compare_df = compare_df[compare_df[COLUMN_SCORE] >= score_threshold]
     logger.debug("got %i entries", len(compare_df))
 
     return compare_df
