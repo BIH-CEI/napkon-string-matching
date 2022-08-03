@@ -1,0 +1,16 @@
+db:
+  host: localhost
+  port: 5432
+  db: mesh
+  user: postgres
+  passwd: meshterms
+
+matching:
+  score_threshold: 0.9
+  compare_column: TokenIds
+  score_func: intersection_vs_union
+
+files:
+  - input/hap_test.xlsx
+  - input/pop_test.xlsx
+  - input/suep_test.xlsx

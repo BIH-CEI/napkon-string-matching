@@ -4,6 +4,7 @@ from itertools import product
 from pathlib import Path
 from typing import Callable
 
+import napkon_string_matching
 import pandas as pd
 from napkon_string_matching.compare.constants import (
     CACHE_FILE_PATTERN,
@@ -28,11 +29,15 @@ logger = logging.getLogger(__name__)
 def compare(
     dataset_left: pd.DataFrame,
     dataset_right: pd.DataFrame,
+    score_func: str,
     score_threshold: float = 0.1,
     compare_column: str = DATA_COLUMN_TOKEN_IDS,
     *args,
     **kwargs,
 ):
+
+    score_func = getattr(napkon_string_matching.compare.score_functions, score_func)
+
     # Get the compare dataframe that holds the score to match all entries from
     # the left with each from right dataset
     compare_df = _gen_compare_dataframe_cached(
@@ -40,6 +45,7 @@ def compare(
         dataset_right,
         score_threshold=score_threshold,
         compare_column=compare_column,
+        score_func=score_func,
         *args,
         **kwargs,
     )

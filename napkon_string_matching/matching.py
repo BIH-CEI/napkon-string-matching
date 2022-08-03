@@ -58,9 +58,7 @@ def match(config: Dict) -> None:
         format_args = {
             **config[CONFIG_FIELD_MATCHING],
             "file_name": name,
-            "score_func": config[CONFIG_FIELD_MATCHING]["score_func"].__name__.replace(
-                "_", "-"
-            ),
+            "score_func": config[CONFIG_FIELD_MATCHING]["score_func"].replace("_", "-"),
         }
         results.write(RESULTS_FILE_PATTERN.format(**format_args), dataset)
 
