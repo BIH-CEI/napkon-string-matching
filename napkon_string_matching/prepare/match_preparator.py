@@ -38,7 +38,7 @@ class MatchPreparator:
         self.headings = None
 
     def load_terms(self):
-        if not self.terms or not self.headings:
+        if self.terms is None or self.headings is None:
             logger.info("load terms from database...")
             with PostgresMeshConnector(**self.dbConfig) as connector:
                 logger.info("...load MeSH terms...")
