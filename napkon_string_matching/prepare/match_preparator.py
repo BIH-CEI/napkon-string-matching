@@ -25,19 +25,30 @@ logger = logging.getLogger(__name__)
 
 
 class MatchPreparator:
-    def __init__(self, dbConfig: dict):
-        self.dbConfig = dbConfig
-        self.terms = None
-        self.headings = None
-
-    def load_terms(
+    def __init__(
         self,
+        dbConfig: dict,
         term_requests: List[TableRequest] = TERMINOLOGY_REQUEST_TERMS,
         heading_requests: List[TableRequest] = TERMINOLOGY_REQUEST_HEADINGS,
     ):
-        with PostgresMeshConnector(**self.dbConfig) as connector:
-            self.terms = connector.read_tables(term_requests)
-            self.headings = connector.read_tables(heading_requests)
+        self.dbConfig = dbConfig
+        self.term_requests = term_requests
+        self.heading_requests = heading_requests
+        self.terms = None
+        self.headings = None
+
+    def load_terms(self):
+        if not self.terms or not self.headings:
+            logger.info("load terms from database...")
+            with PostgresMeshConnector(**self.dbConfig) as connector:
+                logger.info("...load MeSH terms...")
+                self.terms = connector.read_tables(self.term_requests)
+                self.headings = connector.read_tables(self.heading_requests)
+            logger.info(
+                "...got %i headings and %i total terms",
+                len(self.headings),
+                len(self.terms),
+            )
 
     def add_terms(self, df: pd.DataFrame, language: str = "german"):
         logger.info("add terms...")

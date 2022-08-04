@@ -221,6 +221,8 @@ def _enhance_dataset_with_matches(
         ]
     ]
 
+    logger.info("adding %i matches to dataframe...", len(matches))
+
     grouping = matches.groupby(by=group_column)
     for identifier in grouping.groups:
         match_information = grouping.get_group(identifier)
@@ -261,3 +263,5 @@ def _enhance_dataset_with_matches(
             previous = []
 
         dataset.at[identifier, DATA_COLUMN_MATCHES] = previous + match
+
+    logger.info("...done")
