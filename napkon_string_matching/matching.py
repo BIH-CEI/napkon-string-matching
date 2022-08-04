@@ -13,7 +13,7 @@ from napkon_string_matching.constants import (
     CONFIG_FIELD_DB,
     CONFIG_FIELD_FILES,
     CONFIG_FIELD_MATCHING,
-    DATA_COLUMN_TOKEN_IDS,
+    DATA_COLUMN_MATCHES,
     LOG_FORMAT,
     RESULTS_FILE_PATTERN,
 )
@@ -66,6 +66,14 @@ def match(config: Dict) -> None:
 
         datasets[name_left] = dataset_left
         datasets[name_right] = dataset_right
+
+    for name, dataset in datasets.items():
+        logger.info(
+            "matched %s %i/%i",
+            name,
+            len(dataset[dataset[DATA_COLUMN_MATCHES].notna()]),
+            len(dataset),
+        )
 
     for name, dataset in datasets.items():
         format_args = {
