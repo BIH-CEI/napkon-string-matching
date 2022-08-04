@@ -6,9 +6,11 @@ db:
   passwd: meshterms
 
 matching:
-  score_threshold: 0.9
-  compare_column: TokenIds
-  score_func: intersection_vs_union
+  score_threshold: 0.8
+  cache_threshold: 0.5
+  compare_column: Term
+  score_func: fuzzy_match
+  calculate_tokens: False
 
 files:
   - input/hap_test.xlsx
