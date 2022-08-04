@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Callable
 
 import napkon_string_matching
+import napkon_string_matching.compare.score_functions
 import pandas as pd
 from napkon_string_matching.compare.constants import (
     CACHE_FILE_PATTERN,
@@ -29,14 +30,11 @@ logger = logging.getLogger(__name__)
 def compare(
     dataset_left: pd.DataFrame,
     dataset_right: pd.DataFrame,
-    score_func: str,
     score_threshold: float = 0.1,
     compare_column: str = DATA_COLUMN_TOKEN_IDS,
     *args,
     **kwargs,
-):
-
-    score_func = getattr(napkon_string_matching.compare.score_functions, score_func)
+) -> pd.DataFrame:
 
     # Get the compare dataframe that holds the score to match all entries from
     # the left with each from right dataset
@@ -45,7 +43,6 @@ def compare(
         dataset_right,
         score_threshold=score_threshold,
         compare_column=compare_column,
-        score_func=score_func,
         *args,
         **kwargs,
     )
@@ -112,10 +109,14 @@ def _read_compare_dataframe(cache_file: Path) -> pd.DataFrame:
 def _gen_compare_dataframe(
     df_left: pd.DataFrame,
     df_right: pd.DataFrame,
-    score_func: Callable,
+    score_func: str,
     score_threshold: float = 0.1,
     compare_column: str = DATA_COLUMN_TOKEN_IDS,
+    *args,
+    **kwargs,
 ) -> pd.DataFrame:
+    score_func = getattr(napkon_string_matching.compare.score_functions, score_func)
+
     df1_filtered = _get_na_filtered(df_left, column=compare_column)
     df2_filtered = _get_na_filtered(df_right, column=compare_column)
 
