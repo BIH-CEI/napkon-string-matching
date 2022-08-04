@@ -60,6 +60,7 @@ def _gen_compare_dataframe_cached(
 ) -> pd.DataFrame:
     df_hash = _hash_dataframes(dfs=[df_left, df_right], *args, **kwargs)
     cache_score_file = Path(CACHE_FILE_PATTERN.format(df_hash))
+    logger.debug("cache hash %s", df_hash)
 
     if cache_score_file.exists():
         compare_df = _read_compare_dataframe(cache_score_file)
@@ -94,7 +95,7 @@ def _hash_dataframes(dfs, *args, **kwargs) -> str:
     ]
     hashes += [
         md5(str(kwargs).encode("utf-8"), usedforsecurity=False).hexdigest()
-        for kwargs in kwargs
+        for kwargs in kwargs.items()
     ]
 
     return "".join(hashes)
