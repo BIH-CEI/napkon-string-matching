@@ -50,20 +50,7 @@ def compare(
         **kwargs,
     )
 
-    _enhance_dataset_with_matches(
-        dataset=dataset_left,
-        column_suffix=SUFFIX_LEFT,
-        other=dataset_right,
-        other_suffix=SUFFIX_RIGHT,
-        matches=compare_df,
-    )
-    _enhance_dataset_with_matches(
-        dataset=dataset_right,
-        column_suffix=SUFFIX_RIGHT,
-        other=dataset_left,
-        other_suffix=SUFFIX_LEFT,
-        matches=compare_df,
-    )
+    return compare_df
 
 
 def _gen_compare_dataframe_cached(
@@ -201,6 +188,25 @@ def _calc_score(score_func: Callable, row: pd.Series, compare_column: str) -> fl
     INSPECT_COLUMN_RIGHT = compare_column + SUFFIX_RIGHT
 
     return score_func(row[INSPECT_COLUMN_LEFT], row[INSPECT_COLUMN_RIGHT])
+
+
+def enhance_datasets_with_matches(
+    dataset_left: pd.DataFrame, dataset_right: pd.DataFrame, matches: pd.DataFrame
+) -> None:
+    _enhance_dataset_with_matches(
+        dataset=dataset_left,
+        column_suffix=SUFFIX_LEFT,
+        other=dataset_right,
+        other_suffix=SUFFIX_RIGHT,
+        matches=matches,
+    )
+    _enhance_dataset_with_matches(
+        dataset=dataset_right,
+        column_suffix=SUFFIX_RIGHT,
+        other=dataset_left,
+        other_suffix=SUFFIX_LEFT,
+        matches=matches,
+    )
 
 
 def _enhance_dataset_with_matches(

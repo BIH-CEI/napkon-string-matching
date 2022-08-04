@@ -8,7 +8,7 @@ from typing import Dict
 
 import pandas as pd
 
-from napkon_string_matching.compare import compare, score_functions
+from napkon_string_matching.compare import compare, enhance_datasets_with_matches
 from napkon_string_matching.constants import (
     CONFIG_FIELD_DB,
     CONFIG_FIELD_FILES,
@@ -27,14 +27,14 @@ logger = logging.getLogger(__name__)
 def match(config: Dict) -> None:
     preparator = get_preparator(config[CONFIG_FIELD_DB])
 
-    datasets = []
+    datasets = {}
     for file in config[CONFIG_FIELD_FILES]:
         name = Path(file).stem
         dataset = prepare(file, preparator, **config[CONFIG_FIELD_MATCHING])
-        datasets.append((name, dataset))
+        datasets[name] = dataset
 
-    comparisons = set()
-    for entry_left, entry_right in product(datasets, datasets):
+    comparisons = {}
+    for entry_left, entry_right in product(datasets.items(), datasets.items()):
         # Sort key entries to prevent processing of entries in both orders
         # e.g. 1 and 2 but not 2 and 1
         sorted_entries = tuple(
@@ -51,10 +51,23 @@ def match(config: Dict) -> None:
         key = tuple(sorted([name_first, name_second], key=str.lower))
         if key not in comparisons:
             logger.info("compare %s and %s", name_first, name_second)
-            compare(dataset_first, dataset_second, **config[CONFIG_FIELD_MATCHING])
-            comparisons.add(key)
+            matches = compare(
+                dataset_first, dataset_second, **config[CONFIG_FIELD_MATCHING]
+            )
+            comparisons[key] = matches
 
-    for name, dataset in datasets:
+    for key, matches in comparisons.items():
+        name_left, name_right = key
+
+        dataset_left = datasets[name_left]
+        dataset_right = datasets[name_right]
+
+        enhance_datasets_with_matches(dataset_left, dataset_right, matches)
+
+        datasets[name_left] = dataset_left
+        datasets[name_right] = dataset_right
+
+    for name, dataset in datasets.items():
         format_args = {
             **config[CONFIG_FIELD_MATCHING],
             "file_name": name,
