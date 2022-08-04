@@ -66,6 +66,8 @@ class MatchPreparator:
     def add_tokens(
         self, df: pd.DataFrame, score_threshold: int, verbose: bool = True, timeout=10
     ):
+        self.load_terms()
+
         if self.terms is None or self.headings is None:
             raise RuntimeError("'terms' and/or 'headings' not initialized")
 

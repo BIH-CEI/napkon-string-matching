@@ -30,7 +30,7 @@ def match(config: Dict) -> None:
     datasets = []
     for file in config[CONFIG_FIELD_FILES]:
         name = Path(file).stem
-        dataset = prepare(file, preparator)
+        dataset = prepare(file, preparator, **config[CONFIG_FIELD_MATCHING])
         datasets.append((name, dataset))
 
     comparisons = set()
@@ -65,31 +65,60 @@ def match(config: Dict) -> None:
 
 def get_preparator(dbConfig):
 
-    preparator = MatchPreparator(dbConfig)
-    preparator.load_terms()
-
-    return preparator
+    return MatchPreparator(dbConfig)
 
 
-def prepare(file_name: str, preparator: MatchPreparator) -> pd.DataFrame:
+def prepare(
+    file_name: str,
+    preparator: MatchPreparator,
+    calculate_tokens: bool = False,
+    *args,
+    **kwargs,
+) -> pd.DataFrame:
     file = Path(file_name)
     logger.info(f"prepare file {file.name}")
 
-    prepared_file = Path("prepared") / (file.stem + "_prepared.json")
+    output_dir = Path("prepared")
+    FILE_PATTERN = file.stem + "_{}.json"
 
-    if not prepared_file.parent.exists():
-        prepared_file.parent.mkdir(parents=True)
+    # File names for all cache files
+    # Order here is unprocessed -> terms -> prepared
+    unprocessed_file = output_dir / FILE_PATTERN.format("unprocessed")
+    terms_file = output_dir / FILE_PATTERN.format("terms")
+    prepared_file = output_dir / FILE_PATTERN.format("prepared")
 
+    # Create output director if not existing
+    if not output_dir.exists():
+        output_dir.mkdir(parents=True)
+
+    # If prepared already exists, read it and return data
     if prepared_file.exists():
-        logger.info("using previously prepared file")
+        logger.info("using previously cached prepared file")
         data = dataframe.read(prepared_file)
         return data
 
-    data = dataset_table.read(file)
-    preparator.add_terms(data)
-    preparator.add_tokens(data, score_threshold=90, timeout=30)
+    # If term file exists read its data
+    if terms_file.exists():
+        logger.info("using previously cached terms file")
+        data = dataframe.read(terms_file)
+    else:
+        # If unprocessed file exists, read it; otherwise calculate
+        if unprocessed_file.exists():
+            logger.info("using previously cached unprocessed file")
+            data = dataframe.read(unprocessed_file)
+        else:
+            data = dataset_table.read(file)
+            dataframe.write(unprocessed_file, data)
 
-    logger.info("writing prepared data")
-    dataframe.write(prepared_file, data)
+        # No matter if unprocessed data was read from cache or dataset file,
+        # the terms still needs to be generated
+        preparator.add_terms(data)
+        dataframe.write(terms_file, data)
+
+    # No matter if terms data was read or calculated,
+    # the tokens still need to be generated if required
+    if calculate_tokens:
+        preparator.add_tokens(data, score_threshold=90, timeout=30)
+        dataframe.write(prepared_file, data)
 
     return data
