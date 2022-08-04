@@ -54,6 +54,7 @@ def _gen_compare_dataframe_cached(
     df_left: pd.DataFrame,
     df_right: pd.DataFrame,
     score_threshold: float = 0.1,
+    cache_threshold: float = None,
     *args,
     **kwargs,
 ) -> pd.DataFrame:
@@ -63,15 +64,16 @@ def _gen_compare_dataframe_cached(
     if cache_score_file.exists():
         compare_df = _read_compare_dataframe(cache_score_file)
     else:
+        if not cache_threshold:
+            cache_threshold = score_threshold
         compare_df = _gen_compare_dataframe(
-            df_left, df_right, score_threshold=0.1, *args, **kwargs
+            df_left, df_right, score_threshold=cache_threshold, *args, **kwargs
         )
 
         if not cache_score_file.parent.exists():
             cache_score_file.parent.mkdir(parents=True)
 
         logger.info("write cache to file")
-        logger.debug("write to %s", cache_score_file)
         dataframe.write(cache_score_file, compare_df)
 
     # Filter outside of the caching to reuse same cache with different thresholds
