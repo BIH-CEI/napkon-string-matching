@@ -1,0 +1,18 @@
+db:
+  host: localhost
+  port: 5432
+  db: mesh
+  user: postgres
+  passwd: meshterms
+
+matching:
+  score_threshold: 0.8
+  cache_threshold: 0.5
+  compare_column: Term
+  score_func: fuzzy_match
+  calculate_tokens: False
+
+files:
+  - input/hap_test.xlsx
+  - input/pop_test.xlsx
+  - input/suep_test.xlsx

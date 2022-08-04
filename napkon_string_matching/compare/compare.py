@@ -2,9 +2,17 @@ import logging
 from hashlib import md5
 from itertools import product
 from pathlib import Path
-from typing import List
+from typing import Callable
 
+import napkon_string_matching
+import napkon_string_matching.compare.score_functions
 import pandas as pd
+from napkon_string_matching.compare.constants import (
+    CACHE_FILE_PATTERN,
+    COLUMN_SCORE,
+    SUFFIX_LEFT,
+    SUFFIX_RIGHT,
+)
 from napkon_string_matching.constants import (
     DATA_COLUMN_CATEGORIES,
     DATA_COLUMN_IDENTIFIER,
@@ -18,61 +26,60 @@ from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
-SUFFIX_LEFT = "_left"
-SUFFIX_RIGHT = "_right"
-
-COLUMN_COMPARE = DATA_COLUMN_TOKEN_IDS
-COLUMN_SCORE = "Score"
-
-CACHE_FILE_PATTERN = "compared/cache_score_{}.json"
-
 
 def compare(
     dataset_left: pd.DataFrame,
     dataset_right: pd.DataFrame,
-    score_threshold: int = 1,
+    score_threshold: float = 0.1,
+    compare_column: str = DATA_COLUMN_TOKEN_IDS,
     *args,
     **kwargs,
-):
+) -> pd.DataFrame:
+
     # Get the compare dataframe that holds the score to match all entries from
     # the left with each from right dataset
     compare_df = _gen_compare_dataframe_cached(
-        dataset_left, dataset_right, score_threshold=score_threshold
+        dataset_left,
+        dataset_right,
+        score_threshold=score_threshold,
+        compare_column=compare_column,
+        *args,
+        **kwargs,
     )
 
-    _enhance_dataset_with_matches(
-        dataset=dataset_left,
-        column_suffix=SUFFIX_LEFT,
-        other=dataset_right,
-        other_suffix=SUFFIX_RIGHT,
-        matches=compare_df,
-    )
-    _enhance_dataset_with_matches(
-        dataset=dataset_right,
-        column_suffix=SUFFIX_RIGHT,
-        other=dataset_left,
-        other_suffix=SUFFIX_LEFT,
-        matches=compare_df,
-    )
+    return compare_df
 
 
 def _gen_compare_dataframe_cached(
-    df_left: pd.DataFrame, df_right: pd.DataFrame, *args, **kwargs
+    df_left: pd.DataFrame,
+    df_right: pd.DataFrame,
+    score_threshold: float = 0.1,
+    cache_threshold: float = None,
+    *args,
+    **kwargs,
 ) -> pd.DataFrame:
     df_hash = _hash_dataframes(dfs=[df_left, df_right], *args, **kwargs)
     cache_score_file = Path(CACHE_FILE_PATTERN.format(df_hash))
+    logger.debug("cache hash %s", df_hash)
 
     if cache_score_file.exists():
         compare_df = _read_compare_dataframe(cache_score_file)
     else:
-        compare_df = _gen_compare_dataframe(df_left, df_right, *args, **kwargs)
+        if not cache_threshold:
+            cache_threshold = score_threshold
+        compare_df = _gen_compare_dataframe(
+            df_left, df_right, score_threshold=cache_threshold, *args, **kwargs
+        )
 
         if not cache_score_file.parent.exists():
             cache_score_file.parent.mkdir(parents=True)
 
         logger.info("write cache to file")
-        logger.debug("write to %s", cache_score_file)
         dataframe.write(cache_score_file, compare_df)
+
+    # Filter outside of the caching to reuse same cache with different thresholds
+    compare_df = compare_df[compare_df[COLUMN_SCORE] >= score_threshold]
+    logger.debug("got %i filtered entries", len(compare_df))
 
     return compare_df
 
@@ -88,7 +95,7 @@ def _hash_dataframes(dfs, *args, **kwargs) -> str:
     ]
     hashes += [
         md5(str(kwargs).encode("utf-8"), usedforsecurity=False).hexdigest()
-        for kwargs in kwargs
+        for kwargs in kwargs.items()
     ]
 
     return "".join(hashes)
@@ -103,20 +110,30 @@ def _read_compare_dataframe(cache_file: Path) -> pd.DataFrame:
 
 
 def _gen_compare_dataframe(
-    df_left: pd.DataFrame, df_right: pd.DataFrame, score_threshold: int = 1
+    df_left: pd.DataFrame,
+    df_right: pd.DataFrame,
+    score_func: str,
+    score_threshold: float = 0.1,
+    compare_column: str = DATA_COLUMN_TOKEN_IDS,
+    *args,
+    **kwargs,
 ) -> pd.DataFrame:
-    df1_filtered = _get_na_filtered(df_left, column=COLUMN_COMPARE)
-    df2_filtered = _get_na_filtered(df_right, column=COLUMN_COMPARE)
+    score_func = getattr(napkon_string_matching.compare.score_functions, score_func)
 
-    compare_df = _gen_permutation(df1_filtered, df2_filtered)
+    df1_filtered = _get_na_filtered(df_left, column=compare_column)
+    df2_filtered = _get_na_filtered(df_right, column=compare_column)
+
+    compare_df = _gen_permutation(
+        df1_filtered, df2_filtered, compare_column=compare_column
+    )
 
     logger.info("calculate score")
     compare_df[COLUMN_SCORE] = [
-        _calc_score(row)
+        _calc_score(score_func, row, compare_column=compare_column)
         for _, row in tqdm(compare_df.iterrows(), total=len(compare_df))
     ]
 
-    compare_df = compare_df[compare_df[COLUMN_SCORE] >= 0]
+    compare_df = compare_df[compare_df[COLUMN_SCORE] >= score_threshold]
     logger.debug("got %i entries", len(compare_df))
 
     return compare_df
@@ -129,6 +146,7 @@ def _get_na_filtered(df: pd.DataFrame, column: str) -> pd.DataFrame:
 def _gen_permutation(
     df_left: pd.DataFrame,
     df_right: pd.DataFrame,
+    compare_column: str,
 ) -> pd.DataFrame:
     IDX_LEFT = DATA_COLUMN_IDENTIFIER + SUFFIX_LEFT
     IDX_RIGHT = DATA_COLUMN_IDENTIFIER + SUFFIX_RIGHT
@@ -139,10 +157,17 @@ def _gen_permutation(
 
     # Merge the product of both indices with their dataframes
     permutation = _merge_df(
-        _merge_df(join_df, df_left, left_on=IDX_LEFT, suffix_right=SUFFIX_LEFT),
+        _merge_df(
+            join_df,
+            df_left,
+            left_on=IDX_LEFT,
+            suffix_right=SUFFIX_LEFT,
+            compare_column=compare_column,
+        ),
         df_right,
         left_on=IDX_RIGHT,
         suffix_right=SUFFIX_RIGHT,
+        compare_column=compare_column,
     )
 
     return permutation
@@ -153,24 +178,39 @@ def _merge_df(
     df2: pd.DataFrame,
     left_on: str,
     suffix_right: str,
+    compare_column: str,
 ) -> pd.DataFrame:
     return df1.merge(
-        df2[[COLUMN_COMPARE]].add_suffix(suffix_right),
+        df2[[compare_column]].add_suffix(suffix_right),
         left_on=left_on,
         right_index=True,
     )
 
 
-def _calc_score(row: pd.Series) -> float:
-    INSPECT_COLUMN = DATA_COLUMN_TOKEN_IDS
+def _calc_score(score_func: Callable, row: pd.Series, compare_column: str) -> float:
+    INSPECT_COLUMN_LEFT = compare_column + SUFFIX_LEFT
+    INSPECT_COLUMN_RIGHT = compare_column + SUFFIX_RIGHT
 
-    INSPECT_COLUMN_LEFT = INSPECT_COLUMN + SUFFIX_LEFT
-    INSPECT_COLUMN_RIGHT = INSPECT_COLUMN + SUFFIX_RIGHT
+    return score_func(row[INSPECT_COLUMN_LEFT], row[INSPECT_COLUMN_RIGHT])
 
-    set_left = set(row[INSPECT_COLUMN_LEFT])
-    set_right = set(row[INSPECT_COLUMN_RIGHT])
 
-    return len(set_left.intersection(set_right)) / len(set_left.union(set_right))
+def enhance_datasets_with_matches(
+    dataset_left: pd.DataFrame, dataset_right: pd.DataFrame, matches: pd.DataFrame
+) -> None:
+    _enhance_dataset_with_matches(
+        dataset=dataset_left,
+        column_suffix=SUFFIX_LEFT,
+        other=dataset_right,
+        other_suffix=SUFFIX_RIGHT,
+        matches=matches,
+    )
+    _enhance_dataset_with_matches(
+        dataset=dataset_right,
+        column_suffix=SUFFIX_RIGHT,
+        other=dataset_left,
+        other_suffix=SUFFIX_LEFT,
+        matches=matches,
+    )
 
 
 def _enhance_dataset_with_matches(
@@ -190,6 +230,8 @@ def _enhance_dataset_with_matches(
             DATA_COLUMN_ITEM,
         ]
     ]
+
+    logger.info("adding %i matches to dataframe...", len(matches))
 
     grouping = matches.groupby(by=group_column)
     for identifier in grouping.groups:
@@ -231,3 +273,5 @@ def _enhance_dataset_with_matches(
             previous = []
 
         dataset.at[identifier, DATA_COLUMN_MATCHES] = previous + match
+
+    logger.info("...done")
