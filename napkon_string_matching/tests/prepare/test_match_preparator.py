@@ -84,9 +84,6 @@ class TestMatchPreparator(unittest.TestCase):
         self.preparator.add_terms(data)
         self.assertIn(DATA_COLUMN_TERM, data)
 
-    def test_add_tokens_not_initialized(self):
-        self.assertRaises(RuntimeError, self.preparator.add_tokens, None, 100)
-
     def test_add_tokens(self):
         data_dir = Path("napkon_string_matching/tests/prepare/data")
 

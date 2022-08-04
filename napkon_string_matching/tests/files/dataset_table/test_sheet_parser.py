@@ -65,7 +65,7 @@ class TestSheetParser(unittest.TestCase):
             None,
             None,
             {
-                DATA_COLUMN_IDENTIFIER: "Testfile_Test-Sheet_None",
+                DATA_COLUMN_IDENTIFIER: "Testfile#Test-Sheet#None",
                 DATA_COLUMN_ITEM: "This is an item with options",
                 DATA_COLUMN_SHEET: "Test Sheet",
                 DATA_COLUMN_FILE: "Testfile",
@@ -74,7 +74,7 @@ class TestSheetParser(unittest.TestCase):
                 DATA_COLUMN_OPTIONS: ["Option A", "Option B"],
             },
             {
-                DATA_COLUMN_IDENTIFIER: "Testfile_Test-Sheet_None",
+                DATA_COLUMN_IDENTIFIER: "Testfile#Test-Sheet#None",
                 DATA_COLUMN_ITEM: "Another item for same question",
                 DATA_COLUMN_SHEET: "Test Sheet",
                 DATA_COLUMN_FILE: "Testfile",
