@@ -2,6 +2,7 @@
 Module for the SheetParser
 """
 
+from pathlib import Path
 from typing import Any, Dict
 
 import numpy as np
@@ -67,14 +68,14 @@ class SheetParser:
             sheet[DATASETTABLE_COLUMN_PROJECT] == DATASETTABLE_COLUMN_NUMBER
         )[0][0]
         sheet.columns = sheet.iloc[start_index]
-        sheet = sheet.iloc[(start_index) + 1 :, :].reset_index(drop=True)
+        sheet = sheet.iloc[start_index + 1 :, :].reset_index(drop=True)
 
         # Replace `NaN` with `None` for easier handling
         sheet.where(pd.notnull(sheet), None, inplace=True)
 
         # Add meta information to each row
         sheet[DATASETTABLE_COLUMN_SHEET_NAME] = sheet_name
-        sheet[DATASETTABLE_COLUMN_FILE] = str(file.io)
+        sheet[DATASETTABLE_COLUMN_FILE] = Path(file.io).stem
 
         rows = []
         for _, row in sheet.iterrows():
@@ -112,9 +113,13 @@ class SheetParser:
             DATA_COLUMN_ITEM: row[DATASETTABLE_COLUMN_ITEM],
             DATA_COLUMN_SHEET: row[DATASETTABLE_COLUMN_SHEET_NAME],
             DATA_COLUMN_FILE: row[DATASETTABLE_COLUMN_FILE],
-            DATA_COLUMN_IDENTIFIER: f"{row[DATASETTABLE_COLUMN_FILE]}_{row[DATASETTABLE_COLUMN_SHEET_NAME]}_{row.name}".replace(
-                " ", "-"
-            ),
+            DATA_COLUMN_IDENTIFIER: "#".join(
+                [
+                    row[DATASETTABLE_COLUMN_FILE],
+                    row[DATASETTABLE_COLUMN_SHEET_NAME],
+                    str(row.name),
+                ]
+            ).replace(" ", "-"),
         }
 
         item[DATA_COLUMN_CATEGORIES] = (
