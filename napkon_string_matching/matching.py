@@ -4,7 +4,7 @@
 import logging
 from itertools import product
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 import pandas as pd
 
@@ -14,6 +14,7 @@ from napkon_string_matching.constants import (
     CONFIG_FIELD_FILES,
     CONFIG_FIELD_MATCHING,
     DATA_COLUMN_MATCHES,
+    DATA_COLUMN_VARIABLE,
     LOG_FORMAT,
     RESULTS_FILE_PATTERN,
 )
@@ -31,6 +32,11 @@ def match(config: Dict) -> None:
     for file in config[CONFIG_FIELD_FILES]:
         name = Path(file).stem
         dataset = prepare(file, preparator, **config[CONFIG_FIELD_MATCHING])
+
+        if dataset is None:
+            logger.warning("didn't get any data")
+            continue
+
         datasets[name] = dataset
 
     comparisons = {}
@@ -67,13 +73,8 @@ def match(config: Dict) -> None:
         datasets[name_left] = dataset_left
         datasets[name_right] = dataset_right
 
-    for name, dataset in datasets.items():
-        logger.info(
-            "matched %s %i/%i",
-            name,
-            len(dataset[dataset[DATA_COLUMN_MATCHES].notna()]),
-            len(dataset),
-        )
+    analysis = _analyse(datasets)
+    _print_analysis(analysis)
 
     for name, dataset in datasets.items():
         format_args = {
@@ -100,13 +101,25 @@ def prepare(
     logger.info(f"prepare file {file.name}")
 
     output_dir = Path("prepared")
-    FILE_PATTERN = file.stem + "_{}.json"
+
+    # Build output file pattern
+    file_pattern = [file.stem]
+
+    if "filter_column" in kwargs:
+        file_pattern.append(kwargs["filter_column"])
+
+    if "filter_prefix" in kwargs:
+        file_pattern.append(kwargs["filter_prefix"])
+
+    file_pattern.append("{}.json")
+
+    file_pattern = "_".join(file_pattern)
 
     # File names for all cache files
     # Order here is unprocessed -> terms -> prepared
-    unprocessed_file = output_dir / FILE_PATTERN.format("unprocessed")
-    terms_file = output_dir / FILE_PATTERN.format("terms")
-    prepared_file = output_dir / FILE_PATTERN.format("prepared")
+    unprocessed_file = output_dir / file_pattern.format("unprocessed")
+    terms_file = output_dir / file_pattern.format("terms")
+    prepared_file = output_dir / file_pattern.format("prepared")
 
     # Create output director if not existing
     if not output_dir.exists():
@@ -128,7 +141,11 @@ def prepare(
             logger.info("using previously cached unprocessed file")
             data = dataframe.read(unprocessed_file)
         else:
-            data = dataset_table.read(file)
+            data = dataset_table.read(file, *args, **kwargs)
+
+            if data is None:
+                return None
+
             dataframe.write(unprocessed_file, data)
 
         # No matter if unprocessed data was read from cache or dataset file,
@@ -143,3 +160,33 @@ def prepare(
         dataframe.write(prepared_file, data)
 
     return data
+
+
+def _analyse(dfs: List[pd.DataFrame]) -> Dict[str, Dict[str, str]]:
+    GECCO_PREFIX = "gec_"
+
+    result = {}
+    for name, df in dfs.items():
+        matched = df[df[DATA_COLUMN_MATCHES].notna()]
+
+        gecco_entries = df[
+            [GECCO_PREFIX in entry for entry in df[DATA_COLUMN_VARIABLE]]
+        ]
+        matched_gecco_entries = matched[
+            [GECCO_PREFIX in entry for entry in matched[DATA_COLUMN_VARIABLE]]
+        ]
+
+        df_result = {
+            "matched": "{}/{}".format(len(matched), len(df)),
+            "gecco": "{}/{}".format(len(matched_gecco_entries), len(gecco_entries)),
+        }
+        result[name] = df_result
+    return result
+
+
+def _print_analysis(analysis: Dict[str, Dict[str, str]]) -> None:
+    for name, item in analysis.items():
+        entries = []
+        for key, value in item.items():
+            entries.append("{}: {}".format(key, value))
+        logger.info("%s\t%s", name, "\t".join(entries))

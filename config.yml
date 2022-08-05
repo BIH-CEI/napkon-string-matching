@@ -6,11 +6,13 @@ db:
   passwd: meshterms
 
 matching:
-  score_threshold: 0.8
+  score_threshold: 0.7
   cache_threshold: 0.5
   compare_column: Term
   score_func: fuzzy_match
   calculate_tokens: False
+  filter_column: Datenbankspalte
+  filter_prefix: gec_
 
 files:
   - input/hap_test.xlsx

@@ -15,6 +15,7 @@ from napkon_string_matching.constants import (
     DATA_COLUMN_OPTIONS,
     DATA_COLUMN_QUESTION,
     DATA_COLUMN_SHEET,
+    DATA_COLUMN_VARIABLE,
 )
 from napkon_string_matching.files.dataset_table import (
     DATASETTABLE_COLUMN_DB_COLUMN,
@@ -26,6 +27,7 @@ from napkon_string_matching.files.dataset_table import (
     DATASETTABLE_COLUMN_QUESTION,
     DATASETTABLE_COLUMN_SHEET_NAME,
     DATASETTABLE_COLUMN_TYPE,
+    DATASETTABLE_COLUMN_VARIABLE,
     DATASETTABLE_ITEM_SKIPABLE,
     DATASETTABLE_TYPE_HEADER,
 )
@@ -40,7 +42,13 @@ class SheetParser:
         self.current_categories = []
         self.current_question = None
 
-    def parse(self, file: pd.ExcelFile, sheet_name: str) -> pd.DataFrame:
+    def parse(
+        self,
+        file: pd.ExcelFile,
+        sheet_name: str,
+        *args,
+        **kwargs,
+    ) -> pd.DataFrame | None:
         """
         Parses a single sheet
 
@@ -79,13 +87,19 @@ class SheetParser:
 
         rows = []
         for _, row in sheet.iterrows():
-            if item := self._parse_row(row):
+            if item := self._parse_row(row, *args, **kwargs):
                 rows.append(item)
 
-        result = pd.DataFrame(rows)
-        return result
+        return pd.DataFrame(rows) if rows else None
 
-    def _parse_row(self, row: pd.Series) -> Dict[str, Any] | None:
+    def _parse_row(
+        self,
+        row: pd.Series,
+        filter_column: str = None,
+        filter_prefix: str = None,
+        *args,
+        **kwargs,
+    ) -> Dict[str, Any] | None:
         # Extract information like header and question for following entries
         if type_ := row.get(DATASETTABLE_COLUMN_TYPE, None):
             question_entry = row[DATASETTABLE_COLUMN_QUESTION]
@@ -106,6 +120,14 @@ class SheetParser:
                     self.current_categories.pop()
                 self.current_categories.append(question_entry)
 
+        if (
+            filter_column
+            and filter_prefix
+            and row[filter_column]
+            and not row[filter_column].startswith(filter_prefix)
+        ):
+            return None
+
         if not row[DATASETTABLE_COLUMN_ITEM] or not row[DATASETTABLE_COLUMN_DB_COLUMN]:
             return None
 
@@ -113,6 +135,7 @@ class SheetParser:
             DATA_COLUMN_ITEM: row[DATASETTABLE_COLUMN_ITEM],
             DATA_COLUMN_SHEET: row[DATASETTABLE_COLUMN_SHEET_NAME],
             DATA_COLUMN_FILE: row[DATASETTABLE_COLUMN_FILE],
+            DATA_COLUMN_VARIABLE: row.get(DATASETTABLE_COLUMN_VARIABLE, None),
             DATA_COLUMN_IDENTIFIER: "#".join(
                 [
                     row[DATASETTABLE_COLUMN_FILE],
