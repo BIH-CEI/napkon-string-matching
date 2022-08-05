@@ -10,6 +10,7 @@ DATA_COLUMN_TOKEN_IDS = "TokenIds"
 DATA_COLUMN_TOKEN_MATCH = "TokenMatch"
 DATA_COLUMN_IDENTIFIER = "Identifier"
 DATA_COLUMN_MATCHES = "Matches"
+DATA_COLUMN_VARIABLE = "Variable"
 
 LOG_FORMAT = "%(asctime)s\t%(levelname)s\t%(name)s\t%(message)s"
 

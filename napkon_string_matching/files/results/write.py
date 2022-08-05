@@ -9,19 +9,18 @@ logger = logging.getLogger(__name__)
 
 from napkon_string_matching.constants import (
     DATA_COLUMN_CATEGORIES,
-    DATA_COLUMN_IDENTIFIER,
     DATA_COLUMN_ITEM,
     DATA_COLUMN_MATCHES,
-    DATA_COLUMN_OPTIONS,
     DATA_COLUMN_QUESTION,
+    DATA_COLUMN_VARIABLE,
 )
 from napkon_string_matching.files.results.constants import (
     RESULT_COLUMN_IDENTIFIER,
     RESULT_COLUMN_MATCH_IDENTIFIER,
     RESULT_COLUMN_MATCH_SCORE,
     RESULT_COLUMN_MATCH_TERM,
-    RESULT_COLUMN_OPTIONS,
     RESULT_COLUMN_TERM,
+    RESULT_COLUMN_VARIABLE,
 )
 
 
@@ -44,6 +43,7 @@ def write(file_name: str | Path, results: pd.DataFrame) -> None:
         base_dict = {
             RESULT_COLUMN_IDENTIFIER: index,
             RESULT_COLUMN_TERM: term,
+            RESULT_COLUMN_VARIABLE: row[DATA_COLUMN_VARIABLE],
         }
 
         matches = row[DATA_COLUMN_MATCHES]

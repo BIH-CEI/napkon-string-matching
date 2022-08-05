@@ -15,6 +15,7 @@ from napkon_string_matching.constants import (
     DATA_COLUMN_OPTIONS,
     DATA_COLUMN_QUESTION,
     DATA_COLUMN_SHEET,
+    DATA_COLUMN_VARIABLE,
 )
 from napkon_string_matching.files.dataset_table import (
     DATASETTABLE_COLUMN_DB_COLUMN,
@@ -26,6 +27,7 @@ from napkon_string_matching.files.dataset_table import (
     DATASETTABLE_COLUMN_QUESTION,
     DATASETTABLE_COLUMN_SHEET_NAME,
     DATASETTABLE_COLUMN_TYPE,
+    DATASETTABLE_COLUMN_VARIABLE,
     DATASETTABLE_ITEM_SKIPABLE,
     DATASETTABLE_TYPE_HEADER,
 )
@@ -113,6 +115,7 @@ class SheetParser:
             DATA_COLUMN_ITEM: row[DATASETTABLE_COLUMN_ITEM],
             DATA_COLUMN_SHEET: row[DATASETTABLE_COLUMN_SHEET_NAME],
             DATA_COLUMN_FILE: row[DATASETTABLE_COLUMN_FILE],
+            DATA_COLUMN_VARIABLE: row.get(DATASETTABLE_COLUMN_VARIABLE, None),
             DATA_COLUMN_IDENTIFIER: "#".join(
                 [
                     row[DATASETTABLE_COLUMN_FILE],
