@@ -4,7 +4,7 @@
 import logging
 from itertools import product
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 import pandas as pd
 
@@ -67,13 +67,8 @@ def match(config: Dict) -> None:
         datasets[name_left] = dataset_left
         datasets[name_right] = dataset_right
 
-    for name, dataset in datasets.items():
-        logger.info(
-            "matched %s %i/%i",
-            name,
-            len(dataset[dataset[DATA_COLUMN_MATCHES].notna()]),
-            len(dataset),
-        )
+    analysis = _analyse(datasets)
+    _print_analysis(analysis)
 
     for name, dataset in datasets.items():
         format_args = {
@@ -143,3 +138,21 @@ def prepare(
         dataframe.write(prepared_file, data)
 
     return data
+
+
+def _analyse(dfs: List[pd.DataFrame]) -> Dict[str, Dict[str, str]]:
+    result = {}
+    for name, df in dfs.items():
+        df_result = {
+            "matched": "{}/{}".format(len(df[df[DATA_COLUMN_MATCHES].notna()]), len(df))
+        }
+        result[name] = df_result
+    return result
+
+
+def _print_analysis(analysis: Dict[str, Dict[str, str]]) -> None:
+    for name, item in analysis.items():
+        entries = []
+        for key, value in item.items():
+            entries.append("{}: {}".format(key, value))
+        logger.info("%s\t%s", name, "\t".join(entries))
