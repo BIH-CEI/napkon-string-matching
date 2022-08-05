@@ -13,7 +13,7 @@ from napkon_string_matching.files.dataset_table import sheet_parser
 logger = logging.getLogger(__name__)
 
 
-def read(xlsx_file: str | Path) -> pd.DataFrame:
+def read(xlsx_file: str | Path, *args, **kwargs) -> pd.DataFrame:
     """
     Read a xlsx file
 
@@ -41,8 +41,13 @@ def read(xlsx_file: str | Path) -> pd.DataFrame:
     parser = sheet_parser.SheetParser()
     sheets = []
     for sheet_name in sheet_names:
-        data_list = parser.parse(file, sheet_name)
-        sheets.append(data_list)
+        data_list = parser.parse(file, sheet_name, *args, **kwargs)
+        if data_list is not None:
+            sheets.append(data_list)
+
+    if not sheets:
+        logger.warn("...dit not get any entries")
+        return None
 
     result = pd.concat(sheets)
 

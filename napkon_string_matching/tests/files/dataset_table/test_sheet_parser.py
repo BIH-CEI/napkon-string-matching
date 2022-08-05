@@ -9,6 +9,7 @@ from napkon_string_matching.constants import (
     DATA_COLUMN_OPTIONS,
     DATA_COLUMN_QUESTION,
     DATA_COLUMN_SHEET,
+    DATA_COLUMN_VARIABLE,
 )
 from napkon_string_matching.files.dataset_table import (
     DATASETTABLE_COLUMN_DB_COLUMN,
@@ -72,6 +73,7 @@ class TestSheetParser(unittest.TestCase):
                 DATA_COLUMN_CATEGORIES: ["Header", "Subheader"],
                 DATA_COLUMN_QUESTION: "This is a question",
                 DATA_COLUMN_OPTIONS: ["Option A", "Option B"],
+                DATA_COLUMN_VARIABLE: "foo column",
             },
             {
                 DATA_COLUMN_IDENTIFIER: "Testfile#Test-Sheet#None",
@@ -81,6 +83,7 @@ class TestSheetParser(unittest.TestCase):
                 DATA_COLUMN_CATEGORIES: ["Header", "Subheader"],
                 DATA_COLUMN_QUESTION: "This is a question",
                 DATA_COLUMN_OPTIONS: None,
+                DATA_COLUMN_VARIABLE: "bar column",
             },
         ]
 

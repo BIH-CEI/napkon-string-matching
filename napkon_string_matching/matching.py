@@ -32,6 +32,11 @@ def match(config: Dict) -> None:
     for file in config[CONFIG_FIELD_FILES]:
         name = Path(file).stem
         dataset = prepare(file, preparator, **config[CONFIG_FIELD_MATCHING])
+
+        if dataset is None:
+            logger.warning("didn't get any data")
+            continue
+
         datasets[name] = dataset
 
     comparisons = {}
@@ -96,13 +101,25 @@ def prepare(
     logger.info(f"prepare file {file.name}")
 
     output_dir = Path("prepared")
-    FILE_PATTERN = file.stem + "_{}.json"
+
+    # Build output file pattern
+    file_pattern = [file.stem]
+
+    if "filter_column" in kwargs:
+        file_pattern.append(kwargs["filter_column"])
+
+    if "filter_prefix" in kwargs:
+        file_pattern.append(kwargs["filter_prefix"])
+
+    file_pattern.append("{}.json")
+
+    file_pattern = "_".join(file_pattern)
 
     # File names for all cache files
     # Order here is unprocessed -> terms -> prepared
-    unprocessed_file = output_dir / FILE_PATTERN.format("unprocessed")
-    terms_file = output_dir / FILE_PATTERN.format("terms")
-    prepared_file = output_dir / FILE_PATTERN.format("prepared")
+    unprocessed_file = output_dir / file_pattern.format("unprocessed")
+    terms_file = output_dir / file_pattern.format("terms")
+    prepared_file = output_dir / file_pattern.format("prepared")
 
     # Create output director if not existing
     if not output_dir.exists():
@@ -124,7 +141,11 @@ def prepare(
             logger.info("using previously cached unprocessed file")
             data = dataframe.read(unprocessed_file)
         else:
-            data = dataset_table.read(file)
+            data = dataset_table.read(file, *args, **kwargs)
+
+            if data is None:
+                return None
+
             dataframe.write(unprocessed_file, data)
 
         # No matter if unprocessed data was read from cache or dataset file,
