@@ -1,5 +1,7 @@
 # NAPKON String Matching
 
+[![Python application](https://github.com/BIH-CEI/napkon-string-matching/actions/workflows/python-app.yml/badge.svg)](https://github.com/BIH-CEI/napkon-string-matching/actions/workflows/python-app.yml)
+
 ## Configuration
 
 File format:
