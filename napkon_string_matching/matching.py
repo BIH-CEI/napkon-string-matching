@@ -14,6 +14,7 @@ from napkon_string_matching.constants import (
     CONFIG_FIELD_FILES,
     CONFIG_FIELD_MATCHING,
     DATA_COLUMN_MATCHES,
+    DATA_COLUMN_VARIABLE,
     LOG_FORMAT,
     RESULTS_FILE_PATTERN,
 )
@@ -141,10 +142,22 @@ def prepare(
 
 
 def _analyse(dfs: List[pd.DataFrame]) -> Dict[str, Dict[str, str]]:
+    GECCO_PREFIX = "gec_"
+
     result = {}
     for name, df in dfs.items():
+        matched = df[df[DATA_COLUMN_MATCHES].notna()]
+
+        gecco_entries = df[
+            [GECCO_PREFIX in entry for entry in df[DATA_COLUMN_VARIABLE]]
+        ]
+        matched_gecco_entries = matched[
+            [GECCO_PREFIX in entry for entry in matched[DATA_COLUMN_VARIABLE]]
+        ]
+
         df_result = {
-            "matched": "{}/{}".format(len(df[df[DATA_COLUMN_MATCHES].notna()]), len(df))
+            "matched": "{}/{}".format(len(matched), len(df)),
+            "gecco": "{}/{}".format(len(matched_gecco_entries), len(gecco_entries)),
         }
         result[name] = df_result
     return result
