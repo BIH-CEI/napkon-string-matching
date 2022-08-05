@@ -14,4 +14,4 @@ def fuzzy_match(left: List[str], right: List[str]) -> float:
     left_term = " ".join(sorted(left, key=str.lower))
     right_term = " ".join(sorted(right, key=str.lower))
 
-    return fuzz.WRatio(left_term, right_term) / 100
+    return fuzz.QRatio(left_term, right_term) / 100
