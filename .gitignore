@@ -1,5 +1,6 @@
 # Python cache
 __pycache__
+dist
 .venv
 
 # OS specific
