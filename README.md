@@ -1,6 +1,7 @@
 # NAPKON String Matching
 
 [![Python application](https://github.com/BIH-CEI/napkon-string-matching/actions/workflows/python-app.yml/badge.svg)](https://github.com/BIH-CEI/napkon-string-matching/actions/workflows/python-app.yml)
+[![Docker](https://github.com/BIH-CEI/napkon-string-matching/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/BIH-CEI/napkon-string-matching/actions/workflows/docker-publish.yml)
 
 ## Configuration
 
@@ -26,4 +27,16 @@ matching:
 files:
   - file1.xlsx
   - file2.xlsx
+```
+
+## Docker
+
+Run with
+
+```bash
+docker run --rm \
+  -v $(pwd):/configs \
+  -v $(pwd)/input:/app/input \
+  ghcr.io/bih-cei/napkon-string-matching:main \
+  --config /configs/config.yml
 ```
