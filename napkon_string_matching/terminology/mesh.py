@@ -28,14 +28,13 @@ class MeshConnector:
             DataFrame: Extracted data with columns for id and term
         """
 
-        statement = f'SELECT "{request.id_column}", "{request.term_column}" FROM "{request.table_name}";'
+        statement = (
+            f'SELECT "{request.id_column}", "{request.term_column}" FROM "{request.table_name}";'
+        )
         results = self._execute(statement)
 
         terms = pd.DataFrame(
-            [
-                {TERMINOLOGY_COLUMN_ID: id, TERMINOLOGY_COLUMN_TERM: term}
-                for id, term in results
-            ]
+            [{TERMINOLOGY_COLUMN_ID: id, TERMINOLOGY_COLUMN_TERM: term} for id, term in results]
         )
 
         # Drop rows that may not contain an ID or a term

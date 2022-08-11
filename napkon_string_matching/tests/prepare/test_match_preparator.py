@@ -87,9 +87,7 @@ class TestMatchPreparator(unittest.TestCase):
     def test_add_tokens(self):
         data_dir = Path("napkon_string_matching/tests/prepare/data")
 
-        references = pd.DataFrame(
-            json.loads((data_dir / "references.json").read_text())
-        )
+        references = pd.DataFrame(json.loads((data_dir / "references.json").read_text()))
         headings = pd.DataFrame(json.loads((data_dir / "headings.json").read_text()))
 
         self.preparator.terms = references
@@ -129,9 +127,7 @@ class TestMatchPreparator(unittest.TestCase):
 
         data_dir = Path("napkon_string_matching/tests/prepare/data")
 
-        references = pd.DataFrame(
-            json.loads((data_dir / "references.json").read_text())
-        )
+        references = pd.DataFrame(json.loads((data_dir / "references.json").read_text()))
         headings = pd.DataFrame(json.loads((data_dir / "headings.json").read_text()))
 
         self.preparator.terms = references

@@ -14,9 +14,7 @@ DATA_COLUMN_VARIABLE = "Variable"
 
 LOG_FORMAT = "%(asctime)s\t%(levelname)s\t%(name)s\t%(message)s"
 
-RESULTS_FILE_PATTERN = (
-    "output/{file_name}_{score_threshold}_{compare_column}_{score_func}.csv"
-)
+RESULTS_FILE_PATTERN = "output/{file_name}_{score_threshold}_{compare_column}_{score_func}.csv"
 
 CONFIG_FIELD_DB = "db"
 CONFIG_FIELD_MATCHING = "matching"

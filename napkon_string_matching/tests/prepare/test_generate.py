@@ -10,15 +10,11 @@ class TestGenToken(unittest.TestCase):
     def test_gen_token(self):
         data_dir = Path("napkon_string_matching/tests/prepare/data")
 
-        references = pd.DataFrame(
-            json.loads((data_dir / "references.json").read_text())
-        )
+        references = pd.DataFrame(json.loads((data_dir / "references.json").read_text()))
         headings = pd.DataFrame(json.loads((data_dir / "headings.json").read_text()))
 
         term = "Dialyse nach Entlassung".split()
-        tokens, ids, matches = gen_tokens(
-            term, references, headings, score_threshold=90
-        )
+        tokens, ids, matches = gen_tokens(term, references, headings, score_threshold=90)
         self.assertIsNotNone(tokens)
         self.assertIsNotNone(ids)
         self.assertIsNotNone(matches)

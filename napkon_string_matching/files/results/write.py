@@ -36,9 +36,7 @@ def write(file_name: str | Path, results: pd.DataFrame) -> None:
         question = row[DATA_COLUMN_QUESTION]
         item = row[DATA_COLUMN_ITEM]
 
-        term = (
-            (",".join(categories) + ":") if categories else ""
-        ) + f"{question}:{item}"
+        term = ((",".join(categories) + ":") if categories else "") + f"{question}:{item}"
 
         base_dict = {
             RESULT_COLUMN_IDENTIFIER: index,

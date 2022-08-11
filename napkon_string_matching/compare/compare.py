@@ -85,14 +85,9 @@ def _gen_compare_dataframe_cached(
 
 
 def _hash_dataframes(dfs, *args, **kwargs) -> str:
-    hashes = [
-        md5(df.to_csv().encode("utf-8"), usedforsecurity=False).hexdigest()
-        for df in dfs
-    ]
+    hashes = [md5(df.to_csv().encode("utf-8"), usedforsecurity=False).hexdigest() for df in dfs]
 
-    hashes += [
-        md5(str(arg).encode("utf-8"), usedforsecurity=False).hexdigest() for arg in args
-    ]
+    hashes += [md5(str(arg).encode("utf-8"), usedforsecurity=False).hexdigest() for arg in args]
     hashes += [
         md5(str(kwargs).encode("utf-8"), usedforsecurity=False).hexdigest()
         for kwargs in kwargs.items()
@@ -123,9 +118,7 @@ def _gen_compare_dataframe(
     df1_filtered = _get_na_filtered(df_left, column=compare_column)
     df2_filtered = _get_na_filtered(df_right, column=compare_column)
 
-    compare_df = _gen_permutation(
-        df1_filtered, df2_filtered, compare_column=compare_column
-    )
+    compare_df = _gen_permutation(df1_filtered, df2_filtered, compare_column=compare_column)
 
     logger.info("calculate score")
     compare_df[COLUMN_SCORE] = [
@@ -151,9 +144,7 @@ def _gen_permutation(
     IDX_LEFT = DATA_COLUMN_IDENTIFIER + SUFFIX_LEFT
     IDX_RIGHT = DATA_COLUMN_IDENTIFIER + SUFFIX_RIGHT
 
-    join_df = pd.DataFrame(
-        product(df_left.index, df_right.index), columns=[IDX_LEFT, IDX_RIGHT]
-    )
+    join_df = pd.DataFrame(product(df_left.index, df_right.index), columns=[IDX_LEFT, IDX_RIGHT])
 
     # Merge the product of both indices with their dataframes
     permutation = _merge_df(
@@ -249,8 +240,7 @@ def _enhance_dataset_with_matches(
             (
                 score,
                 identifier,
-                (f"{','.join(categories)}:" if categories else "")
-                + f"{question}:{item}",
+                (f"{','.join(categories)}:" if categories else "") + f"{question}:{item}",
             )
             for score, identifier, categories, question, item in zip(
                 matched_entries[COLUMN_SCORE],
