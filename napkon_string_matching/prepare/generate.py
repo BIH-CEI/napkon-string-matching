@@ -41,14 +41,12 @@ def gen_tokens(
     )
 
     # Get IDs above threshold
-    ref_copy = ref_copy[
-        ref_copy[PREPARE_COLUMN_SCORE] >= score_threshold
-    ].drop_duplicates(subset=TERMINOLOGY_COLUMN_ID)
+    ref_copy = ref_copy[ref_copy[PREPARE_COLUMN_SCORE] >= score_threshold].drop_duplicates(
+        subset=TERMINOLOGY_COLUMN_ID
+    )
 
     # Get the corsponding headings
-    ref_copy = ref_copy.merge(
-        headings, on=TERMINOLOGY_COLUMN_ID, suffixes=(None, "_heading")
-    )
+    ref_copy = ref_copy.merge(headings, on=TERMINOLOGY_COLUMN_ID, suffixes=(None, "_heading"))
 
     return (
         list(ref_copy["Term_heading"].values),
@@ -57,9 +55,7 @@ def gen_tokens(
     )
 
 
-def gen_term(
-    categories: List[str], question: str, item: str, language: str = "german"
-) -> str:
+def gen_term(categories: List[str], question: str, item: str, language: str = "german") -> str:
     term_parts = []
 
     if categories:

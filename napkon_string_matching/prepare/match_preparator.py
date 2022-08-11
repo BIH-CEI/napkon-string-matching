@@ -63,9 +63,7 @@ class MatchPreparator:
         df[DATA_COLUMN_TERM] = result
         logger.info("...done")
 
-    def add_tokens(
-        self, df: pd.DataFrame, score_threshold: int, verbose: bool = True, timeout=10
-    ):
+    def add_tokens(self, df: pd.DataFrame, score_threshold: int, verbose: bool = True, timeout=10):
         self.load_terms()
 
         if self.terms is None or self.headings is None:
@@ -76,9 +74,7 @@ class MatchPreparator:
         # Generate the tokens using multiple processes to reduce computational time
         with Pool() as pool:
             multiple_results = [
-                pool.apply_async(
-                    gen_tokens, (term, self.terms, self.headings, score_threshold)
-                )
+                pool.apply_async(gen_tokens, (term, self.terms, self.headings, score_threshold))
                 for term in df[DATA_COLUMN_TERM]
             ]
 
@@ -89,7 +85,5 @@ class MatchPreparator:
 
         df[DATA_COLUMN_TOKENS] = [tokens if tokens else None for tokens, _, _ in result]
         df[DATA_COLUMN_TOKEN_IDS] = [ids if ids else None for _, ids, _ in result]
-        df[DATA_COLUMN_TOKEN_MATCH] = [
-            match if match else None for _, _, match in result
-        ]
+        df[DATA_COLUMN_TOKEN_MATCH] = [match if match else None for _, _, match in result]
         logger.info("...done")

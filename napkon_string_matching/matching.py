@@ -43,9 +43,7 @@ def match(config: Dict) -> None:
     for entry_left, entry_right in product(datasets.items(), datasets.items()):
         # Sort key entries to prevent processing of entries in both orders
         # e.g. 1 and 2 but not 2 and 1
-        sorted_entries = tuple(
-            sorted([entry_left, entry_right], key=lambda tup: tup[0].lower())
-        )
+        sorted_entries = tuple(sorted([entry_left, entry_right], key=lambda tup: tup[0].lower()))
         entry_first, entry_second = sorted_entries
 
         name_first, dataset_first = entry_first
@@ -57,9 +55,7 @@ def match(config: Dict) -> None:
         key = tuple(sorted([name_first, name_second], key=str.lower))
         if key not in comparisons:
             logger.info("compare %s and %s", name_first, name_second)
-            matches = compare(
-                dataset_first, dataset_second, **config[CONFIG_FIELD_MATCHING]
-            )
+            matches = compare(dataset_first, dataset_second, **config[CONFIG_FIELD_MATCHING])
             comparisons[key] = matches
 
     for key, matches in comparisons.items():
@@ -169,9 +165,7 @@ def _analyse(dfs: List[pd.DataFrame]) -> Dict[str, Dict[str, str]]:
     for name, df in dfs.items():
         matched = df[df[DATA_COLUMN_MATCHES].notna()]
 
-        gecco_entries = df[
-            [GECCO_PREFIX in entry for entry in df[DATA_COLUMN_VARIABLE]]
-        ]
+        gecco_entries = df[[GECCO_PREFIX in entry for entry in df[DATA_COLUMN_VARIABLE]]]
         matched_gecco_entries = matched[
             [GECCO_PREFIX in entry for entry in matched[DATA_COLUMN_VARIABLE]]
         ]

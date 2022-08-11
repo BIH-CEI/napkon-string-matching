@@ -72,9 +72,9 @@ class SheetParser:
         )
 
         # Remove leading meta information block on sheet
-        start_index = np.where(
-            sheet[DATASETTABLE_COLUMN_PROJECT] == DATASETTABLE_COLUMN_NUMBER
-        )[0][0]
+        start_index = np.where(sheet[DATASETTABLE_COLUMN_PROJECT] == DATASETTABLE_COLUMN_NUMBER)[0][
+            0
+        ]
         sheet.columns = sheet.iloc[start_index]
         sheet = sheet.iloc[start_index + 1 :, :].reset_index(drop=True)
 
@@ -106,9 +106,7 @@ class SheetParser:
             if type_ == DATASETTABLE_TYPE_HEADER:
                 # If header the category is reset
                 self.current_categories = (
-                    [question_entry]
-                    if question_entry and len(question_entry) > 1
-                    else []
+                    [question_entry] if question_entry and len(question_entry) > 1 else []
                 )
             elif any(entry in type_ for entry in ["Group", "Matrix"]):
                 # set current question multiple items for the same question
@@ -145,12 +143,8 @@ class SheetParser:
             ).replace(" ", "-"),
         }
 
-        item[DATA_COLUMN_CATEGORIES] = (
-            self.current_categories if self.current_categories else None
-        )
-        item[DATA_COLUMN_QUESTION] = (
-            self.current_question if self.current_question else None
-        )
+        item[DATA_COLUMN_CATEGORIES] = self.current_categories if self.current_categories else None
+        item[DATA_COLUMN_QUESTION] = self.current_question if self.current_question else None
 
         if options := row.get(DATASETTABLE_COLUMN_OPTIONS, None):
             # When reading these value they are not actually only separated by
