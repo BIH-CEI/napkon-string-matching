@@ -6,7 +6,6 @@ __pycache__
 .DS_Store
 
 # IDE specific
-.vscode
 .devcontainer
 .history
 
