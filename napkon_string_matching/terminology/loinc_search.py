@@ -40,7 +40,7 @@ def ask_for_credentials():
 
 def parse_table_columns(search_result=None):
     """
-    pareses columns from response
+    parses columns from response
             Parameters:
                     search_result (result_set): resultset for parsing result table from loinc search
             Returns:
@@ -54,7 +54,7 @@ def parse_table_columns(search_result=None):
 
 def parse_table_rows(search_result=None):
     """
-    pareses rows from response
+    parses rows from response
             Parameters:
                     search_result (result_set): resultset for parsing result table from loinc search
             Returns:
