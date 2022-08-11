@@ -1,2 +1,11 @@
 [tool.black]
 line-length = 100
+
+[tool.pytest.ini_options]
+addopts = "-ra -q"
+pythonpath = [
+  ".",
+]
+testpaths = [
+  "./napkon_string_matching/tests",
+]
