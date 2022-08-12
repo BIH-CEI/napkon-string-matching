@@ -25,22 +25,28 @@ from napkon_string_matching.tests import (
 
 class TestMatchPreparator(unittest.TestCase):
     def setUp(self):
-        dbConfig = {
-            "host": "localhost",
-            "port": 5432,
-            "db": "mesh",
-            "user": "postgres",
-            "passwd": "meshterms",
+        config = {
+            "terminology": {
+                "mesh": {
+                    "db": {
+                        "host": "localhost",
+                        "port": 5432,
+                        "db": "mesh",
+                        "user": "postgres",
+                        "passwd": "meshterms",
+                    }
+                }
+            }
         }
 
-        self.preparator = MatchPreparator(dbConfig)
+        self.preparator = MatchPreparator(config)
         self.test_file = Path("input/pop_test.xlsx")
 
     @unittest.skipIf(DISABLE_DB_TESTS, "requires active db contianer")
     def test_load_terms(self):
-        self.preparator.load_terms()
-        self.assertIsNotNone(self.preparator.terms)
-        self.assertIsNotNone(self.preparator.headings)
+        self.preparator.terminology_provider.initialize()
+        self.assertIsNotNone(self.preparator.terminology_provider.synonyms)
+        self.assertIsNotNone(self.preparator.terminology_provider.headings)
 
     def test_add_terms(self):
         data = pd.DataFrame(
@@ -90,8 +96,8 @@ class TestMatchPreparator(unittest.TestCase):
         references = pd.DataFrame(json.loads((data_dir / "references.json").read_text()))
         headings = pd.DataFrame(json.loads((data_dir / "headings.json").read_text()))
 
-        self.preparator.terms = references
-        self.preparator.headings = headings
+        self.preparator.terminology_provider.providers[0]._synonyms = references
+        self.preparator.terminology_provider.providers[0]._headings = headings
 
         data = pd.DataFrame(
             [
@@ -130,8 +136,8 @@ class TestMatchPreparator(unittest.TestCase):
         references = pd.DataFrame(json.loads((data_dir / "references.json").read_text()))
         headings = pd.DataFrame(json.loads((data_dir / "headings.json").read_text()))
 
-        self.preparator.terms = references
-        self.preparator.headings = headings
+        self.preparator.terminology_provider.providers[0]._synonyms = references
+        self.preparator.terminology_provider.providers[0]._headings = headings
 
         self.preparator.add_terms(data)
 
@@ -150,9 +156,7 @@ class TestMatchPreparator(unittest.TestCase):
     def test_add_terms_and_tokens_live(self):
         data = read(self.test_file)
 
-        self.preparator.load_terms()
         self.preparator.add_terms(data)
-
         self.preparator.add_tokens(data, 90, verbose=False, timeout=None)
 
         self.assertIn(DATA_COLUMN_TOKENS, data)

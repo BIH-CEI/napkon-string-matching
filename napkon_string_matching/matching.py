@@ -10,9 +10,9 @@ import pandas as pd
 
 from napkon_string_matching.compare import compare, enhance_datasets_with_matches
 from napkon_string_matching.constants import (
-    CONFIG_FIELD_DB,
     CONFIG_FIELD_FILES,
     CONFIG_FIELD_MATCHING,
+    CONFIG_FIELD_PREPARE,
     DATA_COLUMN_MATCHES,
     DATA_COLUMN_VARIABLE,
     LOG_FORMAT,
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 def match(config: Dict) -> None:
-    preparator = get_preparator(config[CONFIG_FIELD_DB])
+    preparator = get_preparator(config[CONFIG_FIELD_PREPARE])
 
     datasets = {}
     for file in config[CONFIG_FIELD_FILES]:
@@ -81,9 +81,8 @@ def match(config: Dict) -> None:
         results.write(RESULTS_FILE_PATTERN.format(**format_args), dataset)
 
 
-def get_preparator(dbConfig):
-
-    return MatchPreparator(dbConfig)
+def get_preparator(config):
+    return MatchPreparator(config)
 
 
 def prepare(

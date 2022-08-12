@@ -3,11 +3,11 @@ from typing import List
 
 import pandas as pd
 import psycopg2
-from napkon_string_matching.terminology.constants import (
+from napkon_string_matching.terminology.mesh.constants import (
     TERMINOLOGY_COLUMN_ID,
     TERMINOLOGY_COLUMN_TERM,
 )
-from napkon_string_matching.terminology.table_request import TableRequest
+from napkon_string_matching.terminology.mesh.table_request import TableRequest
 
 
 class MeshConnector:
