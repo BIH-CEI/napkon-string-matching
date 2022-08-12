@@ -154,7 +154,7 @@ class TestMatchPreparator(unittest.TestCase):
         "takes long time and requires active db contianer and local test file",
     )
     def test_add_terms_and_tokens_live(self):
-        data = read(self.test_file)
+        data = dataset_table.read(self.test_file)
 
         self.preparator.add_terms(data)
         self.preparator.add_tokens(data, 90, verbose=False, timeout=None)
