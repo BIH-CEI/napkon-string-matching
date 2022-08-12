@@ -7,7 +7,7 @@ from pathlib import Path
 
 import yaml
 
-import napkon_string_matching
+from napkon_string_matching import matching
 from napkon_string_matching.constants import LOG_FORMAT
 
 logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
@@ -28,4 +28,4 @@ if __name__ == "__main__":
 
     config = yaml.safe_load(Path(args.config).read_text())
 
-    napkon_string_matching.match(config)
+    matching.match(config)
