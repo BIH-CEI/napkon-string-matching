@@ -18,7 +18,7 @@ from napkon_string_matching.terminology.mesh import (
     TERMINOLOGY_REQUEST_TERMS,
     TableRequest,
 )
-from napkon_string_matching.terminology.terminology_provider import TerminologyProvider
+from napkon_string_matching.terminology.provider import TerminologyProvider
 from tqdm import tqdm
 
 CONFIG_FIELD_TERMINOLOGY = "terminology"

@@ -1,5 +1,5 @@
 """
-Module for the SheetParser
+Module to handle reading of `Datensatztabelle` files
 """
 
 import logging

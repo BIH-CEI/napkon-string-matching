@@ -4,7 +4,6 @@ from itertools import product
 from pathlib import Path
 from typing import Callable
 
-import napkon_string_matching
 import napkon_string_matching.compare.score_functions
 import pandas as pd
 from napkon_string_matching.constants import (

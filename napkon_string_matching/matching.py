@@ -7,19 +7,19 @@ from pathlib import Path
 from typing import Dict, List
 
 import pandas as pd
-
 from napkon_string_matching.compare.compare import compare, enhance_datasets_with_matches
-from napkon_string_matching.constants import (
-    CONFIG_FIELD_FILES,
-    CONFIG_FIELD_MATCHING,
-    CONFIG_FIELD_PREPARE,
-    DATA_COLUMN_MATCHES,
-    DATA_COLUMN_VARIABLE,
-    LOG_FORMAT,
-    RESULTS_FILE_PATTERN,
-)
+from napkon_string_matching.constants import DATA_COLUMN_MATCHES, DATA_COLUMN_VARIABLE
 from napkon_string_matching.files import dataframe, dataset_table, results
 from napkon_string_matching.prepare.match_preparator import MatchPreparator
+
+LOG_FORMAT = "%(asctime)s\t%(levelname)s\t%(name)s\t%(message)s"
+
+RESULTS_FILE_PATTERN = "output/{file_name}_{score_threshold}_{compare_column}_{score_func}.csv"
+
+CONFIG_FIELD_PREPARE = "prepare"
+CONFIG_FIELD_MATCHING = "matching"
+CONFIG_FIELD_FILES = "files"
+
 
 logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
