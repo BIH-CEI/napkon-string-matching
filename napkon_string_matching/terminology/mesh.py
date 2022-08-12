@@ -1,13 +1,57 @@
+import logging
 from abc import abstractmethod
+from dataclasses import dataclass
 from typing import List
 
 import pandas as pd
 import psycopg2
-from napkon_string_matching.terminology.mesh.constants import (
-    TERMINOLOGY_COLUMN_ID,
-    TERMINOLOGY_COLUMN_TERM,
-)
-from napkon_string_matching.terminology.mesh.table_request import TableRequest
+from napkon_string_matching.terminology.provider_base import ProviderBase
+
+CONFIG_FIELD_DB = "db"
+
+TERMINOLOGY_COLUMN_TERM = "Term"
+TERMINOLOGY_COLUMN_ID = "Id"
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass(kw_only=True, slots=True)
+class TableRequest:
+    """
+    Specifies how to address/extract data from the database
+    """
+
+    table_name: str
+    """Name of the table to access"""
+
+    id_column: str
+    """Name of the column to use as an identifier"""
+
+    term_column: str
+    """Name of the column to use a the term"""
+
+
+TERMINOLOGY_REQUEST_TERMS = [
+    TableRequest(
+        table_name="EntryTerms",
+        id_column="MainHeadingsId",
+        term_column="DescriptionGerman",
+    ),
+    TableRequest(
+        table_name="MainHeadings",
+        id_column="Id",
+        term_column="DescriptionGerman",
+    ),
+]
+
+
+TERMINOLOGY_REQUEST_HEADINGS = [
+    TableRequest(
+        table_name="MainHeadings",
+        id_column="Id",
+        term_column="DescriptionGerman",
+    ),
+]
 
 
 class MeshConnector:
@@ -119,3 +163,25 @@ class PostgresMeshConnector(MeshConnector):
 
         finally:
             cursor.close()
+
+
+class MeshProvider(ProviderBase):
+    def __init__(self, config) -> None:
+        super().__init__()
+        self.config = config
+
+        self.term_requests = TERMINOLOGY_REQUEST_TERMS
+        self.heading_requests = TERMINOLOGY_REQUEST_HEADINGS
+
+    def initialize(self) -> None:
+        if not self.initialized:
+            logger.info("load terms from database...")
+            with PostgresMeshConnector(**self.config[CONFIG_FIELD_DB]) as connector:
+                logger.info("...load MeSH terms...")
+                self._synonyms = connector.read_tables(self.term_requests)
+                self._headings = connector.read_tables(self.heading_requests)
+            logger.info(
+                "...got %i headings and %i total synonyms",
+                len(self._headings),
+                len(self._synonyms),
+            )

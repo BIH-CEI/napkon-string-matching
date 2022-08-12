@@ -1,1 +1,0 @@
-CONFIG_FIELD_MESH = "mesh"

@@ -1,1 +1,0 @@
-from napkon_string_matching.terminology.terminology_provider import TerminologyProvider

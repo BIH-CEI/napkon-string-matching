@@ -1,10 +1,11 @@
 from typing import List
 
 import pandas as pd
-from napkon_string_matching.terminology.constants import CONFIG_FIELD_MESH
 from napkon_string_matching.terminology.mesh import MeshProvider
 
 from .provider_base import ProviderBase
+
+CONFIG_FIELD_MESH = "mesh"
 
 
 class TerminologyProvider:

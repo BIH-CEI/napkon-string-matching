@@ -3,10 +3,7 @@ from typing import Dict, List, Tuple
 import nltk
 import numpy as np
 import pandas as pd
-from napkon_string_matching.terminology.mesh.constants import (
-    TERMINOLOGY_COLUMN_ID,
-    TERMINOLOGY_COLUMN_TERM,
-)
+from napkon_string_matching.terminology.mesh import TERMINOLOGY_COLUMN_ID, TERMINOLOGY_COLUMN_TERM
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from rapidfuzz import fuzz
