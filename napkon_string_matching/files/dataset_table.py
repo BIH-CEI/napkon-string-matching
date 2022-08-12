@@ -1,7 +1,9 @@
 """
-Module for the SheetParser
+Module to handle reading of `Datensatztabelle` files
 """
 
+import logging
+import warnings
 from pathlib import Path
 from typing import Any, Dict
 
@@ -17,20 +19,25 @@ from napkon_string_matching.constants import (
     DATA_COLUMN_SHEET,
     DATA_COLUMN_VARIABLE,
 )
-from napkon_string_matching.files.dataset_table import (
-    DATASETTABLE_COLUMN_DB_COLUMN,
-    DATASETTABLE_COLUMN_FILE,
-    DATASETTABLE_COLUMN_ITEM,
-    DATASETTABLE_COLUMN_NUMBER,
-    DATASETTABLE_COLUMN_OPTIONS,
-    DATASETTABLE_COLUMN_PROJECT,
-    DATASETTABLE_COLUMN_QUESTION,
-    DATASETTABLE_COLUMN_SHEET_NAME,
-    DATASETTABLE_COLUMN_TYPE,
-    DATASETTABLE_COLUMN_VARIABLE,
-    DATASETTABLE_ITEM_SKIPABLE,
-    DATASETTABLE_TYPE_HEADER,
-)
+
+DATASETTABLE_COLUMN_DB_COLUMN = "Datenbankspalte"
+DATASETTABLE_COLUMN_FILE = "FileName"
+DATASETTABLE_COLUMN_ITEM = "Item"
+DATASETTABLE_COLUMN_OPTIONS = "Optionen (durch Semikolons getrennt), Lookuptabelle"
+DATASETTABLE_COLUMN_PROJECT = "Projekt"
+DATASETTABLE_COLUMN_QUESTION = "Frage"
+DATASETTABLE_COLUMN_NUMBER = "Nr."
+DATASETTABLE_COLUMN_SHEET_NAME = "SheetName"
+DATASETTABLE_COLUMN_TYPE = "Fragetyp (Konfiguration)"
+DATASETTABLE_COLUMN_VARIABLE = "Datenbankspalte"
+
+DATASETTABLE_TYPE_GROUP_DEFAULT = "StandardGroup"
+DATASETTABLE_TYPE_GROUP_HORIZONAL = "HorizontalGroup"
+DATASETTABLE_TYPE_HEADER = "Headline"
+
+DATASETTABLE_ITEM_SKIPABLE = "<->"
+
+logger = logging.getLogger(__name__)
 
 
 class SheetParser:
@@ -157,3 +164,49 @@ class SheetParser:
             item[DATA_COLUMN_OPTIONS] = None
 
         return item
+
+
+def read(xlsx_file: str | Path, *args, **kwargs) -> pd.DataFrame:
+    """
+    Read a xlsx file
+
+    The contents are returned as a list of dictionaries containing the row contents
+    and meta information.
+
+    attr
+    ---
+        xlsx_file (str|Path): file to read
+
+    returns
+    ---
+        List[dict]: parsed result
+    """
+
+    logger.info("read from file %s...", str(xlsx_file))
+
+    with warnings.catch_warnings(record=True):
+        warnings.simplefilter("always")
+        file = pd.ExcelFile(xlsx_file, engine="openpyxl")
+    sheet_names = file.sheet_names[2:]
+
+    logger.info("...reading %i sheets...", len(sheet_names))
+
+    parser = SheetParser()
+    sheets = []
+    for sheet_name in sheet_names:
+        data_list = parser.parse(file, sheet_name, *args, **kwargs)
+        if data_list is not None:
+            sheets.append(data_list)
+
+    if not sheets:
+        logger.warn("...dit not get any entries")
+        return None
+
+    result = pd.concat(sheets)
+
+    # Reset to get a valid continous index at the end
+    result.set_index(DATA_COLUMN_IDENTIFIER, inplace=True)
+
+    logger.info("...got %i entries", len(result))
+
+    return result

@@ -1,11 +1,11 @@
 import unittest
 
-from napkon_string_matching.terminology.mesh.constants import (
+from napkon_string_matching.terminology.mesh import (
     TERMINOLOGY_COLUMN_ID,
     TERMINOLOGY_COLUMN_TERM,
     TERMINOLOGY_REQUEST_TERMS,
+    PostgresMeshConnector,
 )
-from napkon_string_matching.terminology.mesh.mesh_connector import PostgresMeshConnector
 from napkon_string_matching.tests import DISABLE_DB_TESTS
 
 

@@ -1,12 +1,7 @@
 import logging
 from pathlib import Path
-from unicodedata import category
-from xml.dom.minidom import Identified
 
 import pandas as pd
-
-logger = logging.getLogger(__name__)
-
 from napkon_string_matching.constants import (
     DATA_COLUMN_CATEGORIES,
     DATA_COLUMN_ITEM,
@@ -14,14 +9,16 @@ from napkon_string_matching.constants import (
     DATA_COLUMN_QUESTION,
     DATA_COLUMN_VARIABLE,
 )
-from napkon_string_matching.files.results.constants import (
-    RESULT_COLUMN_IDENTIFIER,
-    RESULT_COLUMN_MATCH_IDENTIFIER,
-    RESULT_COLUMN_MATCH_SCORE,
-    RESULT_COLUMN_MATCH_TERM,
-    RESULT_COLUMN_TERM,
-    RESULT_COLUMN_VARIABLE,
-)
+
+RESULT_COLUMN_IDENTIFIER = "Identifier"
+RESULT_COLUMN_TERM = "Term"
+RESULT_COLUMN_OPTIONS = "Options"
+RESULT_COLUMN_VARIABLE = "Variable"
+RESULT_COLUMN_MATCH_SCORE = "MatchScore"
+RESULT_COLUMN_MATCH_IDENTIFIER = "MatchIdentifier"
+RESULT_COLUMN_MATCH_TERM = "MatchTerm"
+
+logger = logging.getLogger(__name__)
 
 
 def write(file_name: str | Path, results: pd.DataFrame) -> None:
