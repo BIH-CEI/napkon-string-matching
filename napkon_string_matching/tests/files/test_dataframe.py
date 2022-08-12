@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 from napkon_string_matching.constants import DATA_COLUMN_IDENTIFIER
-from napkon_string_matching.files.dataframe import read, write
+from napkon_string_matching.files import dataframe
 from pandas.testing import assert_frame_equal
 
 
@@ -21,8 +21,8 @@ class TestReadWrite(unittest.TestCase):
         if file.exists():
             file.unlink()
 
-        write(file, df)
-        result = read(file)
+        dataframe.write(file, df)
+        result = dataframe.read(file)
 
         file.unlink()
 
