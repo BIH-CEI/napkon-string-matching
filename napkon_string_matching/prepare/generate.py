@@ -1,22 +1,22 @@
-from itertools import product
 from typing import Dict, List, Tuple
 
 import nltk
 import numpy as np
 import pandas as pd
-from napkon_string_matching.prepare import PREPARE_COLUMN_SCORE
-from napkon_string_matching.prepare.constants import PREPARE_REMOVE_SYMBOLS
 from napkon_string_matching.terminology.mesh.constants import (
     TERMINOLOGY_COLUMN_ID,
     TERMINOLOGY_COLUMN_TERM,
 )
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
 from rapidfuzz import fuzz
 
 nltk.download("punkt")
 nltk.download("stopwords")
 
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
+
+PREPARE_REMOVE_SYMBOLS = "!?,.()[]:;*"
+PREPARE_COLUMN_SCORE = "Score"
 
 
 def gen_tokens(

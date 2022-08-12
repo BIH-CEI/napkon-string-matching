@@ -1,5 +1,0 @@
-CONFIG_FIELD_TERMINOLOGY = "terminology"
-
-PREPARE_COLUMN_SCORE = "Score"
-
-PREPARE_REMOVE_SYMBOLS = "!?,.()[]:;*"

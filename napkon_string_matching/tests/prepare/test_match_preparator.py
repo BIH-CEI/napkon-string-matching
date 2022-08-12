@@ -15,7 +15,7 @@ from napkon_string_matching.constants import (
     DATA_COLUMN_TOKENS,
 )
 from napkon_string_matching.files.dataset_table import read
-from napkon_string_matching.prepare import MatchPreparator
+from napkon_string_matching.prepare.match_preparator import MatchPreparator
 from napkon_string_matching.tests import (
     DISABLE_DB_TESTS,
     DISABLE_LOCAL_FILE_TESTS,

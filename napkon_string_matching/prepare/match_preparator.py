@@ -12,7 +12,6 @@ from napkon_string_matching.constants import (
     DATA_COLUMN_TOKEN_MATCH,
     DATA_COLUMN_TOKENS,
 )
-from napkon_string_matching.prepare.constants import CONFIG_FIELD_TERMINOLOGY
 from napkon_string_matching.prepare.generate import gen_term, gen_tokens
 from napkon_string_matching.terminology import TerminologyProvider
 from napkon_string_matching.terminology.mesh.constants import (
@@ -21,6 +20,9 @@ from napkon_string_matching.terminology.mesh.constants import (
 )
 from napkon_string_matching.terminology.mesh.table_request import TableRequest
 from tqdm import tqdm
+
+CONFIG_FIELD_TERMINOLOGY = "terminology"
+
 
 logger = logging.getLogger(__name__)
 

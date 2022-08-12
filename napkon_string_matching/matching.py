@@ -19,7 +19,7 @@ from napkon_string_matching.constants import (
     RESULTS_FILE_PATTERN,
 )
 from napkon_string_matching.files import dataframe, dataset_table, results
-from napkon_string_matching.prepare import MatchPreparator
+from napkon_string_matching.prepare.match_preparator import MatchPreparator
 
 logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 logger = logging.getLogger(__name__)

@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 import pandas as pd
-from napkon_string_matching.prepare import gen_term, gen_tokens
+from napkon_string_matching.prepare.generate import gen_term, gen_tokens
 
 
 class TestGenToken(unittest.TestCase):
@@ -55,8 +55,12 @@ class TestGenToken(unittest.TestCase):
             (["Einschlusskriterien!"], "[Ursache]", "Andere Ursache, bitte angeben:"),
             (
                 ["Patienteninformationen"],
-                "Hatte der/die Patient*in in den letzten 14 Tagen vor Beginn seiner/ihrer Beschwerden wissentlich Kontakt mit einer wahrscheinlich oder nachgewiesenermaßen mit SARS-CoV-2 infizierten Person?",
-                "Hatte der/die Patient*in in den letzten 14 Tagen vor Beginn seiner/ihrer Beschwerden wissentlich Kontakt mit einer wahrscheinlich oder nachgewiesenermaßen mit SARS-CoV-2 infizierten Person?",
+                "Hatte der/die Patient*in in den letzten 14 Tagen vor Beginn seiner/ihrer \
+                    Beschwerden wissentlich Kontakt mit einer wahrscheinlich oder \
+                    nachgewiesenermaßen mit SARS-CoV-2 infizierten Person?",
+                "Hatte der/die Patient*in in den letzten 14 Tagen vor Beginn seiner/ihrer \
+                    Beschwerden wissentlich Kontakt mit einer wahrscheinlich oder \
+                    nachgewiesenermaßen mit SARS-CoV-2 infizierten Person?",
             ),
             (
                 ["Patienteninformationen"],
@@ -67,7 +71,9 @@ class TestGenToken(unittest.TestCase):
 
         expected_list = [
             "angeben bitte Einschlusskriterien Ursache".split(),
-            "14 Beginn Beschwerden der/die infizierten Kontakt letzten nachgewiesenermaßen Patient Patienteninformationen Person SARS-CoV-2 seiner/ihrer Tagen wahrscheinlich wissentlich".split(),
+            "14 Beginn Beschwerden der/die infizierten Kontakt letzten nachgewiesenermaßen Patient \
+                Patienteninformationen Person SARS-CoV-2 seiner/ihrer Tagen wahrscheinlich \
+                wissentlich".split(),
             "1 < Altersgruppen gibt Haushalt Kinder Patienteninformationen Wieviele".split(),
         ]
 
