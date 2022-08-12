@@ -12,17 +12,14 @@ class TerminologyProvider:
         self.config = config
 
         self.providers: List[ProviderBase] = []
+        self.providers.append(MeshProvider(self.config[CONFIG_FIELD_MESH]))
 
     @property
     def initialized(self) -> bool:
-        return len(self.providers) > 0 and all(
-            [provider.initialized for provider in self.providers]
-        )
+        return all([provider.initialized for provider in self.providers])
 
     def initialize(self) -> None:
         if not self.initialized:
-            self.providers.append(MeshProvider(self.config[CONFIG_FIELD_MESH]))
-
             for provider in self.providers:
                 provider.initialize()
 
