@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from napkon_string_matching.prepare import PREPARE_COLUMN_SCORE
 from napkon_string_matching.prepare.constants import PREPARE_REMOVE_SYMBOLS
-from napkon_string_matching.terminology import (
+from napkon_string_matching.terminology.mesh.constants import (
     TERMINOLOGY_COLUMN_ID,
     TERMINOLOGY_COLUMN_TERM,
 )
@@ -30,7 +30,8 @@ def gen_tokens(
 
     Returns
     ---
-        Tuple[List[str], List[str], Dict[str, str]]: Tuple of headings, ids and the complete match information
+        Tuple[List[str], List[str], Dict[str, str]]: Tuple of headings,
+        ids and the complete match information
     """
     ref_copy = reference.copy(deep=True)
 

@@ -1,9 +1,12 @@
-db:
-  host: localhost
-  port: 5432
-  db: mesh
-  user: postgres
-  passwd: meshterms
+prepare:
+  terminology:
+    mesh:
+      db:
+        host: localhost
+        port: 5432
+        db: mesh
+        user: postgres
+        passwd: meshterms
 
 matching:
   score_threshold: 0.7
