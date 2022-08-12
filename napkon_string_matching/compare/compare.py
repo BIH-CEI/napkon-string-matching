@@ -7,12 +7,6 @@ from typing import Callable
 import napkon_string_matching
 import napkon_string_matching.compare.score_functions
 import pandas as pd
-from napkon_string_matching.compare.constants import (
-    CACHE_FILE_PATTERN,
-    COLUMN_SCORE,
-    SUFFIX_LEFT,
-    SUFFIX_RIGHT,
-)
 from napkon_string_matching.constants import (
     DATA_COLUMN_CATEGORIES,
     DATA_COLUMN_IDENTIFIER,
@@ -23,6 +17,14 @@ from napkon_string_matching.constants import (
 )
 from napkon_string_matching.files import dataframe
 from tqdm import tqdm
+
+SUFFIX_LEFT = "_left"
+SUFFIX_RIGHT = "_right"
+
+COLUMN_SCORE = "Score"
+
+CACHE_FILE_PATTERN = "compared/cache_score_{}.json"
+
 
 logger = logging.getLogger(__name__)
 

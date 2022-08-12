@@ -8,7 +8,7 @@ from typing import Dict, List
 
 import pandas as pd
 
-from napkon_string_matching.compare import compare, enhance_datasets_with_matches
+from napkon_string_matching.compare.compare import compare, enhance_datasets_with_matches
 from napkon_string_matching.constants import (
     CONFIG_FIELD_FILES,
     CONFIG_FIELD_MATCHING,
