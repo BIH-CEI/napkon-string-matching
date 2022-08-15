@@ -1,7 +1,7 @@
 # import REST and parsing modules
-import requests
-import pandas as pd
 import numpy as np
+import pandas as pd
+import requests
 from bs4 import BeautifulSoup
 
 req_strings = {
@@ -63,9 +63,7 @@ def parse_table_rows(search_result=None):
     """
     body = search_result.find("tbody")
     table_rows = body.findAll("tr")
-    return np.array(
-        [np.array([x.text for x in row.findAll("td")]) for row in table_rows]
-    )
+    return np.array([np.array([x.text for x in row.findAll("td")]) for row in table_rows])
 
 
 def build_dataframe(table: np.array, columns: list = []):
