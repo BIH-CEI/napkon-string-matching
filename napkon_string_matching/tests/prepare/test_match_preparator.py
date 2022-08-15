@@ -150,11 +150,13 @@ class TestMatchPreparator(unittest.TestCase):
         self.assertEqual("Dialyse Sonstiges".split(), data[DATA_COLUMN_TOKENS][0])
 
     @unittest.skipIf(
-        DISABLE_DB_TESTS or DISABLE_LOCAL_FILE_TESTS or DISABLE_LONG_LASTING_TESTS,
+        DISABLE_DB_TESTS or DISABLE_LOCAL_FILE_TESTS,
         "takes long time and requires active db contianer and local test file",
     )
     def test_add_terms_and_tokens_live(self):
         data = dataset_table.read(self.test_file)
+
+        data = data[:100]
 
         self.preparator.add_terms(data)
         self.preparator.add_tokens(data, 90, verbose=False, timeout=None)
