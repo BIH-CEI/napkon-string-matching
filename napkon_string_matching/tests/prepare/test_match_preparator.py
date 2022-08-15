@@ -91,7 +91,7 @@ class TestMatchPreparator(unittest.TestCase):
         self.assertIn(DATA_COLUMN_TERM, data)
 
     def test_add_tokens(self):
-        data_dir = Path("napkon_string_matching/tests/prepare/data")
+        data_dir = Path("napkon_string_matching/tests/data")
 
         references = pd.DataFrame(json.loads((data_dir / "references.json").read_text()))
         headings = pd.DataFrame(json.loads((data_dir / "headings.json").read_text()))
@@ -131,7 +131,7 @@ class TestMatchPreparator(unittest.TestCase):
             ]
         )
 
-        data_dir = Path("napkon_string_matching/tests/prepare/data")
+        data_dir = Path("napkon_string_matching/tests/data")
 
         references = pd.DataFrame(json.loads((data_dir / "references.json").read_text()))
         headings = pd.DataFrame(json.loads((data_dir / "headings.json").read_text()))
