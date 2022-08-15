@@ -1,12 +1,12 @@
 # Python cache
 __pycache__
+dist
 .venv
 
 # OS specific
 .DS_Store
 
 # IDE specific
-.vscode
 .devcontainer
 .history
 

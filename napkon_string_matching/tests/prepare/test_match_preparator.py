@@ -14,33 +14,35 @@ from napkon_string_matching.constants import (
     DATA_COLUMN_TOKEN_MATCH,
     DATA_COLUMN_TOKENS,
 )
-from napkon_string_matching.files.dataset_table import read
-from napkon_string_matching.prepare import MatchPreparator
-from napkon_string_matching.tests import (
-    DISABLE_DB_TESTS,
-    DISABLE_LOCAL_FILE_TESTS,
-    DISABLE_LONG_LASTING_TESTS,
-)
+from napkon_string_matching.files import dataset_table
+from napkon_string_matching.prepare.match_preparator import MatchPreparator
+from napkon_string_matching.tests import DISABLE_DB_TESTS, DISABLE_LOCAL_FILE_TESTS
 
 
 class TestMatchPreparator(unittest.TestCase):
     def setUp(self):
-        dbConfig = {
-            "host": "localhost",
-            "port": 5432,
-            "db": "mesh",
-            "user": "postgres",
-            "passwd": "meshterms",
+        config = {
+            "terminology": {
+                "mesh": {
+                    "db": {
+                        "host": "localhost",
+                        "port": 5432,
+                        "db": "mesh",
+                        "user": "postgres",
+                        "passwd": "meshterms",
+                    }
+                }
+            }
         }
 
-        self.preparator = MatchPreparator(dbConfig)
+        self.preparator = MatchPreparator(config)
         self.test_file = Path("input/pop_test.xlsx")
 
     @unittest.skipIf(DISABLE_DB_TESTS, "requires active db contianer")
     def test_load_terms(self):
-        self.preparator.load_terms()
-        self.assertIsNotNone(self.preparator.terms)
-        self.assertIsNotNone(self.preparator.headings)
+        self.preparator.terminology_provider.initialize()
+        self.assertIsNotNone(self.preparator.terminology_provider.synonyms)
+        self.assertIsNotNone(self.preparator.terminology_provider.headings)
 
     def test_add_terms(self):
         data = pd.DataFrame(
@@ -79,21 +81,19 @@ class TestMatchPreparator(unittest.TestCase):
         "requires active db contianer and local test file",
     )
     def test_add_terms_live(self):
-        data = read(self.test_file)
+        data = dataset_table.read(self.test_file)
 
         self.preparator.add_terms(data)
         self.assertIn(DATA_COLUMN_TERM, data)
 
     def test_add_tokens(self):
-        data_dir = Path("napkon_string_matching/tests/prepare/data")
+        data_dir = Path("napkon_string_matching/tests/data")
 
-        references = pd.DataFrame(
-            json.loads((data_dir / "references.json").read_text())
-        )
+        references = pd.DataFrame(json.loads((data_dir / "references.json").read_text()))
         headings = pd.DataFrame(json.loads((data_dir / "headings.json").read_text()))
 
-        self.preparator.terms = references
-        self.preparator.headings = headings
+        self.preparator.terminology_provider.providers[0]._synonyms = references
+        self.preparator.terminology_provider.providers[0]._headings = headings
 
         data = pd.DataFrame(
             [
@@ -106,13 +106,14 @@ class TestMatchPreparator(unittest.TestCase):
             ]
         )
 
-        self.preparator.add_tokens(data, 80)
+        self.preparator.add_tokens(data, 0.1, verbose=False, timeout=None)
 
         self.assertIn(DATA_COLUMN_TOKENS, data)
         self.assertIn(DATA_COLUMN_TOKEN_IDS, data)
         self.assertIn(DATA_COLUMN_TOKEN_MATCH, data)
 
-        self.assertEqual("Dialyse Sonstiges".split(), data[DATA_COLUMN_TOKENS][0])
+        self.assertTrue(any(["Dialyse" in entry for entry in data[DATA_COLUMN_TOKENS][0]]))
+        self.assertTrue(any(["Sonstiges" in entry for entry in data[DATA_COLUMN_TOKENS][0]]))
 
     def test_add_terms_and_tokens(self):
         data = pd.DataFrame(
@@ -127,36 +128,35 @@ class TestMatchPreparator(unittest.TestCase):
             ]
         )
 
-        data_dir = Path("napkon_string_matching/tests/prepare/data")
+        data_dir = Path("napkon_string_matching/tests/data")
 
-        references = pd.DataFrame(
-            json.loads((data_dir / "references.json").read_text())
-        )
+        references = pd.DataFrame(json.loads((data_dir / "references.json").read_text()))
         headings = pd.DataFrame(json.loads((data_dir / "headings.json").read_text()))
 
-        self.preparator.terms = references
-        self.preparator.headings = headings
+        self.preparator.terminology_provider.providers[0]._synonyms = references
+        self.preparator.terminology_provider.providers[0]._headings = headings
 
         self.preparator.add_terms(data)
 
-        self.preparator.add_tokens(data, 90, verbose=False, timeout=None)
+        self.preparator.add_tokens(data, 0.1, verbose=False, timeout=None)
 
         self.assertIn(DATA_COLUMN_TOKENS, data)
         self.assertIn(DATA_COLUMN_TOKEN_IDS, data)
         self.assertIn(DATA_COLUMN_TOKEN_MATCH, data)
 
-        self.assertEqual("Dialyse Sonstiges".split(), data[DATA_COLUMN_TOKENS][0])
+        self.assertTrue(any(["Dialyse" in entry for entry in data[DATA_COLUMN_TOKENS][0]]))
+        self.assertTrue(any(["Sonstiges" in entry for entry in data[DATA_COLUMN_TOKENS][0]]))
 
     @unittest.skipIf(
-        DISABLE_DB_TESTS or DISABLE_LOCAL_FILE_TESTS or DISABLE_LONG_LASTING_TESTS,
+        DISABLE_DB_TESTS or DISABLE_LOCAL_FILE_TESTS,
         "takes long time and requires active db contianer and local test file",
     )
     def test_add_terms_and_tokens_live(self):
-        data = read(self.test_file)
+        data = dataset_table.read(self.test_file)
 
-        self.preparator.load_terms()
+        data = data[:100]
+
         self.preparator.add_terms(data)
-
         self.preparator.add_tokens(data, 90, verbose=False, timeout=None)
 
         self.assertIn(DATA_COLUMN_TOKENS, data)

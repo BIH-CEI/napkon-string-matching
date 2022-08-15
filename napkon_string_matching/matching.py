@@ -8,25 +8,23 @@ from typing import Dict, List
 
 import pandas as pd
 
-from napkon_string_matching.compare import compare, enhance_datasets_with_matches
-from napkon_string_matching.constants import (
-    CONFIG_FIELD_DB,
-    CONFIG_FIELD_FILES,
-    CONFIG_FIELD_MATCHING,
-    DATA_COLUMN_MATCHES,
-    DATA_COLUMN_VARIABLE,
-    LOG_FORMAT,
-    RESULTS_FILE_PATTERN,
-)
+from napkon_string_matching.compare.compare import compare, enhance_datasets_with_matches
+from napkon_string_matching.constants import DATA_COLUMN_MATCHES, DATA_COLUMN_VARIABLE
 from napkon_string_matching.files import dataframe, dataset_table, results
-from napkon_string_matching.prepare import MatchPreparator
+from napkon_string_matching.prepare.match_preparator import MatchPreparator
 
-logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
+RESULTS_FILE_PATTERN = "output/{file_name}_{score_threshold}_{compare_column}_{score_func}.csv"
+
+CONFIG_FIELD_PREPARE = "prepare"
+CONFIG_FIELD_MATCHING = "matching"
+CONFIG_FIELD_FILES = "files"
+
+
 logger = logging.getLogger(__name__)
 
 
 def match(config: Dict) -> None:
-    preparator = get_preparator(config[CONFIG_FIELD_DB])
+    preparator = get_preparator(config[CONFIG_FIELD_PREPARE])
 
     datasets = {}
     for file in config[CONFIG_FIELD_FILES]:
@@ -43,9 +41,7 @@ def match(config: Dict) -> None:
     for entry_left, entry_right in product(datasets.items(), datasets.items()):
         # Sort key entries to prevent processing of entries in both orders
         # e.g. 1 and 2 but not 2 and 1
-        sorted_entries = tuple(
-            sorted([entry_left, entry_right], key=lambda tup: tup[0].lower())
-        )
+        sorted_entries = tuple(sorted([entry_left, entry_right], key=lambda tup: tup[0].lower()))
         entry_first, entry_second = sorted_entries
 
         name_first, dataset_first = entry_first
@@ -57,9 +53,7 @@ def match(config: Dict) -> None:
         key = tuple(sorted([name_first, name_second], key=str.lower))
         if key not in comparisons:
             logger.info("compare %s and %s", name_first, name_second)
-            matches = compare(
-                dataset_first, dataset_second, **config[CONFIG_FIELD_MATCHING]
-            )
+            matches = compare(dataset_first, dataset_second, **config[CONFIG_FIELD_MATCHING])
             comparisons[key] = matches
 
     for key, matches in comparisons.items():
@@ -85,9 +79,8 @@ def match(config: Dict) -> None:
         results.write(RESULTS_FILE_PATTERN.format(**format_args), dataset)
 
 
-def get_preparator(dbConfig):
-
-    return MatchPreparator(dbConfig)
+def get_preparator(config):
+    return MatchPreparator(config)
 
 
 def prepare(
@@ -169,9 +162,7 @@ def _analyse(dfs: List[pd.DataFrame]) -> Dict[str, Dict[str, str]]:
     for name, df in dfs.items():
         matched = df[df[DATA_COLUMN_MATCHES].notna()]
 
-        gecco_entries = df[
-            [GECCO_PREFIX in entry for entry in df[DATA_COLUMN_VARIABLE]]
-        ]
+        gecco_entries = df[[GECCO_PREFIX in entry for entry in df[DATA_COLUMN_VARIABLE]]]
         matched_gecco_entries = matched[
             [GECCO_PREFIX in entry for entry in matched[DATA_COLUMN_VARIABLE]]
         ]

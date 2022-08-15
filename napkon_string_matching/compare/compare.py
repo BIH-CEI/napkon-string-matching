@@ -4,15 +4,8 @@ from itertools import product
 from pathlib import Path
 from typing import Callable
 
-import napkon_string_matching
 import napkon_string_matching.compare.score_functions
 import pandas as pd
-from napkon_string_matching.compare.constants import (
-    CACHE_FILE_PATTERN,
-    COLUMN_SCORE,
-    SUFFIX_LEFT,
-    SUFFIX_RIGHT,
-)
 from napkon_string_matching.constants import (
     DATA_COLUMN_CATEGORIES,
     DATA_COLUMN_IDENTIFIER,
@@ -23,6 +16,14 @@ from napkon_string_matching.constants import (
 )
 from napkon_string_matching.files import dataframe
 from tqdm import tqdm
+
+SUFFIX_LEFT = "_left"
+SUFFIX_RIGHT = "_right"
+
+COLUMN_SCORE = "Score"
+
+CACHE_FILE_PATTERN = "compared/cache_score_{}.json"
+
 
 logger = logging.getLogger(__name__)
 
@@ -85,14 +86,9 @@ def _gen_compare_dataframe_cached(
 
 
 def _hash_dataframes(dfs, *args, **kwargs) -> str:
-    hashes = [
-        md5(df.to_csv().encode("utf-8"), usedforsecurity=False).hexdigest()
-        for df in dfs
-    ]
+    hashes = [md5(df.to_csv().encode("utf-8"), usedforsecurity=False).hexdigest() for df in dfs]
 
-    hashes += [
-        md5(str(arg).encode("utf-8"), usedforsecurity=False).hexdigest() for arg in args
-    ]
+    hashes += [md5(str(arg).encode("utf-8"), usedforsecurity=False).hexdigest() for arg in args]
     hashes += [
         md5(str(kwargs).encode("utf-8"), usedforsecurity=False).hexdigest()
         for kwargs in kwargs.items()
@@ -123,9 +119,7 @@ def _gen_compare_dataframe(
     df1_filtered = _get_na_filtered(df_left, column=compare_column)
     df2_filtered = _get_na_filtered(df_right, column=compare_column)
 
-    compare_df = _gen_permutation(
-        df1_filtered, df2_filtered, compare_column=compare_column
-    )
+    compare_df = _gen_permutation(df1_filtered, df2_filtered, compare_column=compare_column)
 
     logger.info("calculate score")
     compare_df[COLUMN_SCORE] = [
@@ -151,9 +145,7 @@ def _gen_permutation(
     IDX_LEFT = DATA_COLUMN_IDENTIFIER + SUFFIX_LEFT
     IDX_RIGHT = DATA_COLUMN_IDENTIFIER + SUFFIX_RIGHT
 
-    join_df = pd.DataFrame(
-        product(df_left.index, df_right.index), columns=[IDX_LEFT, IDX_RIGHT]
-    )
+    join_df = pd.DataFrame(product(df_left.index, df_right.index), columns=[IDX_LEFT, IDX_RIGHT])
 
     # Merge the product of both indices with their dataframes
     permutation = _merge_df(
@@ -249,8 +241,7 @@ def _enhance_dataset_with_matches(
             (
                 score,
                 identifier,
-                (f"{','.join(categories)}:" if categories else "")
-                + f"{question}:{item}",
+                (f"{','.join(categories)}:" if categories else "") + f"{question}:{item}",
             )
             for score, identifier, categories, question, item in zip(
                 matched_entries[COLUMN_SCORE],

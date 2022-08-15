@@ -1,13 +1,60 @@
+import logging
 from abc import abstractmethod
-from typing import List
+from dataclasses import dataclass
+from typing import List, Tuple
 
+import numpy as np
 import pandas as pd
 import psycopg2
-from napkon_string_matching.terminology.constants import (
-    TERMINOLOGY_COLUMN_ID,
-    TERMINOLOGY_COLUMN_TERM,
-)
-from napkon_string_matching.terminology.table_request import TableRequest
+from napkon_string_matching.compare.score_functions import fuzzy_match
+from napkon_string_matching.terminology.provider_base import ProviderBase
+
+CONFIG_FIELD_DB = "db"
+
+TERMINOLOGY_COLUMN_TERM = "Term"
+TERMINOLOGY_COLUMN_ID = "Id"
+TERMINOLOGY_COLUMN_SCORE = "Score"
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass(kw_only=True, slots=True)
+class TableRequest:
+    """
+    Specifies how to address/extract data from the database
+    """
+
+    table_name: str
+    """Name of the table to access"""
+
+    id_column: str
+    """Name of the column to use as an identifier"""
+
+    term_column: str
+    """Name of the column to use a the term"""
+
+
+TERMINOLOGY_REQUEST_TERMS = [
+    TableRequest(
+        table_name="EntryTerms",
+        id_column="MainHeadingsId",
+        term_column="DescriptionGerman",
+    ),
+    TableRequest(
+        table_name="MainHeadings",
+        id_column="Id",
+        term_column="DescriptionGerman",
+    ),
+]
+
+
+TERMINOLOGY_REQUEST_HEADINGS = [
+    TableRequest(
+        table_name="MainHeadings",
+        id_column="Id",
+        term_column="DescriptionGerman",
+    ),
+]
 
 
 class MeshConnector:
@@ -28,14 +75,13 @@ class MeshConnector:
             DataFrame: Extracted data with columns for id and term
         """
 
-        statement = f'SELECT "{request.id_column}", "{request.term_column}" FROM "{request.table_name}";'
+        statement = (
+            f'SELECT "{request.id_column}", "{request.term_column}" FROM "{request.table_name}";'
+        )
         results = self._execute(statement)
 
         terms = pd.DataFrame(
-            [
-                {TERMINOLOGY_COLUMN_ID: id, TERMINOLOGY_COLUMN_TERM: term}
-                for id, term in results
-            ]
+            [{TERMINOLOGY_COLUMN_ID: id, TERMINOLOGY_COLUMN_TERM: term} for id, term in results]
         )
 
         # Drop rows that may not contain an ID or a term
@@ -120,3 +166,55 @@ class PostgresMeshConnector(MeshConnector):
 
         finally:
             cursor.close()
+
+
+class MeshProvider(ProviderBase):
+    def __init__(self, config) -> None:
+        super().__init__()
+        self.config = config
+
+        self.term_requests = TERMINOLOGY_REQUEST_TERMS
+        self.heading_requests = TERMINOLOGY_REQUEST_HEADINGS
+
+    def initialize(self) -> None:
+        if not self.initialized:
+            logger.info("load terms from database...")
+            with PostgresMeshConnector(**self.config[CONFIG_FIELD_DB]) as connector:
+                logger.info("...load MeSH terms...")
+                self._synonyms = connector.read_tables(self.term_requests)
+                self._headings = connector.read_tables(self.heading_requests)
+            logger.info(
+                "...got %i headings and %i total synonyms",
+                len(self._headings),
+                len(self._synonyms),
+            )
+
+    def get_matches(
+        self,
+        term: List[str],
+        score_threshold: float = 0.1,
+    ) -> List[Tuple[str, str, float]]:
+        """
+        Generate tokens from term, references and headings
+
+        Returns
+        ---
+            List[Tuple[str, str, float]]:   List of tuples
+            (ID, Term, Score)
+        """
+        ref_copy = self.synonyms.copy(deep=True)
+
+        term = " ".join(term)
+        # Calculate the score for each combination
+        ref_copy[TERMINOLOGY_COLUMN_SCORE] = np.vectorize(fuzzy_match)(
+            ref_copy[TERMINOLOGY_COLUMN_TERM], term
+        )
+
+        # Get IDs above threshold
+        ref_copy = (
+            ref_copy[ref_copy[TERMINOLOGY_COLUMN_SCORE] >= score_threshold]
+            .sort_values(by=TERMINOLOGY_COLUMN_SCORE, ascending=False)
+            .drop_duplicates(subset=TERMINOLOGY_COLUMN_ID)
+        )
+
+        return list(ref_copy.itertuples(index=False, name=None))
