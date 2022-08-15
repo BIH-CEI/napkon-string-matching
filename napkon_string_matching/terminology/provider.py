@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 import pandas as pd
 from napkon_string_matching.terminology.mesh import MeshProvider
@@ -32,3 +32,13 @@ class TerminologyProvider:
     def synonyms(self) -> pd.DataFrame:
         results = [provider.synonyms for provider in self.providers]
         return pd.concat(results)
+
+    def get_matches(
+        self,
+        term: List[str],
+        score_threshold: float = 0.1,
+    ) -> List[Tuple[str, str, float]]:
+        results = []
+        for provider in self.providers:
+            results += provider.get_matches(term, score_threshold)
+        return results if results else None

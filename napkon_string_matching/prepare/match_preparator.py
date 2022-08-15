@@ -12,7 +12,7 @@ from napkon_string_matching.constants import (
     DATA_COLUMN_TOKEN_MATCH,
     DATA_COLUMN_TOKENS,
 )
-from napkon_string_matching.prepare.generate import gen_term, gen_tokens
+from napkon_string_matching.prepare.generate import gen_term
 from napkon_string_matching.terminology.mesh import (
     TERMINOLOGY_REQUEST_HEADINGS,
     TERMINOLOGY_REQUEST_TERMS,
@@ -53,7 +53,9 @@ class MatchPreparator:
         df[DATA_COLUMN_TERM] = result
         logger.info("...done")
 
-    def add_tokens(self, df: pd.DataFrame, score_threshold: int, verbose: bool = True, timeout=10):
+    def add_tokens(
+        self, df: pd.DataFrame, score_threshold: float = 0.1, verbose: bool = True, timeout=10
+    ):
         if not self.terminology_provider.initialized:
             self.terminology_provider.initialize()
 
@@ -66,23 +68,20 @@ class MatchPreparator:
         with Pool() as pool:
             multiple_results = [
                 pool.apply_async(
-                    gen_tokens,
-                    (
-                        term,
-                        self.terminology_provider.synonyms,
-                        self.terminology_provider.headings,
-                        score_threshold,
-                    ),
+                    self.terminology_provider.get_matches,
+                    (term, score_threshold),
                 )
                 for term in df[DATA_COLUMN_TERM]
             ]
 
             if verbose:
-                result = [res.get(timeout=timeout) for res in tqdm(multiple_results)]
+                results = [res.get(timeout=timeout) for res in tqdm(multiple_results)]
             else:
-                result = [res.get(timeout=timeout) for res in multiple_results]
+                results = [res.get(timeout=timeout) for res in multiple_results]
 
-        df[DATA_COLUMN_TOKENS] = [tokens if tokens else None for tokens, _, _ in result]
-        df[DATA_COLUMN_TOKEN_IDS] = [ids if ids else None for _, ids, _ in result]
-        df[DATA_COLUMN_TOKEN_MATCH] = [match if match else None for _, _, match in result]
+        unpacked = [tuple(zip(*entry)) if entry else (None, None, None) for entry in results]
+
+        df[DATA_COLUMN_TOKEN_IDS] = [ids if ids else None for ids, *_ in unpacked]
+        df[DATA_COLUMN_TOKENS] = [tokens if tokens else None for _, tokens, *_ in unpacked]
+        df[DATA_COLUMN_TOKEN_MATCH] = results
         logger.info("...done")
