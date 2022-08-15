@@ -4,12 +4,11 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
-req_strings = {
-    "auth_call": "https://loinc.org/wp-login.php?redirect_to=https%3A%2F%2Floinc.org%2Fsearch%2F&reauth=1",
-    "search_call": "https://loinc.org/search/?t=1&s={search_term}&l=de_DE",
-    "no_response": "Keine passenden Einträge gefunden",
-    "login_response": "Log In ‹ LOINC — WordPress",
-}
+URL_AUTH = "https://loinc.org/wp-login.php?redirect_to=https%3A%2F%2Floinc.org%2Fsearch%2F&reauth=1"
+URL_SEARCH = "https://loinc.org/search/?t=1&s={search_term}&l=de_DE"
+
+RESPONSE_NO_ENTRIES = "Keine passenden Einträge gefunden"
+RESPONSE_LOGIN = "Log In ‹ LOINC — WordPress"
 
 
 def get_auth_payload(user_name: str = "", password: str = ""):
@@ -93,18 +92,18 @@ def start_search_session(search_terms: list = []):
         # ask user for credentials
         payload = ask_for_credentials()
         # authenticate on website
-        p = s.post(req_strings["auth_call"], data=payload)
+        p = s.post(URL_AUTH, data=payload)
         # check if connection was successful
         if not p.ok:
             print("connection has not been established")
             return None
         # execute search calls
         for term in search_terms:
-            r = s.get(req_strings["search_call"].format(search_term=term))
+            r = s.get(URL_SEARCH.format(search_term=term))
             # parse content and search for result section
             soup = BeautifulSoup(r.content, "html.parser")
             # check if loggin was successful
-            if soup.find("title").text == req_strings["login_response"]:
+            if soup.find("title").text == RESPONSE_LOGIN:
                 print("login was not successful, please try again")
                 return None
             # find results in response
@@ -113,8 +112,8 @@ def start_search_session(search_terms: list = []):
             table_columns = parse_table_columns(search_result)
             table = parse_table_rows(search_result)
             # build dataframe and append to result
-            if table[0][0] == req_strings["no_response"]:
-                print(req_strings["no_response"])
+            if table[0][0] == RESPONSE_NO_ENTRIES:
+                print(RESPONSE_NO_ENTRIES)
                 return None
             result_dfs.append(build_dataframe(table, table_columns))
     return result_dfs
