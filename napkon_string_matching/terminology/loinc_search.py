@@ -11,7 +11,7 @@ RESPONSE_NO_ENTRIES = "Keine passenden Einträge gefunden"
 RESPONSE_LOGIN = "Log In ‹ LOINC — WordPress"
 
 
-def get_auth_payload(user_name: str = "", password: str = ""):
+def get_auth_payload(user_name: str, password: str):
     """
     creates payload element as dict from credentials.
             Parameters:
