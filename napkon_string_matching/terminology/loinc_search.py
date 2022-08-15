@@ -1,4 +1,6 @@
 # import REST and parsing modules
+import logging
+
 import numpy as np
 import pandas as pd
 import requests
@@ -9,6 +11,8 @@ URL_SEARCH = "https://loinc.org/search/?t=1&s={search_term}&l=de_DE"
 
 RESPONSE_NO_ENTRIES = "Keine passenden Einträge gefunden"
 RESPONSE_LOGIN = "Log In ‹ LOINC — WordPress"
+
+logger = logging.getLogger(__name__)
 
 
 def get_auth_payload(user_name: str, password: str):
@@ -89,7 +93,7 @@ def start_search_session(search_terms: list = []):
         p = s.post(URL_AUTH, data=payload)
         # check if connection was successful
         if not p.ok:
-            print("connection has not been established")
+            logger.info("connection has not been established")
             return None
         # execute search calls
         for term in search_terms:
@@ -98,7 +102,7 @@ def start_search_session(search_terms: list = []):
             soup = BeautifulSoup(r.content, "html.parser")
             # check if loggin was successful
             if soup.find("title").text == RESPONSE_LOGIN:
-                print("login was not successful, please try again")
+                logger.info("login was not successful, please try again")
                 return None
             # find results in response
             search_result = soup.find(id="results")
@@ -107,7 +111,7 @@ def start_search_session(search_terms: list = []):
             table = parse_table_rows(search_result)
             # build dataframe and append to result
             if table[0][0] == RESPONSE_NO_ENTRIES:
-                print(RESPONSE_NO_ENTRIES)
+                logger.info(RESPONSE_NO_ENTRIES)
                 return None
             result_dfs.append(build_dataframe(table, table_columns))
     return result_dfs
