@@ -16,11 +16,7 @@ from napkon_string_matching.constants import (
 )
 from napkon_string_matching.files import dataset_table
 from napkon_string_matching.prepare.match_preparator import MatchPreparator
-from napkon_string_matching.tests import (
-    DISABLE_DB_TESTS,
-    DISABLE_LOCAL_FILE_TESTS,
-    DISABLE_LONG_LASTING_TESTS,
-)
+from napkon_string_matching.tests import DISABLE_DB_TESTS, DISABLE_LOCAL_FILE_TESTS
 
 
 class TestMatchPreparator(unittest.TestCase):
@@ -110,13 +106,14 @@ class TestMatchPreparator(unittest.TestCase):
             ]
         )
 
-        self.preparator.add_tokens(data, 80)
+        self.preparator.add_tokens(data, 0.1, verbose=False, timeout=None)
 
         self.assertIn(DATA_COLUMN_TOKENS, data)
         self.assertIn(DATA_COLUMN_TOKEN_IDS, data)
         self.assertIn(DATA_COLUMN_TOKEN_MATCH, data)
 
-        self.assertEqual("Dialyse Sonstiges".split(), data[DATA_COLUMN_TOKENS][0])
+        self.assertTrue(any(["Dialyse" in entry for entry in data[DATA_COLUMN_TOKENS][0]]))
+        self.assertTrue(any(["Sonstiges" in entry for entry in data[DATA_COLUMN_TOKENS][0]]))
 
     def test_add_terms_and_tokens(self):
         data = pd.DataFrame(
@@ -141,13 +138,14 @@ class TestMatchPreparator(unittest.TestCase):
 
         self.preparator.add_terms(data)
 
-        self.preparator.add_tokens(data, 90, verbose=False, timeout=None)
+        self.preparator.add_tokens(data, 0.1, verbose=False, timeout=None)
 
         self.assertIn(DATA_COLUMN_TOKENS, data)
         self.assertIn(DATA_COLUMN_TOKEN_IDS, data)
         self.assertIn(DATA_COLUMN_TOKEN_MATCH, data)
 
-        self.assertEqual("Dialyse Sonstiges".split(), data[DATA_COLUMN_TOKENS][0])
+        self.assertTrue(any(["Dialyse" in entry for entry in data[DATA_COLUMN_TOKENS][0]]))
+        self.assertTrue(any(["Sonstiges" in entry for entry in data[DATA_COLUMN_TOKENS][0]]))
 
     @unittest.skipIf(
         DISABLE_DB_TESTS or DISABLE_LOCAL_FILE_TESTS,

@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import List, Tuple
 
 import pandas as pd
 
@@ -23,3 +24,19 @@ class ProviderBase(ABC):
     @property
     def synonyms(self) -> pd.DataFrame:
         return self._synonyms
+
+    @abstractmethod
+    def get_matches(
+        self,
+        term: str,
+        score_threshold: float,
+    ) -> List[Tuple[str, str, float]]:
+        """
+        Generate tokens from term, references and headings
+
+        Returns
+        ---
+            List[Tuple[str, str, float]]:   List of tuples
+            (ID, Term, Score)
+        """
+        raise NotImplementedError()

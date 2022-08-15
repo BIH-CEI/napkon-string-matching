@@ -1,16 +1,19 @@
 import logging
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import List
+from typing import List, Tuple
 
+import numpy as np
 import pandas as pd
 import psycopg2
+from napkon_string_matching.compare.score_functions import fuzzy_match
 from napkon_string_matching.terminology.provider_base import ProviderBase
 
 CONFIG_FIELD_DB = "db"
 
 TERMINOLOGY_COLUMN_TERM = "Term"
 TERMINOLOGY_COLUMN_ID = "Id"
+TERMINOLOGY_COLUMN_SCORE = "Score"
 
 logger = logging.getLogger(__name__)
 
@@ -185,3 +188,33 @@ class MeshProvider(ProviderBase):
                 len(self._headings),
                 len(self._synonyms),
             )
+
+    def get_matches(
+        self,
+        term: List[str],
+        score_threshold: float = 0.1,
+    ) -> List[Tuple[str, str, float]]:
+        """
+        Generate tokens from term, references and headings
+
+        Returns
+        ---
+            List[Tuple[str, str, float]]:   List of tuples
+            (ID, Term, Score)
+        """
+        ref_copy = self.synonyms.copy(deep=True)
+
+        term = " ".join(term)
+        # Calculate the score for each combination
+        ref_copy[TERMINOLOGY_COLUMN_SCORE] = np.vectorize(fuzzy_match)(
+            ref_copy[TERMINOLOGY_COLUMN_TERM], term
+        )
+
+        # Get IDs above threshold
+        ref_copy = (
+            ref_copy[ref_copy[TERMINOLOGY_COLUMN_SCORE] >= score_threshold]
+            .sort_values(by=TERMINOLOGY_COLUMN_SCORE, ascending=False)
+            .drop_duplicates(subset=TERMINOLOGY_COLUMN_ID)
+        )
+
+        return list(ref_copy.itertuples(index=False, name=None))
