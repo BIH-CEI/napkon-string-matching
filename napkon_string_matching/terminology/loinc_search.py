@@ -19,7 +19,6 @@ def get_auth_payload(user_name: str, password: str):
                     password (str): The password for search.loinc.org
             Returns:
                     payload (dict): A dict of username and password with website spedific ids
-            Author: giesan
     """
     return {"log": user_name, "pwd": password}
 
@@ -30,7 +29,6 @@ def ask_for_credentials():
             Parameters: -
             Returns:
                     payload (dict): A dict of username and password with website spedific ids
-            Author: giesan
     """
     user_name = input("Please enter your user name for loinc.search: ")
     password = input("Please enter your password for loinc.search: ")
@@ -44,7 +42,6 @@ def parse_table_columns(search_result=None):
                     search_result (result_set): resultset for parsing result table from loinc search
             Returns:
                     columns (list): list of table columns for result
-            Author: giesan
     """
     column_spans = [x.find("span") for x in search_result.find("thead").find_all("th")]
     column_texts = [x.text for x in column_spans if x is not None]
@@ -58,7 +55,6 @@ def parse_table_rows(search_result=None):
                     search_result (result_set): resultset for parsing result table from loinc search
             Returns:
                     table (2dim numpyarray): table as two dim array from results
-            Author: giesan
     """
     body = search_result.find("tbody")
     table_rows = body.findAll("tr")
@@ -73,7 +69,6 @@ def build_dataframe(table: np.array, columns: list = []):
                     columns (list): list of table columns for result
             Returns:
                     df (pandas df): table as pandas dataframe with columns
-            Author: giesan
     """
     return pd.DataFrame(table, columns=columns)
 
@@ -85,7 +80,6 @@ def start_search_session(search_terms: list = []):
                     search_terms (list[str]): list of search terms that must be queries for loinc
             Returns:
                     result_dfs (list[df]): list of dataframes that are returned per loinc search
-    Author: giesan
     """
     result_dfs = []
     with requests.Session() as s:
