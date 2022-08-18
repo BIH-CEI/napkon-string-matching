@@ -1,4 +1,9 @@
 import enum
+import logging
+import re
+import warnings
+from pathlib import Path
+from typing import List
 
 import pandas as pd
 
@@ -7,11 +12,13 @@ class Columns(enum.Enum):
     ID = "Id"
     CATEGORY = "Category"
     PARAMETER = "Parameter"
-    OPTIONS = "Options"
+    CHOICES = "Choices"
 
 
 COLUMN_NAMES = [column.value for column in Columns]
 PROPERTY_NAMES = [column.name.lower() for column in Columns]
+
+logger = logging.getLogger(__name__)
 
 
 class Subscriptable:
@@ -57,3 +64,74 @@ class Subscriptable:
 class GeccoDefinition(Subscriptable):
     def __init__(self, data) -> None:
         self._data = pd.DataFrame(data)
+
+    @staticmethod
+    def from_gecco83_definition(file: str | Path):
+        file = Path(file)
+
+        logger.info("read from file %s...", str(file))
+
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
+            excel_file = pd.ExcelFile(file, engine="openpyxl")
+
+        df: pd.DataFrame = excel_file.parse()
+
+        # Remove whitespaces in column names
+        df.columns = [column.strip() for column in df.columns]
+
+        # Rename columns to fit common names
+        column_mapping = {
+            "ID": Columns.ID.value,
+            "KATEGORIE": Columns.CATEGORY.value,
+            "PARAMETER CASE REPORT FORM": Columns.PARAMETER.value,
+            "ANTWORT-MÖGLICHKEITEN": Columns.CHOICES.value,
+        }
+        df.rename(columns=column_mapping, inplace=True)
+
+        # Create new type
+        gecco = GeccoDefinition(df)
+
+        # Remove empty lines
+        gecco.dropna(how="all", inplace=True)
+        gecco.dropna(
+            how="any", subset=[Columns.CATEGORY.value, Columns.PARAMETER.value], inplace=True
+        )
+        gecco.reset_index(inplace=True)
+
+        # Trim all whitespaces
+        gecco.id = _strip_column(gecco.id)
+        gecco.category = _strip_column(gecco.category)
+        gecco.parameter = _strip_column(gecco.parameter)
+        gecco.choices = _strip_column(gecco.choices)
+
+        gecco.id = _fill_id_gaps(gecco.id)
+
+        gecco.choices = [entry.split(" | ") if entry else None for entry in gecco.choices]
+
+        return gecco
+
+
+def _strip_column(column: pd.Series) -> pd.Series:
+    return [entry.replace("\xa0", "") if not pd.isna(entry) else None for entry in column]
+
+
+def _fill_id_gaps(id_column: pd.Series) -> List:
+    result = []
+    length = len(id_column)
+    regex = re.compile(r"(\d+_)(\d+)")
+    for index, id_ in enumerate(id_column):
+        prev = result[index - 1] if index > 0 else -1
+        next_ = id_column[index + 1] if index < length - 1 else -1
+
+        if not id_:
+            matches = regex.match(prev)
+            new_id = matches.group(1) + str(int(matches.group(2)) + 1)
+        elif not next_:
+            new_id = id_ + "_1"
+        else:
+            new_id = id_
+
+        result.append(new_id)
+
+    return result
