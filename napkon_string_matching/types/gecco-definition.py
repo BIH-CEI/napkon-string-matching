@@ -3,7 +3,7 @@ import logging
 import re
 import warnings
 from pathlib import Path
-from typing import List
+from typing import Dict, List
 
 import pandas as pd
 
@@ -67,6 +67,26 @@ class GeccoDefinition(Subscriptable):
 
     @staticmethod
     def from_gecco83_definition(file: str | Path):
+        column_mapping = {
+            "ID": Columns.ID.value,
+            "KATEGORIE": Columns.CATEGORY.value,
+            "PARAMETER CASE REPORT FORM": Columns.PARAMETER.value,
+            "ANTWORT-MÖGLICHKEITEN": Columns.CHOICES.value,
+        }
+        return GeccoDefinition._from_definition(file, column_mapping, choice_sep="|")
+
+    @staticmethod
+    def from_geccoplus_definition(file: str | Path):
+        column_mapping = {
+            "ID": Columns.ID.value,
+            "Kategorie": Columns.CATEGORY.value,
+            "Data Item": Columns.PARAMETER.value,
+            "Antwortausprägungen": Columns.CHOICES.value,
+        }
+        return GeccoDefinition._from_definition(file, column_mapping, choice_sep="\n")
+
+    @staticmethod
+    def _from_definition(file: str | Path, column_mapping: Dict[str, str], choice_sep: str):
         file = Path(file)
 
         logger.info("read from file %s...", str(file))
@@ -81,12 +101,6 @@ class GeccoDefinition(Subscriptable):
         df.columns = [column.strip() for column in df.columns]
 
         # Rename columns to fit common names
-        column_mapping = {
-            "ID": Columns.ID.value,
-            "KATEGORIE": Columns.CATEGORY.value,
-            "PARAMETER CASE REPORT FORM": Columns.PARAMETER.value,
-            "ANTWORT-MÖGLICHKEITEN": Columns.CHOICES.value,
-        }
         df.rename(columns=column_mapping, inplace=True)
 
         # Create new type
@@ -107,13 +121,16 @@ class GeccoDefinition(Subscriptable):
 
         gecco.id = _fill_id_gaps(gecco.id)
 
-        gecco.choices = [entry.split(" | ") if entry else None for entry in gecco.choices]
+        gecco.choices = [
+            [choice.strip() for choice in entry.strip().split(choice_sep)] if entry else None
+            for entry in gecco.choices
+        ]
 
         return gecco
 
 
 def _strip_column(column: pd.Series) -> pd.Series:
-    return [entry.replace("\xa0", "") if not pd.isna(entry) else None for entry in column]
+    return [str(entry).replace("\xa0", "") if not pd.isna(entry) else None for entry in column]
 
 
 def _fill_id_gaps(id_column: pd.Series) -> List:
