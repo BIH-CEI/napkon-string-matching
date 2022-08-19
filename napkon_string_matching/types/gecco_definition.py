@@ -63,7 +63,7 @@ class Subscriptable:
 
 
 class GeccoDefinition(Subscriptable):
-    def __init__(self, data) -> None:
+    def __init__(self, data=None) -> None:
         self._data = pd.DataFrame(data)
 
     @staticmethod
