@@ -154,7 +154,7 @@ def _strip_column(column: pd.Series) -> pd.Series:
 def _fill_id_gaps(id_column: pd.Series) -> List:
     result = []
     length = len(id_column)
-    regex = re.compile(r"(\d+_)(\d+)")
+    regex = re.compile(r"(\d+-)(\d+)")
     for index, id_ in enumerate(id_column):
         prev = result[index - 1] if index > 0 else -1
         next_ = id_column[index + 1] if index < length - 1 else -1
@@ -163,7 +163,7 @@ def _fill_id_gaps(id_column: pd.Series) -> List:
             matches = regex.match(prev)
             new_id = matches.group(1) + str(int(matches.group(2)) + 1)
         elif not next_:
-            new_id = id_ + "_1"
+            new_id = id_ + "-1"
         else:
             new_id = id_
 
