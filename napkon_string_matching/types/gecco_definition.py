@@ -1,4 +1,5 @@
 import enum
+import json
 import logging
 import re
 import warnings
@@ -145,6 +146,18 @@ class GeccoDefinition(Subscriptable):
             )
 
         return GeccoDefinition(pd.concat([self._data, other._data]))
+
+    @staticmethod
+    def from_json(file: str | Path):
+        file = Path(file)
+        definition = json.loads(file.read_text(encoding="utf-8"))
+        result = GeccoDefinition(definition)
+        result.reset_index(drop=True, inplace=True)
+        return result
+
+    def write_json(self, file: str | Path) -> None:
+        file = Path(file)
+        file.write_text(self.to_json(), encoding="utf-8")
 
 
 def _strip_column(column: pd.Series) -> pd.Series:
