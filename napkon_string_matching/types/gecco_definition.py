@@ -145,7 +145,7 @@ class GeccoDefinition(Subscriptable):
                 )
             )
 
-        return GeccoDefinition(pd.concat([self._data, other._data]))
+        return GeccoDefinition(pd.concat([self._data, other._data], ignore_index=True))
 
     @staticmethod
     def from_json(file: str | Path):
