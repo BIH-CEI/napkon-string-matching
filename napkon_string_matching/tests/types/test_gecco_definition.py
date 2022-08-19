@@ -20,7 +20,7 @@ class TestGeccoDefinition(unittest.TestCase):
             test_file.unlink()
 
         gecco.write_json(test_file)
-        result = GeccoDefinition.from_json(test_file)
+        result = GeccoDefinition.read_json(test_file)
 
         test_file.unlink()
 

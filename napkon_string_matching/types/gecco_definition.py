@@ -67,31 +67,31 @@ class GeccoDefinition(Subscriptable):
         self._data = pd.DataFrame(data)
 
     @staticmethod
-    def from_gecco83_definition(file: str | Path):
+    def read_gecco83_definition(file: str | Path):
         column_mapping = {
             "ID": Columns.ID.value,
             "KATEGORIE": Columns.CATEGORY.value,
             "PARAMETER CASE REPORT FORM": Columns.PARAMETER.value,
             "ANTWORT-MÖGLICHKEITEN": Columns.CHOICES.value,
         }
-        return GeccoDefinition._from_definition(
+        return GeccoDefinition._read_definition(
             file, column_mapping, choice_sep="|", id_prefix="gecco_"
         )
 
     @staticmethod
-    def from_geccoplus_definition(file: str | Path):
+    def read_geccoplus_definition(file: str | Path):
         column_mapping = {
             "ID": Columns.ID.value,
             "Kategorie": Columns.CATEGORY.value,
             "Data Item": Columns.PARAMETER.value,
             "Antwortausprägungen": Columns.CHOICES.value,
         }
-        return GeccoDefinition._from_definition(
+        return GeccoDefinition._read_definition(
             file, column_mapping, choice_sep="\n", id_prefix="gecco_83+"
         )
 
     @staticmethod
-    def _from_definition(
+    def _read_definition(
         file: str | Path, column_mapping: Dict[str, str], choice_sep: str, id_prefix: str = ""
     ):
         file = Path(file)
@@ -148,7 +148,7 @@ class GeccoDefinition(Subscriptable):
         return GeccoDefinition(pd.concat([self._data, other._data], ignore_index=True))
 
     @staticmethod
-    def from_json(file: str | Path):
+    def read_json(file: str | Path):
         file = Path(file)
         definition = json.loads(file.read_text(encoding="utf-8"))
         result = GeccoDefinition(definition)
