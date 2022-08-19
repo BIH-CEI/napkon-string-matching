@@ -136,6 +136,16 @@ class GeccoDefinition(Subscriptable):
 
         return gecco
 
+    def concat(self, other):
+        if not isinstance(other, GeccoDefinition):
+            raise TypeError(
+                "'other' should be of type '{}' but is of type '{}'".format(
+                    type(self).__name__, type(other).__name__
+                )
+            )
+
+        return GeccoDefinition(pd.concat([self._data, other._data]))
+
 
 def _strip_column(column: pd.Series) -> pd.Series:
     return [str(entry).replace("\xa0", "") if not pd.isna(entry) else None for entry in column]
