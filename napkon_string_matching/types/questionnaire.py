@@ -1,8 +1,11 @@
 import enum
 import json
 import logging
+import warnings
 from pathlib import Path
+from typing import List
 
+import numpy as np
 import pandas as pd
 
 
@@ -21,6 +24,25 @@ class Columns(enum.Enum):
     MATCHES = "Matches"
     VARIABLE = "Variable"
 
+
+DATASETTABLE_COLUMN_DB_COLUMN = "Datenbankspalte"
+DATASETTABLE_COLUMN_FILE = "FileName"
+DATASETTABLE_COLUMN_ITEM = "Item"
+DATASETTABLE_COLUMN_OPTIONS = "Optionen (durch Semikolons getrennt), Lookuptabelle"
+DATASETTABLE_COLUMN_PROJECT = "Projekt"
+DATASETTABLE_COLUMN_QUESTION = "Frage"
+DATASETTABLE_COLUMN_NUMBER = "Nr."
+DATASETTABLE_COLUMN_SHEET_NAME = "SheetName"
+DATASETTABLE_COLUMN_TYPE = "Fragetyp (Konfiguration)"
+DATASETTABLE_COLUMN_VARIABLE = "Datenbankspalte"
+
+DATASETTABLE_TYPE_GROUP_DEFAULT = "StandardGroup"
+DATASETTABLE_TYPE_GROUP_HORIZONAL = "HorizontalGroup"
+DATASETTABLE_TYPE_HEADER = "Headline"
+
+COLUMN_TEMP_SUBCATEGORY = "Subcategory"
+
+DATASETTABLE_ITEM_SKIPABLE = "<->"
 
 COLUMN_NAMES = [column.value for column in Columns]
 PROPERTY_NAMES = [column.name.lower() for column in Columns]
@@ -127,3 +149,275 @@ class Questionnaire(Subscriptable):
         file.write_text(self.to_json(), encoding="utf-8")
 
         logger.info("...done")
+
+    @staticmethod
+    def read_dataset_table(file: str | Path, *args, **kwargs):
+        """
+        Read a xlsx file
+
+        The contents are returned as a list of dictionaries containing the row contents
+        and meta information.
+
+        attr
+        ---
+            xlsx_file (str|Path): file to read
+
+        returns
+        ---
+            Questionnaire: parsed result
+        """
+
+        logger.info("read from file %s...", str(file))
+
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
+            file = pd.ExcelFile(file, engine="openpyxl")
+        sheet_names = file.sheet_names[2:]
+
+        logger.info("...reading %i sheets...", len(sheet_names))
+
+        parser = SheetParser()
+        sheets = []
+        for sheet_name in sheet_names:
+            data_list = parser.parse(file, sheet_name, *args, **kwargs)
+            if data_list is not None:
+                sheets.append(data_list)
+
+        if not sheets:
+            logger.warn("...dit not get any entries")
+            return None
+
+        result = Questionnaire().concat(sheets)
+
+        logger.info("...got %i entries", len(result))
+
+        return result
+
+
+class SheetParser:
+    """
+    A parser for sheets of a dataset table
+    """
+
+    def __init__(self) -> None:
+        self.current_categories = []
+        self.current_question = None
+
+    def parse(
+        self,
+        file: pd.ExcelFile,
+        sheet_name: str,
+        *args,
+        **kwargs,
+    ) -> Questionnaire:
+        """
+        Parses a single sheet
+
+        Extracts meta information and information needed for matching
+        and returns them as a list
+
+        attr
+        ---
+            file (Excelfile): opened excel file
+            sheet_name (str): name of the sheet to parse
+
+        returns
+        ---
+            List[dict]: list of dictionary per line
+        """
+        self.current_categories = []
+        self.current_question = None
+
+        sheet: pd.DataFrame = pd.read_excel(
+            file, sheet_name=sheet_name, na_values=DATASETTABLE_ITEM_SKIPABLE
+        )
+
+        # Remove leading meta information block on sheet
+        start_index = np.where(sheet[DATASETTABLE_COLUMN_PROJECT] == DATASETTABLE_COLUMN_NUMBER)[0][
+            0
+        ]
+        sheet.columns = sheet.iloc[start_index]
+        sheet = sheet.iloc[start_index + 1 :, :].reset_index(drop=True)
+
+        # Replace `NaN` with `None` for easier handling
+        sheet.where(pd.notnull(sheet), None, inplace=True)
+
+        # Add meta information to each row
+        sheet[DATASETTABLE_COLUMN_SHEET_NAME] = sheet_name
+        sheet[DATASETTABLE_COLUMN_FILE] = Path(file.io).stem
+
+        return self.parse_rows(sheet, *args, **kwargs)
+
+    def parse_rows(
+        self,
+        sheet: pd.DataFrame,
+        filter_column: str = None,
+        filter_prefix: str = None,
+        *args,
+        **kwargs,
+    ) -> Questionnaire | None:
+
+        # Fill category and subcategory if available
+        sheet[Columns.CATEGORIES.value] = [
+            question if type_ == DATASETTABLE_TYPE_HEADER else None
+            for question, type_ in zip(
+                sheet[DATASETTABLE_COLUMN_QUESTION], sheet[DATASETTABLE_COLUMN_TYPE]
+            )
+        ]
+        sheet[COLUMN_TEMP_SUBCATEGORY] = [
+            question
+            if pd.notna(type_)
+            and type_ != DATASETTABLE_TYPE_HEADER
+            and all(entry not in type_ for entry in ["Group", "Matrix"])
+            else None
+            for question, type_ in zip(
+                sheet[DATASETTABLE_COLUMN_QUESTION], sheet[DATASETTABLE_COLUMN_TYPE]
+            )
+        ]
+
+        # Fill for all items category and subcategory if they belong to one
+        sheet[Columns.CATEGORIES.value] = sheet[Columns.CATEGORIES.value].ffill()
+        sheet[COLUMN_TEMP_SUBCATEGORY] = _fill_subcategories(
+            sheet[Columns.CATEGORIES.value], sheet[COLUMN_TEMP_SUBCATEGORY]
+        )
+
+        # Combine both information in a single column
+        sheet[Columns.CATEGORIES.value] = [
+            [category, sub] if sub else [category] if category else None
+            for category, sub in zip(
+                sheet[Columns.CATEGORIES.value], sheet[COLUMN_TEMP_SUBCATEGORY]
+            )
+        ]
+        sheet.drop(columns=COLUMN_TEMP_SUBCATEGORY, inplace=True)
+
+        # Remove all entries without items and variable names
+        sheet.dropna(subset=[DATASETTABLE_COLUMN_ITEM, DATASETTABLE_COLUMN_DB_COLUMN], inplace=True)
+
+        # Fill down questions to sub-items
+        sheet[DATASETTABLE_COLUMN_QUESTION] = sheet[DATASETTABLE_COLUMN_QUESTION].ffill()
+
+        # Filter entries if filter provided
+        if filter_column and filter_prefix:
+            sheet.drop(
+                sheet[
+                    [
+                        not entry.startswith(filter_prefix) if pd.notna(entry) else False
+                        for entry in sheet[filter_column]
+                    ]
+                ].index,
+                inplace=True,
+            )
+
+        # Rename columns
+        mappings = {
+            DATASETTABLE_COLUMN_ITEM: Columns.ITEM.value,
+            DATASETTABLE_COLUMN_SHEET_NAME: Columns.SHEET.value,
+            DATASETTABLE_COLUMN_FILE: Columns.FILE.value,
+            DATASETTABLE_COLUMN_QUESTION: Columns.QUESTION.value,
+            DATASETTABLE_COLUMN_VARIABLE: Columns.VARIABLE.value,
+        }
+        sheet.rename(columns=mappings, inplace=True)
+
+        # Create identifier column
+        sheet[Columns.IDENTIFIER.value] = [
+            _generate_identifier(file, sheet, str(index))
+            for file, sheet, index in zip(
+                sheet[Columns.FILE.value], sheet[Columns.SHEET.value], sheet.index
+            )
+        ]
+
+        # Set options
+        options = sheet.get(DATASETTABLE_COLUMN_OPTIONS)
+        sheet[Columns.OPTIONS.value] = (
+            [_generate_options(options_) for options_ in options] if options is not None else None
+        )
+
+        # Remove non-required columns
+        remove_columns = set(sheet.columns).difference(set(COLUMN_NAMES))
+        sheet.drop(columns=remove_columns, inplace=True)
+
+        return Questionnaire(sheet)
+
+        # Extract information like header and question for following entries
+        pass
+        return
+        if type_ := row.get(DATASETTABLE_COLUMN_TYPE, None):
+            question_entry = row[DATASETTABLE_COLUMN_QUESTION]
+            if type_ == DATASETTABLE_TYPE_HEADER:
+                # If header the category is reset
+                self.current_categories = (
+                    [question_entry] if question_entry and len(question_entry) > 1 else []
+                )
+            elif any(entry in type_ for entry in ["Group", "Matrix"]):
+                # set current question multiple items for the same question
+                self.current_question = question_entry
+            else:
+                # These should be `sub-headers` with strange type names
+                # for these the sub-header is added to the current categories
+                if len(self.current_categories) > 1:
+                    self.current_categories.pop()
+                self.current_categories.append(question_entry)
+
+        if (
+            filter_column
+            and filter_prefix
+            and row[filter_column]
+            and not row[filter_column].startswith(filter_prefix)
+        ):
+            return None
+
+        if not row[DATASETTABLE_COLUMN_ITEM] or not row[DATASETTABLE_COLUMN_DB_COLUMN]:
+            return None
+
+        questionnaire = Questionnaire()
+        questionnaire.item = row[DATASETTABLE_COLUMN_ITEM]
+        questionnaire.sheet = row[DATASETTABLE_COLUMN_SHEET_NAME]
+        questionnaire.file = row[DATASETTABLE_COLUMN_FILE]
+        questionnaire.variable = row.get(DATASETTABLE_COLUMN_VARIABLE)
+
+        questionnaire.identifier = (
+            "#".join(
+                [
+                    row[DATASETTABLE_COLUMN_FILE],
+                    row[DATASETTABLE_COLUMN_SHEET_NAME],
+                    str(row.name),
+                ]
+            ).replace(" ", "-"),
+        )
+
+        questionnaire.categories = self.current_categories if self.current_categories else None
+        questionnaire.question = self.current_question if self.current_question else None
+
+        options = row.get(DATASETTABLE_COLUMN_OPTIONS, None)
+        # When reading these value they are not actually only separated by
+        # semicolons but also by linebreaks. Special handling for cases
+        # where only one of them is present
+        questionnaire.options = (
+            options.replace(";", "\n").replace("\n\n", "\n").splitlines() if options else None
+        )
+
+        return questionnaire
+
+
+def _fill_subcategories(categories: pd.Series, subcategories: pd.Series) -> List:
+    result = []
+    for index, entry in enumerate(zip(categories, subcategories)):
+        prev_cat = categories[index - 1] if index > 0 else -1
+        prev_sub = result[index - 1] if index > 0 else -1
+        cat, sub = entry
+
+        if not sub and prev_sub and prev_cat == cat:
+            result.append(prev_sub)
+        else:
+            result.append(sub)
+    return result
+
+
+def _generate_identifier(file: str, sheet: str, row_name: str) -> str:
+    return "#".join([file, sheet, row_name]).replace(" ", "-")
+
+
+def _generate_options(options: str) -> List[str] | None:
+    return (
+        options.replace(";", "\n").replace("\n\n", "\n").splitlines() if pd.notna(options) else None
+    )
