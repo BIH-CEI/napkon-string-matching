@@ -73,7 +73,9 @@ class GeccoDefinition(Subscriptable):
             "PARAMETER CASE REPORT FORM": Columns.PARAMETER.value,
             "ANTWORT-MÖGLICHKEITEN": Columns.CHOICES.value,
         }
-        return GeccoDefinition._from_definition(file, column_mapping, choice_sep="|")
+        return GeccoDefinition._from_definition(
+            file, column_mapping, choice_sep="|", id_prefix="gecco_"
+        )
 
     @staticmethod
     def from_geccoplus_definition(file: str | Path):
@@ -83,10 +85,14 @@ class GeccoDefinition(Subscriptable):
             "Data Item": Columns.PARAMETER.value,
             "Antwortausprägungen": Columns.CHOICES.value,
         }
-        return GeccoDefinition._from_definition(file, column_mapping, choice_sep="\n")
+        return GeccoDefinition._from_definition(
+            file, column_mapping, choice_sep="\n", id_prefix="gecco_83+"
+        )
 
     @staticmethod
-    def _from_definition(file: str | Path, column_mapping: Dict[str, str], choice_sep: str):
+    def _from_definition(
+        file: str | Path, column_mapping: Dict[str, str], choice_sep: str, id_prefix: str = ""
+    ):
         file = Path(file)
 
         logger.info("read from file %s...", str(file))
@@ -125,6 +131,8 @@ class GeccoDefinition(Subscriptable):
             [choice.strip() for choice in entry.strip().split(choice_sep)] if entry else None
             for entry in gecco.choices
         ]
+
+        gecco.id = id_prefix + gecco.id
 
         return gecco
 
