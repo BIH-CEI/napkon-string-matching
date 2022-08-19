@@ -69,18 +69,23 @@ class Subscriptable:
 
 
 class Questionnaire(Subscriptable):
-    def __init__(self, data) -> None:
+    def __init__(self, data=None) -> None:
         self._data = pd.DataFrame(data)
 
-    def concat(self, other):
-        if not isinstance(other, Questionnaire):
+    def concat(self, others: List):
+        if len(others) == 0:
+            return self
+
+        if not isinstance(others[0], Questionnaire):
             raise TypeError(
                 "'other' should be of type '{}' but is of type '{}'".format(
-                    type(self).__name__, type(other).__name__
+                    type(self).__name__, type(others[0]).__name__
                 )
             )
 
-        return Questionnaire(pd.concat([self._data, other._data], ignore_index=True))
+        return Questionnaire(
+            pd.concat([self._data, *[other._data for other in others]], ignore_index=True)
+        )
 
     @staticmethod
     def read_json(file: str | Path):
