@@ -6,12 +6,10 @@ from itertools import product
 from pathlib import Path
 from typing import Dict, List
 
-import pandas as pd
-
 from napkon_string_matching.compare.compare import compare, enhance_datasets_with_matches
-from napkon_string_matching.constants import DATA_COLUMN_MATCHES, DATA_COLUMN_VARIABLE
 from napkon_string_matching.files import dataframe, dataset_table, results
 from napkon_string_matching.prepare.match_preparator import MatchPreparator
+from napkon_string_matching.types.questionnaire import Questionnaire
 
 RESULTS_FILE_PATTERN = "output/{file_name}_{score_threshold}_{compare_column}_{score_func}.csv"
 
@@ -89,7 +87,11 @@ def prepare(
     calculate_tokens: bool = False,
     *args,
     **kwargs,
-) -> pd.DataFrame:
+) -> Questionnaire:
+    """
+    Reads a questionnaire from file. If `calculate_tokens == True` tokens are also generated
+    using the provided preparator.
+    """
     file = Path(file_name)
     logger.info(f"prepare file {file.name}")
 
@@ -155,17 +157,19 @@ def prepare(
     return data
 
 
-def _analyse(dfs: List[pd.DataFrame]) -> Dict[str, Dict[str, str]]:
+def _analyse(dfs: List[Questionnaire]) -> Dict[str, Dict[str, str]]:
+    """
+    Analyses how many entries there are in the result and how many are matched.
+    Also calcualtes these for all entries starting with the `gec_` prefix.
+    """
     GECCO_PREFIX = "gec_"
 
     result = {}
     for name, df in dfs.items():
-        matched = df[df[DATA_COLUMN_MATCHES].notna()]
+        matched = df[df.matches.notna()]
 
-        gecco_entries = df[[GECCO_PREFIX in entry for entry in df[DATA_COLUMN_VARIABLE]]]
-        matched_gecco_entries = matched[
-            [GECCO_PREFIX in entry for entry in matched[DATA_COLUMN_VARIABLE]]
-        ]
+        gecco_entries = df[[GECCO_PREFIX in entry for entry in df.variable]]
+        matched_gecco_entries = matched[[GECCO_PREFIX in entry for entry in matched.variable]]
 
         df_result = {
             "matched": "{}/{}".format(len(matched), len(df)),
