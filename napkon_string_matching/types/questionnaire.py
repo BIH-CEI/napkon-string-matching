@@ -338,66 +338,6 @@ class SheetParser:
 
         return Questionnaire(sheet)
 
-        # Extract information like header and question for following entries
-        pass
-        return
-        if type_ := row.get(DATASETTABLE_COLUMN_TYPE, None):
-            question_entry = row[DATASETTABLE_COLUMN_QUESTION]
-            if type_ == DATASETTABLE_TYPE_HEADER:
-                # If header the category is reset
-                self.current_categories = (
-                    [question_entry] if question_entry and len(question_entry) > 1 else []
-                )
-            elif any(entry in type_ for entry in ["Group", "Matrix"]):
-                # set current question multiple items for the same question
-                self.current_question = question_entry
-            else:
-                # These should be `sub-headers` with strange type names
-                # for these the sub-header is added to the current categories
-                if len(self.current_categories) > 1:
-                    self.current_categories.pop()
-                self.current_categories.append(question_entry)
-
-        if (
-            filter_column
-            and filter_prefix
-            and row[filter_column]
-            and not row[filter_column].startswith(filter_prefix)
-        ):
-            return None
-
-        if not row[DATASETTABLE_COLUMN_ITEM] or not row[DATASETTABLE_COLUMN_DB_COLUMN]:
-            return None
-
-        questionnaire = Questionnaire()
-        questionnaire.item = row[DATASETTABLE_COLUMN_ITEM]
-        questionnaire.sheet = row[DATASETTABLE_COLUMN_SHEET_NAME]
-        questionnaire.file = row[DATASETTABLE_COLUMN_FILE]
-        questionnaire.variable = row.get(DATASETTABLE_COLUMN_VARIABLE)
-
-        questionnaire.identifier = (
-            "#".join(
-                [
-                    row[DATASETTABLE_COLUMN_FILE],
-                    row[DATASETTABLE_COLUMN_SHEET_NAME],
-                    str(row.name),
-                ]
-            ).replace(" ", "-"),
-        )
-
-        questionnaire.categories = self.current_categories if self.current_categories else None
-        questionnaire.question = self.current_question if self.current_question else None
-
-        options = row.get(DATASETTABLE_COLUMN_OPTIONS, None)
-        # When reading these value they are not actually only separated by
-        # semicolons but also by linebreaks. Special handling for cases
-        # where only one of them is present
-        questionnaire.options = (
-            options.replace(";", "\n").replace("\n\n", "\n").splitlines() if options else None
-        )
-
-        return questionnaire
-
 
 def _fill_subcategories(categories: pd.Series, subcategories: pd.Series) -> List:
     result = []
