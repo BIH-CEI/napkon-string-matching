@@ -77,6 +77,9 @@ class Subscriptable:
     def __getattr__(self, __name: str):
         return getattr(self._data, __name)
 
+    def __getitem__(self, val):
+        return self.__class__(self._data.__getitem__(val))
+
     def __repr__(self) -> str:
         return repr(self._data)
 
@@ -283,7 +286,7 @@ class SheetParser:
 
         # Combine both information in a single column
         sheet[Columns.CATEGORIES.value] = [
-            [category, sub] if sub else [category] if category else None
+            _combine_categories(category, sub)
             for category, sub in zip(
                 sheet[Columns.CATEGORIES.value], sheet[COLUMN_TEMP_SUBCATEGORY]
             )
@@ -361,3 +364,12 @@ def _generate_options(options: str) -> List[str] | None:
     return (
         options.replace(";", "\n").replace("\n\n", "\n").splitlines() if pd.notna(options) else None
     )
+
+
+def _combine_categories(first: str, second: str) -> List[str]:
+    result = []
+    if pd.notna(first):
+        result.append(first)
+    if pd.notna(second):
+        result.append(second)
+    return result if result else None
