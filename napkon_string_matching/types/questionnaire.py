@@ -238,23 +238,26 @@ class Questionnaire(Subscriptable):
         left = self.dropna(subset=[compare_column])
         right = right.dropna(subset=[compare_column])
 
-        column_mapping = {compare_column: comp.Columns.PARAMETER.value}
+        column_mapping = {Columns.QUESTION.value: comp.Columns.PARAMETER.value}
         left.rename(columns=column_mapping, inplace=True)
         right.rename(columns=column_mapping, inplace=True)
 
         right = right.add_prefix("Match")
         compare_df = left.merge(right, how="cross").dataframe()
 
-        comparable = Comparable(compare_df)
-        comparable.drop_superfluous_columns()
-
         logger.info("calculate score")
+        comparable = Comparable(compare_df)
+
         comparable.match_score = [
             score_func(param, match_param)
             for param, match_param in tqdm(
-                zip(comparable.parameter, comparable.match_parameter), total=len(comparable)
+                zip(comparable[compare_column], comparable["Match" + compare_column]),
+                total=len(comparable),
             )
         ]
+
+        # Remove not needed columns
+        comparable.drop_superfluous_columns()
 
         comparable = comparable[comparable.match_score >= score_threshold]
         logger.debug("got %i entries", len(comparable))
