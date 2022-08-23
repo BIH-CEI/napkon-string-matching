@@ -44,58 +44,19 @@ COLUMN_TEMP_SUBCATEGORY = "Subcategory"
 
 DATASETTABLE_ITEM_SKIPABLE = "<->"
 
-COLUMN_NAMES = [column.value for column in Columns]
-PROPERTY_NAMES = [column.name.lower() for column in Columns]
+SUFFIX_LEFT = "_left"
+SUFFIX_RIGHT = "_right"
+
+COLUMN_SCORE = "Score"
+
+CACHE_FILE_PATTERN = "compared/cache_score_{}.json"
 
 logger = logging.getLogger(__name__)
 
 
-class Subscriptable:
-    __slots__ = PROPERTY_NAMES
-
-    def __new__(cls, *args, **kwargs):
-        # Automatically define setter and getter methods for all properties
-        for column in Columns:
-            property_name = column.name.lower()
-
-            def getter_method(column=column.value):
-                return lambda self: getattr(self._data, column)
-
-            def setter_method(column=column.value):
-                return lambda self, value: setattr(self._data, column, value)
-
-            setattr(
-                cls,
-                property_name,
-                property(
-                    fget=getter_method(),
-                    fset=setter_method(),
-                ),
-            )
-        return super().__new__(cls)
-
-    def __getattr__(self, __name: str):
-        return getattr(self._data, __name)
-
-    def __getitem__(self, val):
-        return self.__class__(self._data.__getitem__(val))
-
-    def __repr__(self) -> str:
-        return repr(self._data)
-
-    def __str__(self) -> str:
-        return str(self._data)
-
-    def __eq__(self, __o: object) -> bool:
-        return self._data.equals(__o)
-
-    def __len__(self) -> int:
-        return len(self._data)
-
-
 class Questionnaire(Subscriptable):
-    def __init__(self, data=None) -> None:
-        self._data = pd.DataFrame(data)
+    __slots__ = [column.name.lower() for column in Columns]
+    __columns__ = Columns
 
     def concat(self, others: List):
         if len(others) == 0:
@@ -335,11 +296,10 @@ class SheetParser:
             [_generate_options(options_) for options_ in options] if options is not None else None
         )
 
-        # Remove non-required columns
-        remove_columns = set(sheet.columns).difference(set(COLUMN_NAMES))
-        sheet.drop(columns=remove_columns, inplace=True)
+        result = Questionnaire(sheet)
+        result.drop_superfluous_columns()
 
-        return Questionnaire(sheet)
+        return result
 
 
 def _fill_subcategories(categories: pd.Series, subcategories: pd.Series) -> List:
