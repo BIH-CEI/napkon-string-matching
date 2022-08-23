@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Dict, List
 
 import pandas as pd
+from napkon_string_matching.types.subscriptable import Subscriptable
 
 
 class Columns(enum.Enum):
@@ -16,55 +17,12 @@ class Columns(enum.Enum):
     CHOICES = "Choices"
 
 
-COLUMN_NAMES = [column.value for column in Columns]
-PROPERTY_NAMES = [column.name.lower() for column in Columns]
-
 logger = logging.getLogger(__name__)
 
 
-class Subscriptable:
-    __slots__ = PROPERTY_NAMES
-
-    def __new__(cls, *args, **kwargs):
-        # Automatically define setter and getter methods for all properties
-        for column in Columns:
-            property_name = column.name.lower()
-
-            def getter_method(column=column.value):
-                return lambda self: getattr(self._data, column)
-
-            def setter_method(column=column.value):
-                return lambda self, value: setattr(self._data, column, value)
-
-            setattr(
-                cls,
-                property_name,
-                property(
-                    fget=getter_method(),
-                    fset=setter_method(),
-                ),
-            )
-        return super().__new__(cls)
-
-    def __getattr__(self, __name: str):
-        return getattr(self._data, __name)
-
-    def __repr__(self) -> str:
-        return repr(self._data)
-
-    def __str__(self) -> str:
-        return str(self._data)
-
-    def __eq__(self, __o: object) -> bool:
-        return self._data.equals(__o)
-
-    def __len__(self) -> int:
-        return len(self._data)
-
-
 class GeccoDefinition(Subscriptable):
-    def __init__(self, data=None) -> None:
-        self._data = pd.DataFrame(data)
+    __slots__ = [column.name.lower() for column in Columns]
+    __columns__ = Columns
 
     @staticmethod
     def read_gecco83_definition(file: str | Path):
