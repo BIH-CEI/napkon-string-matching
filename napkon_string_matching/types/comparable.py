@@ -67,6 +67,10 @@ class ComparisonResults:
         return self.results.items()
 
     def write_excel(self, file: str):
+        path = Path(file)
+        if not path.parent.exists():
+            path.parent.mkdir(parents=True)
+
         writer = pd.ExcelWriter(file, engine="openpyxl")
         for name, comp in self.items():
             comp.to_excel(writer, sheet_name=name, index=False)
