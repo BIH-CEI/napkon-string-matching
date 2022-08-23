@@ -4,16 +4,13 @@
 import logging
 from itertools import product
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict
 
-import pandas as pd
-
-from napkon_string_matching.compare.compare import compare, enhance_datasets_with_matches
-from napkon_string_matching.constants import DATA_COLUMN_MATCHES, DATA_COLUMN_VARIABLE
-from napkon_string_matching.files import dataframe, dataset_table, results
 from napkon_string_matching.prepare.match_preparator import MatchPreparator
+from napkon_string_matching.types.comparable import ComparisonResults
+from napkon_string_matching.types.questionnaire import Questionnaire
 
-RESULTS_FILE_PATTERN = "output/{file_name}_{score_threshold}_{compare_column}_{score_func}.csv"
+RESULTS_FILE_PATTERN = "output/result_{score_threshold}_{compare_column}_{score_func}.xlsx"
 
 CONFIG_FIELD_PREPARE = "prepare"
 CONFIG_FIELD_MATCHING = "matching"
@@ -37,7 +34,8 @@ def match(config: Dict) -> None:
 
         datasets[name] = dataset
 
-    comparisons = {}
+    comparisons = ComparisonResults()
+    matched = set()
     for entry_left, entry_right in product(datasets.items(), datasets.items()):
         # Sort key entries to prevent processing of entries in both orders
         # e.g. 1 and 2 but not 2 and 1
@@ -51,32 +49,21 @@ def match(config: Dict) -> None:
             continue
 
         key = tuple(sorted([name_first, name_second], key=str.lower))
-        if key not in comparisons:
+        if key not in matched:
+            matched.add(key)
             logger.info("compare %s and %s", name_first, name_second)
-            matches = compare(dataset_first, dataset_second, **config[CONFIG_FIELD_MATCHING])
-            comparisons[key] = matches
+            matches = dataset_first.compare(dataset_second, **config[CONFIG_FIELD_MATCHING])
+            comparisons[f"{name_first} vs {name_second}"] = matches
 
-    for key, matches in comparisons.items():
-        name_left, name_right = key
-
-        dataset_left = datasets[name_left]
-        dataset_right = datasets[name_right]
-
-        enhance_datasets_with_matches(dataset_left, dataset_right, matches)
-
-        datasets[name_left] = dataset_left
-        datasets[name_right] = dataset_right
-
-    analysis = _analyse(datasets)
+    analysis = _analyse(comparisons)
     _print_analysis(analysis)
 
-    for name, dataset in datasets.items():
-        format_args = {
-            **config[CONFIG_FIELD_MATCHING],
-            "file_name": name,
-            "score_func": config[CONFIG_FIELD_MATCHING]["score_func"].replace("_", "-"),
-        }
-        results.write(RESULTS_FILE_PATTERN.format(**format_args), dataset)
+    # write result
+    format_args = {
+        **config[CONFIG_FIELD_MATCHING],
+        "score_func": config[CONFIG_FIELD_MATCHING]["score_func"].replace("_", "-"),
+    }
+    comparisons.write_excel(RESULTS_FILE_PATTERN.format(**format_args))
 
 
 def get_preparator(config):
@@ -89,7 +76,11 @@ def prepare(
     calculate_tokens: bool = False,
     *args,
     **kwargs,
-) -> pd.DataFrame:
+) -> Questionnaire:
+    """
+    Reads a questionnaire from file. If `calculate_tokens == True` tokens are also generated
+    using the provided preparator.
+    """
     file = Path(file_name)
     logger.info(f"prepare file {file.name}")
 
@@ -121,57 +112,59 @@ def prepare(
     # If prepared already exists, read it and return data
     if prepared_file.exists():
         logger.info("using previously cached prepared file")
-        data = dataframe.read(prepared_file)
+        data = Questionnaire.read_json(prepared_file)
         return data
 
     # If term file exists read its data
     if terms_file.exists():
         logger.info("using previously cached terms file")
-        data = dataframe.read(terms_file)
+        data = Questionnaire.read_json(terms_file)
     else:
         # If unprocessed file exists, read it; otherwise calculate
         if unprocessed_file.exists():
             logger.info("using previously cached unprocessed file")
-            data = dataframe.read(unprocessed_file)
+            data = Questionnaire.read_json(unprocessed_file)
         else:
-            data = dataset_table.read(file, *args, **kwargs)
+            data = Questionnaire.read_dataset_table(file, *args, **kwargs)
 
             if data is None:
                 return None
 
-            dataframe.write(unprocessed_file, data)
+            data.write_json(unprocessed_file)
 
         # No matter if unprocessed data was read from cache or dataset file,
         # the terms still needs to be generated
         preparator.add_terms(data)
-        dataframe.write(terms_file, data)
+        data.write_json(terms_file)
 
     # No matter if terms data was read or calculated,
     # the tokens still need to be generated if required
     if calculate_tokens:
         preparator.add_tokens(data, score_threshold=90, timeout=30)
-        dataframe.write(prepared_file, data)
+        data.write_json(prepared_file)
 
     return data
 
 
-def _analyse(dfs: List[pd.DataFrame]) -> Dict[str, Dict[str, str]]:
+def _analyse(results: ComparisonResults) -> Dict[str, Dict[str, str]]:
+    """
+    Analyses how many entries there are in the result and how many are matched.
+    Also calcualtes these for all entries starting with the `gec_` prefix.
+    """
     GECCO_PREFIX = "gec_"
 
     result = {}
-    for name, df in dfs.items():
-        matched = df[df[DATA_COLUMN_MATCHES].notna()]
+    for name, comp in results.items():
+        gecco_entries = comp[[GECCO_PREFIX in entry for entry in comp.variable]]
+        gecco_match_entries = comp[[GECCO_PREFIX in entry for entry in comp.match_variable]]
 
-        gecco_entries = df[[GECCO_PREFIX in entry for entry in df[DATA_COLUMN_VARIABLE]]]
-        matched_gecco_entries = matched[
-            [GECCO_PREFIX in entry for entry in matched[DATA_COLUMN_VARIABLE]]
-        ]
-
-        df_result = {
-            "matched": "{}/{}".format(len(matched), len(df)),
-            "gecco": "{}/{}".format(len(matched_gecco_entries), len(gecco_entries)),
+        comp_result = {
+            "matched": "{}/{}".format(comp.variable.nunique(), comp.match_variable.nunique()),
+            "gecco": "{}/{}".format(
+                gecco_entries.variable.nunique(), gecco_match_entries.match_variable.nunique()
+            ),
         }
-        result[name] = df_result
+        result[name] = comp_result
     return result
 
 

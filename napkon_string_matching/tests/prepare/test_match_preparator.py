@@ -3,20 +3,9 @@ import unittest
 from pathlib import Path
 
 import pandas as pd
-from napkon_string_matching.constants import (
-    DATA_COLUMN_CATEGORIES,
-    DATA_COLUMN_FILE,
-    DATA_COLUMN_ITEM,
-    DATA_COLUMN_QUESTION,
-    DATA_COLUMN_SHEET,
-    DATA_COLUMN_TERM,
-    DATA_COLUMN_TOKEN_IDS,
-    DATA_COLUMN_TOKEN_MATCH,
-    DATA_COLUMN_TOKENS,
-)
-from napkon_string_matching.files import dataset_table
 from napkon_string_matching.prepare.match_preparator import MatchPreparator
 from napkon_string_matching.tests import DISABLE_DB_TESTS, DISABLE_LOCAL_FILE_TESTS
+from napkon_string_matching.types.questionnaire import Columns, Questionnaire
 
 
 class TestMatchPreparator(unittest.TestCase):
@@ -45,46 +34,41 @@ class TestMatchPreparator(unittest.TestCase):
         self.assertIsNotNone(self.preparator.terminology_provider.headings)
 
     def test_add_terms(self):
-        data = pd.DataFrame(
+        data = Questionnaire(
             [
                 {
-                    DATA_COLUMN_ITEM: "An item without categories",
-                    DATA_COLUMN_SHEET: "Test Sheet",
-                    DATA_COLUMN_FILE: "Testfile",
-                    DATA_COLUMN_CATEGORIES: None,
-                    DATA_COLUMN_QUESTION: "This is a question",
+                    Columns.ITEM.value: "An item without categories",
+                    Columns.SHEET.value: "Test Sheet",
+                    Columns.FILE.value: "Testfile",
+                    Columns.CATEGORIES.value: None,
+                    Columns.QUESTION.value: "This is a question",
                 },
                 {
-                    DATA_COLUMN_ITEM: "An item without categories 1",
-                    DATA_COLUMN_SHEET: "Test Sheet",
-                    DATA_COLUMN_FILE: "Testfile",
-                    DATA_COLUMN_CATEGORIES: None,
-                    DATA_COLUMN_QUESTION: "This is another question 1",
+                    Columns.ITEM.value: "An item without categories 1",
+                    Columns.SHEET.value: "Test Sheet",
+                    Columns.FILE.value: "Testfile",
+                    Columns.CATEGORIES.value: None,
+                    Columns.QUESTION.value: "This is another question 1",
                 },
             ]
         )
 
         self.preparator.add_terms(data, language="english")
 
-        self.assertIn(DATA_COLUMN_TERM, data)
-        self.assertEqual(2, len(data[DATA_COLUMN_TERM].values))
-        self.assertEqual(
-            "categories item question without".split(), data[DATA_COLUMN_TERM].values[0]
-        )
-        self.assertEqual(
-            "1 another categories item question without".split(),
-            data[DATA_COLUMN_TERM].values[1],
-        )
+        self.assertIsNotNone(data.term)
+        self.assertEqual(2, len(data.term))
+        self.assertEqual("categories item question without".split(), data.term[0])
+        self.assertEqual("1 another categories item question without".split(), data.term[1])
 
     @unittest.skipIf(
         DISABLE_DB_TESTS or DISABLE_LOCAL_FILE_TESTS,
         "requires active db contianer and local test file",
     )
     def test_add_terms_live(self):
-        data = dataset_table.read(self.test_file)
+        data = Questionnaire.read_dataset_table(self.test_file)
 
         self.preparator.add_terms(data)
-        self.assertIn(DATA_COLUMN_TERM, data)
+        self.assertIsNotNone(data.term)
 
     def test_add_tokens(self):
         data_dir = Path("napkon_string_matching/tests/data")
@@ -95,35 +79,35 @@ class TestMatchPreparator(unittest.TestCase):
         self.preparator.terminology_provider.providers[0]._synonyms = references
         self.preparator.terminology_provider.providers[0]._headings = headings
 
-        data = pd.DataFrame(
+        data = Questionnaire(
             [
                 {
-                    DATA_COLUMN_SHEET: "Test Sheet",
-                    DATA_COLUMN_FILE: "Testfile",
-                    DATA_COLUMN_CATEGORIES: None,
-                    DATA_COLUMN_TERM: "Hatte Sie Dialyse oder sonstiges?".split(),
+                    Columns.SHEET.value: "Test Sheet",
+                    Columns.FILE.value: "Testfile",
+                    Columns.CATEGORIES.value: None,
+                    Columns.TERM.value: "Hatte Sie Dialyse oder sonstiges?".split(),
                 },
             ]
         )
 
         self.preparator.add_tokens(data, 0.1, verbose=False, timeout=None)
 
-        self.assertIn(DATA_COLUMN_TOKENS, data)
-        self.assertIn(DATA_COLUMN_TOKEN_IDS, data)
-        self.assertIn(DATA_COLUMN_TOKEN_MATCH, data)
+        self.assertIsNotNone(data.tokens)
+        self.assertIsNotNone(data.token_ids)
+        self.assertIsNotNone(data.token_match)
 
-        self.assertTrue(any(["Dialyse" in entry for entry in data[DATA_COLUMN_TOKENS][0]]))
-        self.assertTrue(any(["Sonstiges" in entry for entry in data[DATA_COLUMN_TOKENS][0]]))
+        self.assertTrue(any(["Dialyse" in entry for entry in data.tokens[0]]))
+        self.assertTrue(any(["Sonstiges" in entry for entry in data.tokens[0]]))
 
     def test_add_terms_and_tokens(self):
-        data = pd.DataFrame(
+        data = Questionnaire(
             [
                 {
-                    DATA_COLUMN_ITEM: "Hatte Sie Dialyse oder sonstiges?",
-                    DATA_COLUMN_SHEET: "Test Sheet",
-                    DATA_COLUMN_FILE: "Testfile",
-                    DATA_COLUMN_CATEGORIES: None,
-                    DATA_COLUMN_QUESTION: "Dialyse",
+                    Columns.ITEM.value: "Hatte Sie Dialyse oder sonstiges?",
+                    Columns.SHEET.value: "Test Sheet",
+                    Columns.FILE.value: "Testfile",
+                    Columns.CATEGORIES.value: None,
+                    Columns.QUESTION.value: "Dialyse",
                 }
             ]
         )
@@ -140,25 +124,25 @@ class TestMatchPreparator(unittest.TestCase):
 
         self.preparator.add_tokens(data, 0.1, verbose=False, timeout=None)
 
-        self.assertIn(DATA_COLUMN_TOKENS, data)
-        self.assertIn(DATA_COLUMN_TOKEN_IDS, data)
-        self.assertIn(DATA_COLUMN_TOKEN_MATCH, data)
+        self.assertIsNotNone(data.tokens)
+        self.assertIsNotNone(data.token_ids)
+        self.assertIsNotNone(data.token_match)
 
-        self.assertTrue(any(["Dialyse" in entry for entry in data[DATA_COLUMN_TOKENS][0]]))
-        self.assertTrue(any(["Sonstiges" in entry for entry in data[DATA_COLUMN_TOKENS][0]]))
+        self.assertTrue(any(["Dialyse" in entry for entry in data.tokens[0]]))
+        self.assertTrue(any(["Sonstiges" in entry for entry in data.tokens[0]]))
 
     @unittest.skipIf(
         DISABLE_DB_TESTS or DISABLE_LOCAL_FILE_TESTS,
         "takes long time and requires active db contianer and local test file",
     )
     def test_add_terms_and_tokens_live(self):
-        data = dataset_table.read(self.test_file)
+        data = Questionnaire.read_dataset_table(self.test_file)
 
         data = data[:100]
 
         self.preparator.add_terms(data)
         self.preparator.add_tokens(data, 90, verbose=False, timeout=None)
 
-        self.assertIn(DATA_COLUMN_TOKENS, data)
-        self.assertIn(DATA_COLUMN_TOKEN_IDS, data)
-        self.assertIn(DATA_COLUMN_TOKEN_MATCH, data)
+        self.assertIsNotNone(data.tokens)
+        self.assertIsNotNone(data.token_ids)
+        self.assertIsNotNone(data.token_match)
