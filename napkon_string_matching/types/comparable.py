@@ -69,5 +69,5 @@ class ComparisonResults:
     def write_excel(self, file: str):
         writer = pd.ExcelWriter(file, engine="openpyxl")
         for name, comp in self.items():
-            comp.to_excel(writer, sheet_name=name)
+            comp.to_excel(writer, sheet_name=name, index=False)
         writer.save()
