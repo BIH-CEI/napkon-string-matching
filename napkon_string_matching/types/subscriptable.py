@@ -37,7 +37,11 @@ class Subscriptable:
         return getattr(self._data, __name)
 
     def __getitem__(self, val):
-        return self.__class__(self._data.__getitem__(val))
+        result = self._data.__getitem__(val)
+        if isinstance(result, pd.DataFrame):
+            return self.__class__(result)
+        else:
+            return result
 
     def __repr__(self) -> str:
         return repr(self._data)
