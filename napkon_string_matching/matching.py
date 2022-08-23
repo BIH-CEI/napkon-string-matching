@@ -10,7 +10,7 @@ from napkon_string_matching.prepare.match_preparator import MatchPreparator
 from napkon_string_matching.types.comparable import ComparisonResults
 from napkon_string_matching.types.questionnaire import Questionnaire
 
-RESULTS_FILE_PATTERN = "output/{file_name}_{score_threshold}_{compare_column}_{score_func}.csv"
+RESULTS_FILE_PATTERN = "output/result_{score_threshold}_{compare_column}_{score_func}.xlsx"
 
 CONFIG_FIELD_PREPARE = "prepare"
 CONFIG_FIELD_MATCHING = "matching"
@@ -58,13 +58,12 @@ def match(config: Dict) -> None:
     analysis = _analyse(comparisons)
     _print_analysis(analysis)
 
-    for name, dataset in datasets.items():
-        format_args = {
-            **config[CONFIG_FIELD_MATCHING],
-            "file_name": name,
-            "score_func": config[CONFIG_FIELD_MATCHING]["score_func"].replace("_", "-"),
-        }
-        results.write(RESULTS_FILE_PATTERN.format(**format_args), dataset)
+    # write result
+    format_args = {
+        **config[CONFIG_FIELD_MATCHING],
+        "score_func": config[CONFIG_FIELD_MATCHING]["score_func"].replace("_", "-"),
+    }
+    comparisons.write_excel(RESULTS_FILE_PATTERN.format(**format_args))
 
 
 def get_preparator(config):

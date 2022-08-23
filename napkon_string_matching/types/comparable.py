@@ -4,6 +4,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict
 
+import pandas as pd
 from napkon_string_matching.types.subscriptable import Subscriptable
 
 logger = logging.getLogger(__name__)
@@ -65,5 +66,8 @@ class ComparisonResults:
     def items(self):
         return self.results.items()
 
-    def write_excel(file: str | Path):
-        pass
+    def write_excel(self, file: str):
+        writer = pd.ExcelWriter(file, engine="openpyxl")
+        for name, comp in self.items():
+            comp.to_excel(writer, sheet_name=name)
+        writer.save()
