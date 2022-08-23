@@ -1,33 +1,27 @@
-import enum
 import json
 import logging
 import warnings
-from hashlib import md5
+from enum import Enum
 from pathlib import Path
 from typing import List
 
-import napkon_string_matching
 import napkon_string_matching.types.comparable as comp
 import numpy as np
 import pandas as pd
-from napkon_string_matching.types.comparable import Comparable
-from napkon_string_matching.types.subscriptable import Subscriptable
-from tqdm import tqdm
+from napkon_string_matching.types.comparable_subscriptable import (
+    ComparableColumns,
+    ComparableSubscriptable,
+    gen_hash,
+)
 
 
-class Columns(enum.Enum):
+class Columns(Enum):
     ITEM = "Item"
     SHEET = "Sheet"
     FILE = "File"
     CATEGORIES = "Categories"
     QUESTION = "Question"
     OPTIONS = "Options"
-    TERM = "Term"
-    TOKENS = "Tokens"
-    TOKEN_IDS = "TokenIds"
-    TOKEN_MATCH = "TokenMatch"
-    IDENTIFIER = "Identifier"
-    MATCHES = "Matches"
     VARIABLE = "Variable"
 
 
@@ -50,26 +44,14 @@ COLUMN_TEMP_SUBCATEGORY = "Subcategory"
 
 DATASETTABLE_ITEM_SKIPABLE = "<->"
 
-SUFFIX_LEFT = "_left"
-SUFFIX_RIGHT = "_right"
-
-COLUMN_SCORE = "Score"
-
-CACHE_FILE_PATTERN = "compared/cache_score_{}.json"
-
-SUFFIX_LEFT = "_left"
-SUFFIX_RIGHT = "_right"
-
-COLUMN_SCORE = "Score"
-
-CACHE_FILE_PATTERN = "compared/cache_score_{}.json"
 
 logger = logging.getLogger(__name__)
 
 
-class Questionnaire(Subscriptable):
+class Questionnaire(ComparableSubscriptable):
     __slots__ = [column.name.lower() for column in Columns]
-    __columns__ = Columns
+    __columns__ = list(ComparableColumns) + list(Columns)
+    __column_mapping__ = {Columns.QUESTION.value: comp.Columns.PARAMETER.value}
 
     def concat(self, others: List):
         if len(others) == 0:
@@ -172,97 +154,6 @@ class Questionnaire(Subscriptable):
 
     def hash(self) -> str:
         return gen_hash(self._data.to_csv())
-
-    def _hash_compare_args(self, other, *args, **kwargs) -> str:
-        hashes = [self.hash(), other.hash()]
-
-        hashes += [gen_hash(str(arg)) for arg in args]
-        hashes += [gen_hash(str(kwargs)) for kwargs in kwargs.items()]
-
-        return "".join(hashes)
-
-    def compare(
-        self,
-        other,
-        score_threshold: float = 0.1,
-        compare_column: str = Columns.TOKEN_IDS,
-        cached: bool = True,
-        cache_threshold: float = None,
-        *args,
-        **kwargs,
-    ) -> Comparable:
-
-        # Get the compare dataframe that holds the score to match all entries from
-        # the left with each from right dataset
-        df_hash = self._hash_compare_args(other, *args, **kwargs)
-        cache_score_file = Path(CACHE_FILE_PATTERN.format(df_hash))
-        logger.debug("cache hash %s", df_hash)
-
-        if cache_score_file.exists() and cached:
-            logger.info("using cached result")
-            result = Comparable.read_json(cache_score_file)
-        else:
-            if not cache_threshold:
-                cache_threshold = score_threshold
-            result = self._gen_comparable(
-                other,
-                score_threshold=cache_threshold,
-                compare_column=compare_column,
-                *args,
-                **kwargs,
-            )
-
-            if not cache_score_file.parent.exists():
-                cache_score_file.parent.mkdir(parents=True)
-
-            logger.info("write cache to file")
-            result.write_json(cache_score_file)
-
-        # Filter outside of the caching to reuse same cache with different thresholds
-        result = result[result.match_score >= score_threshold]
-        logger.debug("got %i filtered entries", len(result))
-
-        return result
-
-    def _gen_comparable(
-        self,
-        right,
-        score_func: str,
-        score_threshold: float = 0.1,
-        compare_column: str = Columns.TOKEN_IDS.value,
-        *args,
-        **kwargs,
-    ) -> Comparable:
-        score_func = getattr(napkon_string_matching.compare.score_functions, score_func)
-
-        left = self.dropna(subset=[compare_column])
-        right = right.dropna(subset=[compare_column])
-
-        column_mapping = {Columns.QUESTION.value: comp.Columns.PARAMETER.value}
-        left.rename(columns=column_mapping, inplace=True)
-        right.rename(columns=column_mapping, inplace=True)
-
-        right = right.add_prefix("Match")
-        compare_df = left.merge(right, how="cross").dataframe()
-
-        logger.info("calculate score")
-        comparable = Comparable(compare_df)
-
-        comparable.match_score = [
-            score_func(param, match_param)
-            for param, match_param in tqdm(
-                zip(comparable[compare_column], comparable["Match" + compare_column]),
-                total=len(comparable),
-            )
-        ]
-
-        # Remove not needed columns
-        comparable.drop_superfluous_columns()
-
-        comparable = comparable[comparable.match_score >= score_threshold]
-        logger.debug("got %i entries", len(comparable))
-
-        return comparable
 
 
 class SheetParser:
@@ -390,7 +281,7 @@ class SheetParser:
         sheet.rename(columns=mappings, inplace=True)
 
         # Create identifier column
-        sheet[Columns.IDENTIFIER.value] = [
+        sheet[ComparableColumns.IDENTIFIER.value] = [
             _generate_identifier(file, sheet, str(index))
             for file, sheet, index in zip(
                 sheet[Columns.FILE.value], sheet[Columns.SHEET.value], sheet.index
@@ -440,7 +331,3 @@ def _combine_categories(first: str, second: str) -> List[str]:
     if pd.notna(second):
         result.append(second)
     return result if result else None
-
-
-def gen_hash(string: str) -> str:
-    return md5(string.encode("utf-8"), usedforsecurity=False).hexdigest()
