@@ -6,8 +6,8 @@ from itertools import product
 from pathlib import Path
 from typing import Dict, List
 
-from napkon_string_matching.compare.compare import compare, enhance_datasets_with_matches
-from napkon_string_matching.files import dataframe, dataset_table, results
+# from napkon_string_matching.compare.compare import compare, enhance_datasets_with_matches
+# from napkon_string_matching.files import dataframe, dataset_table, results
 from napkon_string_matching.prepare.match_preparator import MatchPreparator
 from napkon_string_matching.types.questionnaire import Questionnaire
 
@@ -51,19 +51,8 @@ def match(config: Dict) -> None:
         key = tuple(sorted([name_first, name_second], key=str.lower))
         if key not in comparisons:
             logger.info("compare %s and %s", name_first, name_second)
-            matches = compare(dataset_first, dataset_second, **config[CONFIG_FIELD_MATCHING])
+            matches = dataset_first.compare(dataset_second, **config[CONFIG_FIELD_MATCHING])
             comparisons[key] = matches
-
-    for key, matches in comparisons.items():
-        name_left, name_right = key
-
-        dataset_left = datasets[name_left]
-        dataset_right = datasets[name_right]
-
-        enhance_datasets_with_matches(dataset_left, dataset_right, matches)
-
-        datasets[name_left] = dataset_left
-        datasets[name_right] = dataset_right
 
     analysis = _analyse(datasets)
     _print_analysis(analysis)
@@ -123,36 +112,36 @@ def prepare(
     # If prepared already exists, read it and return data
     if prepared_file.exists():
         logger.info("using previously cached prepared file")
-        data = dataframe.read(prepared_file)
+        data = Questionnaire.read_json(prepared_file)
         return data
 
     # If term file exists read its data
     if terms_file.exists():
         logger.info("using previously cached terms file")
-        data = dataframe.read(terms_file)
+        data = Questionnaire.read_json(terms_file)
     else:
         # If unprocessed file exists, read it; otherwise calculate
         if unprocessed_file.exists():
             logger.info("using previously cached unprocessed file")
-            data = dataframe.read(unprocessed_file)
+            data = Questionnaire.read_json(unprocessed_file)
         else:
-            data = dataset_table.read(file, *args, **kwargs)
+            data = Questionnaire.read_dataset_table(file, *args, **kwargs)
 
             if data is None:
                 return None
 
-            dataframe.write(unprocessed_file, data)
+            data.write_json(unprocessed_file)
 
         # No matter if unprocessed data was read from cache or dataset file,
         # the terms still needs to be generated
         preparator.add_terms(data)
-        dataframe.write(terms_file, data)
+        data.write_json(terms_file)
 
     # No matter if terms data was read or calculated,
     # the tokens still need to be generated if required
     if calculate_tokens:
         preparator.add_tokens(data, score_threshold=90, timeout=30)
-        dataframe.write(prepared_file, data)
+        data.write_json(prepared_file)
 
     return data
 
