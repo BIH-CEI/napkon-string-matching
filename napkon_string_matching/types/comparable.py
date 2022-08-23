@@ -2,6 +2,7 @@ import json
 import logging
 from enum import Enum
 from pathlib import Path
+from typing import Dict
 
 from napkon_string_matching.types.subscriptable import Subscriptable
 
@@ -52,3 +53,17 @@ class Comparable(Subscriptable):
 
         logger.info("write result to %s", str(file))
         file.write_text(self.to_csv(index=False), encoding="utf-8")
+
+
+class ComparisonResults:
+    def __init__(self, comp_dict: Dict[str, Comparable] = dict()) -> None:
+        self.results = comp_dict
+
+    def __setitem__(self, item, value):
+        self.results[item] = value
+
+    def items(self):
+        return self.results.items()
+
+    def write_excel(file: str | Path):
+        pass

@@ -4,11 +4,10 @@
 import logging
 from itertools import product
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict
 
-# from napkon_string_matching.compare.compare import compare, enhance_datasets_with_matches
-# from napkon_string_matching.files import dataframe, dataset_table, results
 from napkon_string_matching.prepare.match_preparator import MatchPreparator
+from napkon_string_matching.types.comparable import ComparisonResults
 from napkon_string_matching.types.questionnaire import Questionnaire
 
 RESULTS_FILE_PATTERN = "output/{file_name}_{score_threshold}_{compare_column}_{score_func}.csv"
@@ -35,7 +34,8 @@ def match(config: Dict) -> None:
 
         datasets[name] = dataset
 
-    comparisons = {}
+    comparisons = ComparisonResults()
+    matched = set()
     for entry_left, entry_right in product(datasets.items(), datasets.items()):
         # Sort key entries to prevent processing of entries in both orders
         # e.g. 1 and 2 but not 2 and 1
@@ -49,12 +49,13 @@ def match(config: Dict) -> None:
             continue
 
         key = tuple(sorted([name_first, name_second], key=str.lower))
-        if key not in comparisons:
+        if key not in matched:
+            matched.add(key)
             logger.info("compare %s and %s", name_first, name_second)
             matches = dataset_first.compare(dataset_second, **config[CONFIG_FIELD_MATCHING])
-            comparisons[key] = matches
+            comparisons[f"{name_first} vs {name_second}"] = matches
 
-    analysis = _analyse(datasets)
+    analysis = _analyse(comparisons)
     _print_analysis(analysis)
 
     for name, dataset in datasets.items():
@@ -146,7 +147,7 @@ def prepare(
     return data
 
 
-def _analyse(dfs: List[Questionnaire]) -> Dict[str, Dict[str, str]]:
+def _analyse(results: ComparisonResults) -> Dict[str, Dict[str, str]]:
     """
     Analyses how many entries there are in the result and how many are matched.
     Also calcualtes these for all entries starting with the `gec_` prefix.
@@ -154,17 +155,17 @@ def _analyse(dfs: List[Questionnaire]) -> Dict[str, Dict[str, str]]:
     GECCO_PREFIX = "gec_"
 
     result = {}
-    for name, df in dfs.items():
-        matched = df[df.matches.notna()]
+    for name, comp in results.items():
+        gecco_entries = comp[[GECCO_PREFIX in entry for entry in comp.variable]]
+        gecco_match_entries = comp[[GECCO_PREFIX in entry for entry in comp.match_variable]]
 
-        gecco_entries = df[[GECCO_PREFIX in entry for entry in df.variable]]
-        matched_gecco_entries = matched[[GECCO_PREFIX in entry for entry in matched.variable]]
-
-        df_result = {
-            "matched": "{}/{}".format(len(matched), len(df)),
-            "gecco": "{}/{}".format(len(matched_gecco_entries), len(gecco_entries)),
+        comp_result = {
+            "matched": "{}/{}".format(comp.variable.nunique(), comp.match_variable.nunique()),
+            "gecco": "{}/{}".format(
+                gecco_entries.variable.nunique(), gecco_match_entries.match_variable.nunique()
+            ),
         }
-        result[name] = df_result
+        result[name] = comp_result
     return result
 
 
