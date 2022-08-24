@@ -30,7 +30,7 @@ class GeccoDefinition(ComparableSubscriptable):
     @staticmethod
     def read_gecco83_definition(file: str | Path):
         column_mapping = {
-            "ID": Columns.ID.value,
+            "ID": ComparableColumns.IDENTIFIER.value,
             "KATEGORIE": Columns.CATEGORY.value,
             "PARAMETER CASE REPORT FORM": Columns.PARAMETER.value,
             "ANTWORT-MÖGLICHKEITEN": Columns.CHOICES.value,
@@ -42,7 +42,7 @@ class GeccoDefinition(ComparableSubscriptable):
     @staticmethod
     def read_geccoplus_definition(file: str | Path):
         column_mapping = {
-            "ID": Columns.ID.value,
+            "ID": ComparableColumns.IDENTIFIER.value,
             "Kategorie": Columns.CATEGORY.value,
             "Data Item": Columns.PARAMETER.value,
             "Antwortausprägungen": Columns.CHOICES.value,
