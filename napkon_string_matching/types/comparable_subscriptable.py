@@ -155,6 +155,7 @@ class ComparableSubscriptable(Subscriptable):
         file_name: str,
         preparator,
         calculate_tokens: bool = False,
+        tokens=dict(),
         *args,
         **kwargs,
     ):
@@ -175,6 +176,9 @@ class ComparableSubscriptable(Subscriptable):
 
         if "filter_prefix" in kwargs:
             file_pattern.append(kwargs["filter_prefix"])
+
+        if "score_threshold" in tokens:
+            file_pattern.append(str(tokens["score_threshold"]))
 
         file_pattern.append("{}.json")
 
@@ -221,7 +225,9 @@ class ComparableSubscriptable(Subscriptable):
         # No matter if terms data was read or calculated,
         # the tokens still need to be generated if required
         if calculate_tokens:
-            preparator.add_tokens(data, score_threshold=90, timeout=30)
+            config = {"score_threshold": 0.9, "timeout": 30, **tokens}
+            preparator.add_tokens(data, **config)
             data.write_json(prepared_file)
+            data.write_csv(prepared_file.with_suffix(".csv"))
 
         return data

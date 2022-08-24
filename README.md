@@ -26,6 +26,9 @@ matching:
   calculate_tokens: True | False
   filter_column: <column to filter by>
   filter_prefix: <prefix to be filtered by>
+  tokens:
+    timeout: <threshold>
+    score_threshold: <timeout>
 
 gecco_definitions:
   - gecco_definition.json
