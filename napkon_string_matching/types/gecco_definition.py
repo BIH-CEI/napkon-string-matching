@@ -40,7 +40,11 @@ class GeccoDefinition(ComparableSubscriptable):
         )
 
     @staticmethod
-    def read_geccoplus_definition(file: str | Path):
+    def read_original_format(file_name, *args, **kwargs):
+        return GeccoDefinition.read_json(file_name, *args, **kwargs)
+
+    @staticmethod
+    def read_geccoplus_definition(file: str | Path, *args, **kwargs):
         column_mapping = {
             "ID": ComparableColumns.IDENTIFIER.value,
             "Kategorie": Columns.CATEGORY.value,

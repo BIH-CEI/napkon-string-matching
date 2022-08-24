@@ -153,3 +153,84 @@ class ComparableSubscriptable(Subscriptable):
         }
 
         return sorted(tokens, key=str.casefold)
+
+    @staticmethod
+    def read_original_format(file_name, *args, **kwargs):
+        raise NotImplementedError()
+
+    @classmethod
+    def prepare(
+        cls,
+        file_name: str,
+        preparator,
+        calculate_tokens: bool = False,
+        *args,
+        **kwargs,
+    ):
+        """
+        Reads a questionnaire from file. If `calculate_tokens == True` tokens are also generated
+        using the provided preparator.
+        """
+        file = Path(file_name)
+        logger.info(f"prepare file {file.name}")
+
+        output_dir = Path("prepared")
+
+        # Build output file pattern
+        file_pattern = [file.stem]
+
+        if "filter_column" in kwargs:
+            file_pattern.append(kwargs["filter_column"])
+
+        if "filter_prefix" in kwargs:
+            file_pattern.append(kwargs["filter_prefix"])
+
+        file_pattern.append("{}.json")
+
+        file_pattern = "_".join(file_pattern)
+
+        # File names for all cache files
+        # Order here is unprocessed -> terms -> prepared
+        unprocessed_file = output_dir / file_pattern.format("unprocessed")
+        terms_file = output_dir / file_pattern.format("terms")
+        prepared_file = output_dir / file_pattern.format("prepared")
+
+        # Create output director if not existing
+        if not output_dir.exists():
+            output_dir.mkdir(parents=True)
+
+        # If prepared already exists, read it and return data
+        if prepared_file.exists():
+            logger.info("using previously cached prepared file")
+            data = cls.read_json(prepared_file)
+            return data
+
+        # If term file exists read its data
+        if terms_file.exists():
+            logger.info("using previously cached terms file")
+            data = cls.read_json(terms_file)
+        else:
+            # If unprocessed file exists, read it; otherwise calculate
+            if unprocessed_file.exists():
+                logger.info("using previously cached unprocessed file")
+                data = cls.read_json(unprocessed_file)
+            else:
+                data = cls.read_original_format(file, *args, **kwargs)
+
+                if data is None:
+                    return None
+
+                data.write_json(unprocessed_file)
+
+            # No matter if unprocessed data was read from cache or dataset file,
+            # the terms still needs to be generated
+            data.add_terms()
+            data.write_json(terms_file)
+
+        # No matter if terms data was read or calculated,
+        # the tokens still need to be generated if required
+        if calculate_tokens:
+            preparator.add_tokens(data, score_threshold=90, timeout=30)
+            data.write_json(prepared_file)
+
+        return data

@@ -68,6 +68,10 @@ class Questionnaire(ComparableSubscriptable):
         )
 
     @staticmethod
+    def read_original_format(file_name, *args, **kwargs):
+        return Questionnaire.read_dataset_table(file_name, *args, **kwargs)
+
+    @staticmethod
     def read_dataset_table(file: str | Path, *args, **kwargs):
         """
         Read a xlsx file

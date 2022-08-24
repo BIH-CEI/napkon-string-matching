@@ -17,6 +17,9 @@ matching:
   filter_column: Datenbankspalte
   filter_prefix: gec_
 
+gecco_definitions:
+  - input/gecco_definition.json
+
 files:
   - input/hap_test.xlsx
   - input/pop_test.xlsx
