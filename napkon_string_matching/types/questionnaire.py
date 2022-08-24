@@ -1,4 +1,3 @@
-import json
 import logging
 import warnings
 from enum import Enum
@@ -69,47 +68,6 @@ class Questionnaire(ComparableSubscriptable):
         )
 
     @staticmethod
-    def read_json(file: str | Path):
-        """
-        Read a `Questionnaire` stored as JSON from file
-
-        Attributes
-        ---
-            file_path (str|Path):   file path to read from
-
-        Returns
-        ---
-            Questionnaire:  from the file contents
-        """
-
-        logger.info("read from file %s...", str(file))
-
-        file = Path(file)
-        definition = json.loads(file.read_text(encoding="utf-8"))
-
-        result = Questionnaire(definition)
-        result.reset_index(drop=True, inplace=True)
-
-        logger.info("...got %i entries", len(result))
-        return result
-
-    def write_json(self, file: str | Path) -> None:
-        """
-        Write a `Questionnaire` to file in JSON format
-
-        Attributes
-        ---
-            file_path (str|Path):   file path to write to
-        """
-
-        logger.info("write %i entries to file %s...", len(self), str(file))
-
-        file = Path(file)
-        file.write_text(self.to_json(), encoding="utf-8")
-
-        logger.info("...done")
-
-    @staticmethod
     def read_dataset_table(file: str | Path, *args, **kwargs):
         """
         Read a xlsx file
@@ -154,6 +112,28 @@ class Questionnaire(ComparableSubscriptable):
 
     def hash(self) -> str:
         return gen_hash(self._data.to_csv())
+
+    def add_terms(self, language: str = "german"):
+        logger.info("add terms...")
+        result = [
+            Questionnaire.gen_term(category, question, item, language=language)
+            for category, question, item in zip(self.categories, self.question, self.item)
+        ]
+        self.term = result
+        logger.info("...done")
+
+    @staticmethod
+    def gen_term(categories: List[str], question: str, item: str, language: str = "german") -> str:
+        term_parts = []
+
+        if categories:
+            term_parts += categories
+        if question:
+            term_parts.append(question)
+        if item:
+            term_parts.append(item)
+
+        return ComparableSubscriptable.gen_term(term_parts, language)
 
 
 class SheetParser:

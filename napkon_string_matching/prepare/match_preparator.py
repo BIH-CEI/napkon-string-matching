@@ -2,7 +2,6 @@ import logging
 from multiprocessing import Pool
 from typing import List
 
-from napkon_string_matching.prepare.generate import gen_term
 from napkon_string_matching.terminology.mesh import (
     TERMINOLOGY_REQUEST_HEADINGS,
     TERMINOLOGY_REQUEST_TERMS,
@@ -30,15 +29,6 @@ class MatchPreparator:
         self.heading_requests = heading_requests
 
         self.terminology_provider = TerminologyProvider(self.config[CONFIG_FIELD_TERMINOLOGY])
-
-    def add_terms(self, qn: Questionnaire, language: str = "german"):
-        logger.info("add terms...")
-        result = [
-            gen_term(category, question, item, language)
-            for category, question, item in zip(qn.categories, qn.question, qn.item)
-        ]
-        qn.term = result
-        logger.info("...done")
 
     def add_tokens(
         self, qn: Questionnaire, score_threshold: float = 0.1, verbose: bool = True, timeout=10

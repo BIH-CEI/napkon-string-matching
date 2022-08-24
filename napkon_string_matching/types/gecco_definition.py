@@ -1,17 +1,19 @@
-import enum
-import json
 import logging
 import re
 import warnings
+from enum import Enum
 from pathlib import Path
 from typing import Dict, List
 
+import napkon_string_matching.types.comparable as comp
 import pandas as pd
-from napkon_string_matching.types.subscriptable import Subscriptable
+from napkon_string_matching.types.comparable_subscriptable import (
+    ComparableColumns,
+    ComparableSubscriptable,
+)
 
 
-class Columns(enum.Enum):
-    ID = "Id"
+class Columns(Enum):
     CATEGORY = "Category"
     PARAMETER = "Parameter"
     CHOICES = "Choices"
@@ -20,9 +22,10 @@ class Columns(enum.Enum):
 logger = logging.getLogger(__name__)
 
 
-class GeccoDefinition(Subscriptable):
+class GeccoDefinition(ComparableSubscriptable):
     __slots__ = [column.name.lower() for column in Columns]
-    __columns__ = Columns
+    __columns__ = list(ComparableColumns) + list(Columns)
+    __column_mapping__ = {ComparableColumns.IDENTIFIER.value: comp.Columns.VARIABLE.value}
 
     @staticmethod
     def read_gecco83_definition(file: str | Path):
@@ -105,17 +108,14 @@ class GeccoDefinition(Subscriptable):
 
         return GeccoDefinition(pd.concat([self._data, other._data], ignore_index=True))
 
-    @staticmethod
-    def read_json(file: str | Path):
-        file = Path(file)
-        definition = json.loads(file.read_text(encoding="utf-8"))
-        result = GeccoDefinition(definition)
-        result.reset_index(drop=True, inplace=True)
-        return result
-
-    def write_json(self, file: str | Path) -> None:
-        file = Path(file)
-        file.write_text(self.to_json(), encoding="utf-8")
+    def add_terms(self, language: str = "german"):
+        logger.info("add terms...")
+        result = [
+            ComparableSubscriptable.gen_term([category, parameter], language=language)
+            for category, parameter in zip(self.category, self.parameter)
+        ]
+        self.term = result
+        logger.info("...done")
 
 
 def _strip_column(column: pd.Series) -> pd.Series:

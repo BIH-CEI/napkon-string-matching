@@ -3,12 +3,21 @@ from abc import abstractmethod
 from enum import Enum
 from hashlib import md5
 from pathlib import Path
+from typing import List
 
 import napkon_string_matching.compare.score_functions
+import nltk
 from napkon_string_matching.types.comparable import Comparable
 from napkon_string_matching.types.subscriptable import Subscriptable
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
 from tqdm import tqdm
 
+nltk.download("punkt")
+nltk.download("stopwords")
+
+
+PREPARE_REMOVE_SYMBOLS = "!?,.()[]:;*"
 CACHE_FILE_PATTERN = "compared/cache_score_{}.json"
 
 logger = logging.getLogger(__name__)
@@ -127,3 +136,20 @@ class ComparableSubscriptable(Subscriptable):
         logger.debug("got %i entries", len(comparable))
 
         return comparable
+
+    @abstractmethod
+    def add_terms(self, language: str = "german"):
+        raise NotImplementedError()
+
+    @staticmethod
+    def gen_term(parts: List[str], language: str = "german") -> str:
+        tokens = word_tokenize(" ".join(parts))
+
+        stop_words = set(stopwords.words(language))
+        tokens = {
+            word
+            for word in tokens
+            if word.casefold() not in stop_words and word not in PREPARE_REMOVE_SYMBOLS
+        }
+
+        return sorted(tokens, key=str.casefold)

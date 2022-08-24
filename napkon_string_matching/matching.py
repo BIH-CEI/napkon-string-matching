@@ -134,7 +134,7 @@ def prepare(
 
         # No matter if unprocessed data was read from cache or dataset file,
         # the terms still needs to be generated
-        preparator.add_terms(data)
+        data.add_terms()
         data.write_json(terms_file)
 
     # No matter if terms data was read or calculated,
