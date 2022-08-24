@@ -228,5 +228,6 @@ class ComparableSubscriptable(Subscriptable):
             config = {"score_threshold": 0.9, "timeout": 30, **tokens}
             preparator.add_tokens(data, **config)
             data.write_json(prepared_file)
+            data.write_csv(prepared_file.with_suffix(".csv"))
 
         return data
