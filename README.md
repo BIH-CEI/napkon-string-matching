@@ -8,12 +8,15 @@
 File format:
 
 ```yaml
-db:
-  host: <host>
-  port: <port>
-  db: <db name>
-  user: <user>
-  passwd: <password>
+prepare:
+  terminology:
+    mesh:
+      db:
+        host: <host>
+        port: <port>
+        db: <db name>
+        user: <user>
+        passwd: <password>
 
 matching:
   score_threshold: <threshold>
@@ -23,6 +26,9 @@ matching:
   calculate_tokens: True | False
   filter_column: <column to filter by>
   filter_prefix: <prefix to be filtered by>
+
+gecco_definitions:
+  - gecco_definition.json
 
 files:
   - file1.xlsx
@@ -36,7 +42,10 @@ Run with
 ```bash
 docker run --rm \
   -v $(pwd):/configs \
+  -v $(pwd)/compared:/app/compared \
   -v $(pwd)/input:/app/input \
+  -v $(pwd)/output:/app/output \
+  -v $(pwd)/prepared:/app/prepared \
   ghcr.io/bih-cei/napkon-string-matching:main \
   --config /configs/config.yml
 ```

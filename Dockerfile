@@ -1,6 +1,5 @@
 ARG BASE=python:3.10-alpine
 
-
 FROM $BASE AS builder
 
 WORKDIR /app
@@ -13,16 +12,12 @@ RUN pip install --upgrade build
 RUN python -m build
 
 
-FROM $BASE
+FROM ghcr.io/bih-cei/napkon-string-matching-base:main
 
 WORKDIR /app
 
 COPY requirements.txt .
-RUN apk add --virtual build-dependencies build-base \
-    && pip install -r requirements.txt \
-    && apk del build-dependencies
-
-RUN apk add --no-cache libstdc++
+RUN pip install -r requirements.txt
 
 COPY main.py .
 
