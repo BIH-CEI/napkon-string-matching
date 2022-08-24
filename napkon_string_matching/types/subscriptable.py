@@ -1,6 +1,12 @@
+import json
+import logging
+from hashlib import md5
 from operator import getitem, setitem
+from pathlib import Path
 
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 class Subscriptable:
@@ -70,3 +76,51 @@ class Subscriptable:
     def drop_superfluous_columns(self) -> None:
         remove_columns = set(self.columns).difference(set(self.__column_names__))
         self.drop(columns=remove_columns, inplace=True)
+
+    def write_json(self, file_name: str | Path, *args, **kwargs) -> None:
+        """
+        Write data to file in JSON format
+
+        Attributes
+        ---
+            file_path (str|Path):   file path to write to
+        """
+
+        logger.info("write %i entries to file %s...", len(self), str(file_name))
+
+        file = Path(file_name)
+        file.write_text(self.to_json(), encoding="utf-8")
+
+        logger.info("...done")
+
+    @classmethod
+    def read_json(cls, file_name: str | Path, *args, **kwargs):
+        """
+        Read data stored as JSON from file
+
+        Attributes
+        ---
+            file_path (str|Path):   file path to read from
+
+        Returns
+        ---
+            Self:  from the file contents
+        """
+
+        logger.info("read from file %s...", str(file_name))
+
+        file = Path(file_name)
+        definition = json.loads(file.read_text(encoding="utf-8"))
+
+        result = cls(definition)
+        result.reset_index(drop=True, inplace=True)
+
+        logger.info("...got %i entries", len(result))
+        return result
+
+    def hash(self) -> str:
+        return gen_hash(self._data.to_csv())
+
+
+def gen_hash(string: str) -> str:
+    return md5(string.encode("utf-8"), usedforsecurity=False).hexdigest()

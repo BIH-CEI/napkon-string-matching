@@ -1,75 +1,36 @@
-import enum
-import json
 import logging
 import re
 import warnings
+from enum import Enum
 from pathlib import Path
 from typing import Dict, List
 
+import napkon_string_matching.types.comparable as comp
 import pandas as pd
+from napkon_string_matching.types.comparable_subscriptable import (
+    ComparableColumns,
+    ComparableSubscriptable,
+)
 
 
-class Columns(enum.Enum):
-    ID = "Id"
+class Columns(Enum):
     CATEGORY = "Category"
     PARAMETER = "Parameter"
     CHOICES = "Choices"
 
 
-COLUMN_NAMES = [column.value for column in Columns]
-PROPERTY_NAMES = [column.name.lower() for column in Columns]
-
 logger = logging.getLogger(__name__)
 
 
-class Subscriptable:
-    __slots__ = PROPERTY_NAMES
-
-    def __new__(cls, *args, **kwargs):
-        # Automatically define setter and getter methods for all properties
-        for column in Columns:
-            property_name = column.name.lower()
-
-            def getter_method(column=column.value):
-                return lambda self: getattr(self._data, column)
-
-            def setter_method(column=column.value):
-                return lambda self, value: setattr(self._data, column, value)
-
-            setattr(
-                cls,
-                property_name,
-                property(
-                    fget=getter_method(),
-                    fset=setter_method(),
-                ),
-            )
-        return super().__new__(cls)
-
-    def __getattr__(self, __name: str):
-        return getattr(self._data, __name)
-
-    def __repr__(self) -> str:
-        return repr(self._data)
-
-    def __str__(self) -> str:
-        return str(self._data)
-
-    def __eq__(self, __o: object) -> bool:
-        return self._data.equals(__o)
-
-    def __len__(self) -> int:
-        return len(self._data)
-
-
-class GeccoDefinition(Subscriptable):
-    def __init__(self, data=None) -> None:
-        self._data = pd.DataFrame(data)
+class GeccoDefinition(ComparableSubscriptable):
+    __slots__ = [column.name.lower() for column in Columns]
+    __columns__ = list(ComparableColumns) + list(Columns)
+    __column_mapping__ = {ComparableColumns.IDENTIFIER.value: comp.Columns.VARIABLE.value}
 
     @staticmethod
     def read_gecco83_definition(file: str | Path):
         column_mapping = {
-            "ID": Columns.ID.value,
+            "ID": ComparableColumns.IDENTIFIER.value,
             "KATEGORIE": Columns.CATEGORY.value,
             "PARAMETER CASE REPORT FORM": Columns.PARAMETER.value,
             "ANTWORT-MÖGLICHKEITEN": Columns.CHOICES.value,
@@ -79,9 +40,13 @@ class GeccoDefinition(Subscriptable):
         )
 
     @staticmethod
-    def read_geccoplus_definition(file: str | Path):
+    def read_original_format(file_name, *args, **kwargs):
+        return GeccoDefinition.read_json(file_name, *args, **kwargs)
+
+    @staticmethod
+    def read_geccoplus_definition(file: str | Path, *args, **kwargs):
         column_mapping = {
-            "ID": Columns.ID.value,
+            "ID": ComparableColumns.IDENTIFIER.value,
             "Kategorie": Columns.CATEGORY.value,
             "Data Item": Columns.PARAMETER.value,
             "Antwortausprägungen": Columns.CHOICES.value,
@@ -147,17 +112,14 @@ class GeccoDefinition(Subscriptable):
 
         return GeccoDefinition(pd.concat([self._data, other._data], ignore_index=True))
 
-    @staticmethod
-    def read_json(file: str | Path):
-        file = Path(file)
-        definition = json.loads(file.read_text(encoding="utf-8"))
-        result = GeccoDefinition(definition)
-        result.reset_index(drop=True, inplace=True)
-        return result
-
-    def write_json(self, file: str | Path) -> None:
-        file = Path(file)
-        file.write_text(self.to_json(), encoding="utf-8")
+    def add_terms(self, language: str = "german"):
+        logger.info("add terms...")
+        result = [
+            ComparableSubscriptable.gen_term([category, parameter], language=language)
+            for category, parameter in zip(self.category, self.parameter)
+        ]
+        self.term = result
+        logger.info("...done")
 
 
 def _strip_column(column: pd.Series) -> pd.Series:

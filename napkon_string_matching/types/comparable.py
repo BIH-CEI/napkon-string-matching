@@ -1,4 +1,3 @@
-import json
 import logging
 from enum import Enum
 from pathlib import Path
@@ -23,27 +22,6 @@ class Columns(Enum):
 class Comparable(Subscriptable):
     __slots__ = [column.name.lower() for column in Columns]
     __columns__ = Columns
-
-    def write_json(self, file_name: str | Path) -> None:
-        logger.info("write %i entries to file %s...", len(self), str(file_name))
-
-        file = Path(file_name)
-        file.write_text(self.to_json(), encoding="utf-8")
-
-        logger.info("...done")
-
-    @staticmethod
-    def read_json(file_name: str | Path):
-        logger.info("read from file %s...", str(file_name))
-
-        file = Path(file_name)
-        definition = json.loads(file.read_text(encoding="utf-8"))
-
-        result = Comparable(definition)
-        result.reset_index(drop=True, inplace=True)
-
-        logger.info("...got %i entries", len(result))
-        return result
 
     def write_csv(self, file_name: str | Path) -> None:
         file = Path(file_name)

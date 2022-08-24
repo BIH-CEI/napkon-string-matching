@@ -2,14 +2,13 @@ import logging
 from multiprocessing import Pool
 from typing import List
 
-from napkon_string_matching.prepare.generate import gen_term
 from napkon_string_matching.terminology.mesh import (
     TERMINOLOGY_REQUEST_HEADINGS,
     TERMINOLOGY_REQUEST_TERMS,
     TableRequest,
 )
 from napkon_string_matching.terminology.provider import TerminologyProvider
-from napkon_string_matching.types.questionnaire import Questionnaire
+from napkon_string_matching.types.comparable_subscriptable import ComparableSubscriptable
 from tqdm import tqdm
 
 CONFIG_FIELD_TERMINOLOGY = "terminology"
@@ -31,17 +30,12 @@ class MatchPreparator:
 
         self.terminology_provider = TerminologyProvider(self.config[CONFIG_FIELD_TERMINOLOGY])
 
-    def add_terms(self, qn: Questionnaire, language: str = "german"):
-        logger.info("add terms...")
-        result = [
-            gen_term(category, question, item, language)
-            for category, question, item in zip(qn.categories, qn.question, qn.item)
-        ]
-        qn.term = result
-        logger.info("...done")
-
     def add_tokens(
-        self, qn: Questionnaire, score_threshold: float = 0.1, verbose: bool = True, timeout=10
+        self,
+        cs: ComparableSubscriptable,
+        score_threshold: float = 0.1,
+        verbose: bool = True,
+        timeout=10,
     ):
         if not self.terminology_provider.initialized:
             self.terminology_provider.initialize()
@@ -58,7 +52,7 @@ class MatchPreparator:
                     self.terminology_provider.get_matches,
                     (term, score_threshold),
                 )
-                for term in qn.term
+                for term in cs.term
             ]
 
             if verbose:
@@ -68,7 +62,7 @@ class MatchPreparator:
 
         unpacked = [tuple(zip(*entry)) if entry else (None, None, None) for entry in results]
 
-        qn.token_ids = [ids if ids else None for ids, *_ in unpacked]
-        qn.tokens = [tokens if tokens else None for _, tokens, *_ in unpacked]
-        qn.token_match = results
+        cs.token_ids = [ids if ids else None for ids, *_ in unpacked]
+        cs.tokens = [tokens if tokens else None for _, tokens, *_ in unpacked]
+        cs.token_match = results
         logger.info("...done")

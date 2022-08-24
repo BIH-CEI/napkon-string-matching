@@ -5,6 +5,7 @@ from pathlib import Path
 import pandas as pd
 from napkon_string_matching.prepare.match_preparator import MatchPreparator
 from napkon_string_matching.tests import DISABLE_DB_TESTS, DISABLE_LOCAL_FILE_TESTS
+from napkon_string_matching.types.comparable_subscriptable import ComparableColumns
 from napkon_string_matching.types.questionnaire import Columns, Questionnaire
 
 
@@ -53,7 +54,7 @@ class TestMatchPreparator(unittest.TestCase):
             ]
         )
 
-        self.preparator.add_terms(data, language="english")
+        data.add_terms(language="english")
 
         self.assertIsNotNone(data.term)
         self.assertEqual(2, len(data.term))
@@ -67,7 +68,7 @@ class TestMatchPreparator(unittest.TestCase):
     def test_add_terms_live(self):
         data = Questionnaire.read_dataset_table(self.test_file)
 
-        self.preparator.add_terms(data)
+        data.add_terms()
         self.assertIsNotNone(data.term)
 
     def test_add_tokens(self):
@@ -85,7 +86,7 @@ class TestMatchPreparator(unittest.TestCase):
                     Columns.SHEET.value: "Test Sheet",
                     Columns.FILE.value: "Testfile",
                     Columns.CATEGORIES.value: None,
-                    Columns.TERM.value: "Hatte Sie Dialyse oder sonstiges?".split(),
+                    ComparableColumns.TERM.value: "Hatte Sie Dialyse oder sonstiges?".split(),
                 },
             ]
         )
@@ -120,8 +121,7 @@ class TestMatchPreparator(unittest.TestCase):
         self.preparator.terminology_provider.providers[0]._synonyms = references
         self.preparator.terminology_provider.providers[0]._headings = headings
 
-        self.preparator.add_terms(data)
-
+        data.add_terms()
         self.preparator.add_tokens(data, 0.1, verbose=False, timeout=None)
 
         self.assertIsNotNone(data.tokens)
@@ -140,7 +140,7 @@ class TestMatchPreparator(unittest.TestCase):
 
         data = data[:100]
 
-        self.preparator.add_terms(data)
+        data.add_terms()
         self.preparator.add_tokens(data, 90, verbose=False, timeout=None)
 
         self.assertIsNotNone(data.tokens)
