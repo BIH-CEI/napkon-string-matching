@@ -1,5 +1,6 @@
 import json
 import logging
+from hashlib import md5
 from operator import getitem, setitem
 from pathlib import Path
 
@@ -116,3 +117,10 @@ class Subscriptable:
 
         logger.info("...got %i entries", len(result))
         return result
+
+    def hash(self) -> str:
+        return gen_hash(self._data.to_csv())
+
+
+def gen_hash(string: str) -> str:
+    return md5(string.encode("utf-8"), usedforsecurity=False).hexdigest()

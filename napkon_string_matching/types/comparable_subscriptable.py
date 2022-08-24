@@ -1,14 +1,13 @@
 import logging
 from abc import abstractmethod
 from enum import Enum
-from hashlib import md5
 from pathlib import Path
 from typing import List
 
 import napkon_string_matching.compare.score_functions
 import nltk
 from napkon_string_matching.types.comparable import Comparable
-from napkon_string_matching.types.subscriptable import Subscriptable
+from napkon_string_matching.types.subscriptable import Subscriptable, gen_hash
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from tqdm import tqdm
@@ -23,10 +22,6 @@ CACHE_FILE_PATTERN = "compared/cache_score_{}.json"
 logger = logging.getLogger(__name__)
 
 
-def gen_hash(string: str) -> str:
-    return md5(string.encode("utf-8"), usedforsecurity=False).hexdigest()
-
-
 class ComparableColumns(Enum):
     TERM = "Term"
     TOKENS = "Tokens"
@@ -39,10 +34,6 @@ class ComparableColumns(Enum):
 class ComparableSubscriptable(Subscriptable):
     __slots__ = [column.name.lower() for column in ComparableColumns]
     __column_mapping__ = {}
-
-    @abstractmethod
-    def hash(self) -> str:
-        raise NotImplementedError()
 
     def _hash_compare_args(self, other, *args, **kwargs) -> str:
         hashes = [self.hash(), other.hash()]

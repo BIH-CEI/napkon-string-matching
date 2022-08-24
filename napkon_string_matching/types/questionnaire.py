@@ -10,7 +10,6 @@ import pandas as pd
 from napkon_string_matching.types.comparable_subscriptable import (
     ComparableColumns,
     ComparableSubscriptable,
-    gen_hash,
 )
 
 
@@ -113,9 +112,6 @@ class Questionnaire(ComparableSubscriptable):
         logger.info("...got %i entries", len(result))
 
         return result
-
-    def hash(self) -> str:
-        return gen_hash(self._data.to_csv())
 
     def add_terms(self, language: str = "german"):
         logger.info("add terms...")
