@@ -16,6 +16,9 @@ matching:
   calculate_tokens: False
   filter_column: Datenbankspalte
   filter_prefix: gec_
+  tokens:
+    timeout: 30
+    score_threshold: 0.85
 
 gecco_definitions:
   - input/gecco_definition.json
