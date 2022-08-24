@@ -1,16 +1,5 @@
 ARG BASE=python:3.10-alpine
 
-FROM $BASE as pandas-base
-
-WORKDIR /app
-
-COPY requirements.txt .
-RUN apk add --virtual build-dependencies build-base \
-    && pip install $(grep "pandas\|numpy" requirements.txt) \
-    && apk del build-dependencies
-RUN apk add --no-cache libstdc++
-
-
 FROM $BASE AS builder
 
 WORKDIR /app
@@ -23,12 +12,12 @@ RUN pip install --upgrade build
 RUN python -m build
 
 
-FROM pandas-base
+FROM ghcr.io/bih-cei/napkon-string-matching-base:main
 
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install -r requirements.txt 
+RUN pip install -r requirements.txt
 
 COPY main.py .
 
