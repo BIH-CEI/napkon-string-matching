@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 from napkon_string_matching.tests import DISABLE_LOCAL_FILE_TESTS
+from napkon_string_matching.types.comparable_subscriptable import ComparableColumns
 from napkon_string_matching.types.questionnaire import (
     DATASETTABLE_COLUMN_DB_COLUMN,
     DATASETTABLE_COLUMN_FILE,
@@ -82,7 +83,7 @@ class TestQuestionnaire(unittest.TestCase):
 
         expected_results = [
             {
-                Columns.IDENTIFIER.value: "Testfile#Test-Sheet#2",
+                ComparableColumns.IDENTIFIER.value: "Testfile#Test-Sheet#2",
                 Columns.ITEM.value: "This is an item with options",
                 Columns.SHEET.value: "Test Sheet",
                 Columns.FILE.value: "Testfile",
@@ -92,7 +93,7 @@ class TestQuestionnaire(unittest.TestCase):
                 Columns.VARIABLE.value: "foo column",
             },
             {
-                Columns.IDENTIFIER.value: "Testfile#Test-Sheet#3",
+                ComparableColumns.IDENTIFIER.value: "Testfile#Test-Sheet#3",
                 Columns.ITEM.value: "Another item for same question",
                 Columns.SHEET.value: "Test Sheet",
                 Columns.FILE.value: "Testfile",
@@ -110,3 +111,67 @@ class TestQuestionnaire(unittest.TestCase):
         for row, expected in zip(result.iterrows(), expected_results):
             _, row = row
             self.assertDictEqual(expected, row.to_dict())
+
+    def test_gen_term(self):
+        input_list = [
+            (
+                ["Header", "Subheader"],
+                "This is a question",
+                "This is an item with options",
+            ),
+            ([], "This is another question", "An item without categories"),
+        ]
+        expected_list = [
+            "Header item options question Subheader".split(),
+            "another categories item question without".split(),
+        ]
+
+        for input, expected in zip(input_list, expected_list):
+            categories, question, item = input
+
+            result = Questionnaire.gen_term(
+                categories,
+                question,
+                item,
+                language="english",
+            )
+            self.assertEqual(expected, result)
+
+    def test_gen_term_german(self):
+        input_list = [
+            (["Einschlusskriterien!"], "[Ursache]", "Andere Ursache, bitte angeben:"),
+            (
+                ["Patienteninformationen"],
+                "Hatte der/die Patient*in in den letzten 14 Tagen vor Beginn seiner/ihrer \
+                    Beschwerden wissentlich Kontakt mit einer wahrscheinlich oder \
+                    nachgewiesenermaßen mit SARS-CoV-2 infizierten Person?",
+                "Hatte der/die Patient*in in den letzten 14 Tagen vor Beginn seiner/ihrer \
+                    Beschwerden wissentlich Kontakt mit einer wahrscheinlich oder \
+                    nachgewiesenermaßen mit SARS-CoV-2 infizierten Person?",
+            ),
+            (
+                ["Patienteninformationen"],
+                "Welche Altersgruppen gibt es im Haushalt?",
+                "Wieviele Kinder <1",
+            ),
+        ]
+
+        expected_list = [
+            "angeben bitte Einschlusskriterien Ursache".split(),
+            "14 Beginn Beschwerden der/die infizierten Kontakt letzten nachgewiesenermaßen Patient \
+                Patienteninformationen Person SARS-CoV-2 seiner/ihrer Tagen wahrscheinlich \
+                wissentlich".split(),
+            "1 < Altersgruppen gibt Haushalt Kinder Patienteninformationen Wieviele".split(),
+        ]
+
+        for input, expected in zip(input_list, expected_list):
+            categories, question, item = input
+
+            result = Questionnaire.gen_term(
+                categories,
+                question,
+                item,
+                language="german",
+            )
+
+            self.assertEqual(expected, result)
