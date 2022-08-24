@@ -1,9 +1,9 @@
 import unittest
 
-from napkon_string_matching.prepare.generate import gen_term
+from napkon_string_matching.types.comparable_subscriptable import ComparableSubscriptable
 
 
-class TestGenTerm(unittest.TestCase):
+class TestComparableSubscriptable(unittest.TestCase):
     def test_gen_term(self):
         input_list = [
             (
@@ -21,7 +21,7 @@ class TestGenTerm(unittest.TestCase):
         for input, expected in zip(input_list, expected_list):
             categories, question, item = input
 
-            result = gen_term(
+            result = ComparableSubscriptable.gen_term(
                 categories,
                 question,
                 item,
@@ -59,7 +59,7 @@ class TestGenTerm(unittest.TestCase):
         for input, expected in zip(input_list, expected_list):
             categories, question, item = input
 
-            result = gen_term(
+            result = ComparableSubscriptable.gen_term(
                 categories,
                 question,
                 item,
