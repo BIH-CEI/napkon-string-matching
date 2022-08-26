@@ -91,6 +91,8 @@ class TestQuestionnaire(unittest.TestCase):
                 Columns.QUESTION.value: "This is a question",
                 Columns.OPTIONS.value: ["Option A", "Option B"],
                 Columns.VARIABLE.value: "foo column",
+                Columns.PARAMETER.value: "Header:Subheader:This is a question:"
+                + "This is an item with options",
             },
             {
                 ComparableColumns.IDENTIFIER.value: "Testfile#Test-Sheet#3",
@@ -101,6 +103,8 @@ class TestQuestionnaire(unittest.TestCase):
                 Columns.QUESTION.value: "This is a question",
                 Columns.OPTIONS.value: None,
                 Columns.VARIABLE.value: "bar column",
+                Columns.PARAMETER.value: "Header:Subheader:This is a question:"
+                + "Another item for same question",
             },
         ]
 
