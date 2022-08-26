@@ -21,6 +21,7 @@ class Columns(Enum):
     QUESTION = "Question"
     OPTIONS = "Options"
     VARIABLE = "Variable"
+    PARAMETER = "Parameter"
 
 
 DATASETTABLE_COLUMN_DB_COLUMN = "Datenbankspalte"
@@ -49,7 +50,7 @@ logger = logging.getLogger(__name__)
 class Questionnaire(ComparableSubscriptable):
     __slots__ = [column.name.lower() for column in Columns]
     __columns__ = list(ComparableColumns) + list(Columns)
-    __column_mapping__ = {Columns.QUESTION.value: comp.Columns.PARAMETER.value}
+    __column_mapping__ = {Columns.PARAMETER.value: comp.Columns.PARAMETER.value}
 
     def concat(self, others: List):
         if len(others) == 0:
@@ -124,16 +125,21 @@ class Questionnaire(ComparableSubscriptable):
 
     @staticmethod
     def gen_term(categories: List[str], question: str, item: str, language: str = "german") -> str:
-        term_parts = []
-
-        if categories:
-            term_parts += categories
-        if question:
-            term_parts.append(question)
-        if item:
-            term_parts.append(item)
-
+        term_parts = get_term_parts(categories, question, item)
         return ComparableSubscriptable.gen_term(term_parts, language)
+
+
+def get_term_parts(categories: List[str], question: str, item: str) -> List[str]:
+    term_parts = []
+
+    if categories:
+        term_parts += categories
+    if question:
+        term_parts.append(question)
+    if item:
+        term_parts.append(item)
+
+    return term_parts
 
 
 class SheetParser:
@@ -259,22 +265,26 @@ class SheetParser:
             DATASETTABLE_COLUMN_VARIABLE: Columns.VARIABLE.value,
         }
         sheet.rename(columns=mappings, inplace=True)
+        result = Questionnaire(sheet)
 
         # Create identifier column
-        sheet[ComparableColumns.IDENTIFIER.value] = [
+        result.identifier = [
             _generate_identifier(file, sheet, str(index))
-            for file, sheet, index in zip(
-                sheet[Columns.FILE.value], sheet[Columns.SHEET.value], sheet.index
-            )
+            for file, sheet, index in zip(result.file, result.sheet, result.index)
         ]
 
         # Set options
-        options = sheet.get(DATASETTABLE_COLUMN_OPTIONS)
-        sheet[Columns.OPTIONS.value] = (
+        options = result.get(DATASETTABLE_COLUMN_OPTIONS)
+        result.options = (
             [_generate_options(options_) for options_ in options] if options is not None else None
         )
 
-        result = Questionnaire(sheet)
+        # Generate parameter
+        result.parameter = [
+            ":".join(get_term_parts(category, question, item))
+            for category, question, item in zip(result.categories, result.question, result.item)
+        ]
+
         result.drop_superfluous_columns()
 
         return result
