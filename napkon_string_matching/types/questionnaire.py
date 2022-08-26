@@ -265,22 +265,26 @@ class SheetParser:
             DATASETTABLE_COLUMN_VARIABLE: Columns.VARIABLE.value,
         }
         sheet.rename(columns=mappings, inplace=True)
+        result = Questionnaire(sheet)
 
         # Create identifier column
-        sheet[ComparableColumns.IDENTIFIER.value] = [
+        result.identifier = [
             _generate_identifier(file, sheet, str(index))
-            for file, sheet, index in zip(
-                sheet[Columns.FILE.value], sheet[Columns.SHEET.value], sheet.index
-            )
+            for file, sheet, index in zip(result.file, result.sheet, result.index)
         ]
 
         # Set options
-        options = sheet.get(DATASETTABLE_COLUMN_OPTIONS)
-        sheet[Columns.OPTIONS.value] = (
+        options = result.get(DATASETTABLE_COLUMN_OPTIONS)
+        result.options = (
             [_generate_options(options_) for options_ in options] if options is not None else None
         )
 
-        result = Questionnaire(sheet)
+        # Generate parameter
+        result.parameter = [
+            ":".join(get_term_parts(category, question, item))
+            for category, question, item in zip(result.categories, result.question, result.item)
+        ]
+
         result.drop_superfluous_columns()
 
         return result
