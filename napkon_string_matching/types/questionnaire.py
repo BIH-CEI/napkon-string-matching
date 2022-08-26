@@ -21,6 +21,7 @@ class Columns(Enum):
     QUESTION = "Question"
     OPTIONS = "Options"
     VARIABLE = "Variable"
+    PARAMETER = "Parameter"
 
 
 DATASETTABLE_COLUMN_DB_COLUMN = "Datenbankspalte"
@@ -49,7 +50,7 @@ logger = logging.getLogger(__name__)
 class Questionnaire(ComparableSubscriptable):
     __slots__ = [column.name.lower() for column in Columns]
     __columns__ = list(ComparableColumns) + list(Columns)
-    __column_mapping__ = {Columns.QUESTION.value: comp.Columns.PARAMETER.value}
+    __column_mapping__ = {Columns.PARAMETER.value: comp.Columns.PARAMETER.value}
 
     def concat(self, others: List):
         if len(others) == 0:
