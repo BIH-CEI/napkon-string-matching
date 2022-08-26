@@ -125,16 +125,21 @@ class Questionnaire(ComparableSubscriptable):
 
     @staticmethod
     def gen_term(categories: List[str], question: str, item: str, language: str = "german") -> str:
-        term_parts = []
-
-        if categories:
-            term_parts += categories
-        if question:
-            term_parts.append(question)
-        if item:
-            term_parts.append(item)
-
+        term_parts = get_term_parts(categories, question, item)
         return ComparableSubscriptable.gen_term(term_parts, language)
+
+
+def get_term_parts(categories: List[str], question: str, item: str) -> List[str]:
+    term_parts = []
+
+    if categories:
+        term_parts += categories
+    if question:
+        term_parts.append(question)
+    if item:
+        term_parts.append(item)
+
+    return term_parts
 
 
 class SheetParser:
