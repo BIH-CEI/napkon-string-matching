@@ -9,7 +9,7 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-class Subscriptable:
+class Data:
     __slots__ = ["_data"]
     __columns__ = []
 
