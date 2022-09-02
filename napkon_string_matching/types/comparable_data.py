@@ -34,6 +34,14 @@ class ComparableColumns(Enum):
 class ComparableData(Data):
     __slots__ = [column.name.lower() for column in ComparableColumns]
     __column_mapping__ = {}
+    __category_type__ = None
+
+    @property
+    def categories(self) -> List[str]:
+        return list(self._data[self.__category_column__].unique())
+
+    def get_category(self, category: str) -> __category_type__:
+        return self.__category_type__(self._data, category)
 
     def _hash_compare_args(self, other, *args, **kwargs) -> str:
         hashes = [self.hash(), other.hash()]

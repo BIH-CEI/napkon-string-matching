@@ -7,10 +7,8 @@ from typing import List
 import napkon_string_matching.types.comparable as comp
 import numpy as np
 import pandas as pd
-from napkon_string_matching.types.comparable_data import (
-    ComparableColumns,
-    ComparableData,
-)
+from napkon_string_matching.types.category import Category
+from napkon_string_matching.types.comparable_data import ComparableColumns, ComparableData
 
 
 class Columns(Enum):
@@ -47,10 +45,18 @@ DATASETTABLE_ITEM_SKIPABLE = "<->"
 logger = logging.getLogger(__name__)
 
 
-class Questionnaire(ComparableData):
-    __slots__ = [column.name.lower() for column in Columns]
+class QuestionnaireBase:
     __columns__ = list(ComparableColumns) + list(Columns)
+    __category_column__ = Columns.SHEET.value
+
+
+class QuestionnaireCategory(QuestionnaireBase, Category):
+    pass
+
+
+class Questionnaire(QuestionnaireBase, ComparableData):
     __column_mapping__ = {Columns.PARAMETER.value: comp.Columns.PARAMETER.value}
+    __category_type__ = QuestionnaireCategory
 
     def concat(self, others: List):
         if len(others) == 0:
