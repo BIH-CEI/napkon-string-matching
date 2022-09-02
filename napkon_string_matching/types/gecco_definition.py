@@ -7,6 +7,7 @@ from typing import Dict, List
 
 import napkon_string_matching.types.comparable as comp
 import pandas as pd
+from napkon_string_matching.types.category import Category
 from napkon_string_matching.types.comparable_data import ComparableColumns, ComparableData
 
 
@@ -19,9 +20,15 @@ class Columns(Enum):
 logger = logging.getLogger(__name__)
 
 
-class GeccoDefinition(ComparableData):
-    __slots__ = [column.name.lower() for column in Columns]
+class GeccoBase:
     __columns__ = list(ComparableColumns) + list(Columns)
+
+
+class GeccoCategory(Category, GeccoBase):
+    __category_column__ = Columns.CATEGORY.value
+
+
+class GeccoDefinition(ComparableData, GeccoBase):
     __column_mapping__ = {ComparableColumns.IDENTIFIER.value: comp.Columns.VARIABLE.value}
 
     @staticmethod
@@ -112,11 +119,18 @@ class GeccoDefinition(ComparableData):
     def add_terms(self, language: str = "german"):
         logger.info("add terms...")
         result = [
-            ComparableSubscriptable.gen_term([category, parameter], language=language)
+            ComparableData.gen_term([category, parameter], language=language)
             for category, parameter in zip(self.category, self.parameter)
         ]
         self.term = result
         logger.info("...done")
+
+    @property
+    def categories(self) -> List[str]:
+        return list(self._data["Category"].unique())
+
+    def get_category(self, category: str) -> GeccoCategory | None:
+        return GeccoCategory(self._data, category)
 
 
 def _strip_column(column: pd.Series) -> pd.Series:
