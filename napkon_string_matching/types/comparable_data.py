@@ -7,7 +7,7 @@ from typing import List
 import napkon_string_matching.compare.score_functions
 import nltk
 from napkon_string_matching.types.comparable import Comparable
-from napkon_string_matching.types.subscriptable import Subscriptable, gen_hash
+from napkon_string_matching.types.data import Data, gen_hash
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from tqdm import tqdm
@@ -31,7 +31,7 @@ class ComparableColumns(Enum):
     IDENTIFIER = "Identifier"
 
 
-class ComparableSubscriptable(Subscriptable):
+class ComparableData(Data):
     __slots__ = [column.name.lower() for column in ComparableColumns]
     __column_mapping__ = {}
 

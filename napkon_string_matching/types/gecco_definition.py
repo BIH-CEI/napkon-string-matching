@@ -7,10 +7,7 @@ from typing import Dict, List
 
 import napkon_string_matching.types.comparable as comp
 import pandas as pd
-from napkon_string_matching.types.comparable_subscriptable import (
-    ComparableColumns,
-    ComparableSubscriptable,
-)
+from napkon_string_matching.types.comparable_data import ComparableColumns, ComparableData
 
 
 class Columns(Enum):
@@ -22,7 +19,7 @@ class Columns(Enum):
 logger = logging.getLogger(__name__)
 
 
-class GeccoDefinition(ComparableSubscriptable):
+class GeccoDefinition(ComparableData):
     __slots__ = [column.name.lower() for column in Columns]
     __columns__ = list(ComparableColumns) + list(Columns)
     __column_mapping__ = {ComparableColumns.IDENTIFIER.value: comp.Columns.VARIABLE.value}

@@ -7,9 +7,9 @@ from typing import List
 import napkon_string_matching.types.comparable as comp
 import numpy as np
 import pandas as pd
-from napkon_string_matching.types.comparable_subscriptable import (
+from napkon_string_matching.types.comparable_data import (
     ComparableColumns,
-    ComparableSubscriptable,
+    ComparableData,
 )
 
 
@@ -47,7 +47,7 @@ DATASETTABLE_ITEM_SKIPABLE = "<->"
 logger = logging.getLogger(__name__)
 
 
-class Questionnaire(ComparableSubscriptable):
+class Questionnaire(ComparableData):
     __slots__ = [column.name.lower() for column in Columns]
     __columns__ = list(ComparableColumns) + list(Columns)
     __column_mapping__ = {Columns.PARAMETER.value: comp.Columns.PARAMETER.value}
@@ -126,7 +126,7 @@ class Questionnaire(ComparableSubscriptable):
     @staticmethod
     def gen_term(categories: List[str], question: str, item: str, language: str = "german") -> str:
         term_parts = get_term_parts(categories, question, item)
-        return ComparableSubscriptable.gen_term(term_parts, language)
+        return ComparableData.gen_term(term_parts, language)
 
 
 def get_term_parts(categories: List[str], question: str, item: str) -> List[str]:

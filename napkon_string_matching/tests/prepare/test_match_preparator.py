@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 from napkon_string_matching.prepare.match_preparator import MatchPreparator
 from napkon_string_matching.tests import DISABLE_DB_TESTS, DISABLE_LOCAL_FILE_TESTS
-from napkon_string_matching.types.comparable_subscriptable import ComparableColumns
+from napkon_string_matching.types.comparable_data import ComparableColumns
 from napkon_string_matching.types.questionnaire import Columns, Questionnaire
 
 
