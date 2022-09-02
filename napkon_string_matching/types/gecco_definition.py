@@ -22,14 +22,16 @@ logger = logging.getLogger(__name__)
 
 class GeccoBase:
     __columns__ = list(ComparableColumns) + list(Columns)
-
-
-class GeccoCategory(Category, GeccoBase):
     __category_column__ = Columns.CATEGORY.value
 
 
-class GeccoDefinition(ComparableData, GeccoBase):
+class GeccoCategory(GeccoBase, Category):
+    pass
+
+
+class GeccoDefinition(GeccoBase, ComparableData):
     __column_mapping__ = {ComparableColumns.IDENTIFIER.value: comp.Columns.VARIABLE.value}
+    __category_type__ = GeccoCategory
 
     @staticmethod
     def read_gecco83_definition(file: str | Path):
@@ -124,13 +126,6 @@ class GeccoDefinition(ComparableData, GeccoBase):
         ]
         self.term = result
         logger.info("...done")
-
-    @property
-    def categories(self) -> List[str]:
-        return list(self._data["Category"].unique())
-
-    def get_category(self, category: str) -> GeccoCategory | None:
-        return GeccoCategory(self._data, category)
 
 
 def _strip_column(column: pd.Series) -> pd.Series:

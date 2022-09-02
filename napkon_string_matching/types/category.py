@@ -3,6 +3,7 @@ import pandas as pd
 
 class Category:
     __category_column__ = None
+    __columns__ = []
     __column_names__ = ""
 
     def __new__(cls, *args, **kwargs):
