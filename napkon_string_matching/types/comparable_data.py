@@ -131,8 +131,10 @@ class ComparableData(Data):
         ]
 
         # Remove not needed columns
+        logger.debug("remove superfluous columns")
         comparable.drop_superfluous_columns()
 
+        logger.debug("apply score threshold")
         comparable = comparable[comparable.match_score >= score_threshold]
         logger.debug("got %i entries", len(comparable))
 

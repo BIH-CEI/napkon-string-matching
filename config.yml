@@ -19,6 +19,7 @@ matching:
   tokens:
     timeout: 30
     score_threshold: 0.85
+  variable_score_threshold: 0.9
 
 gecco_definition: input/gecco_definition.json
 

@@ -10,6 +10,7 @@ from napkon_string_matching.types.questionnaire import Questionnaire
 CONFIG_GECCO_FILES = "gecco_definition"
 CONFIG_FIELD_FILES = "files"
 CONFIG_FIELD_MATCHING = "matching"
+CONFIG_VARIABLE_THRESHOLD = "variable_score_threshold"
 
 RESULTS_FILE_PATTERN = "output/result_{score_threshold}_{compare_column}_{score_func}.xlsx"
 
@@ -81,14 +82,20 @@ class Matcher:
             key = tuple(sorted([name_first, name_second], key=str.lower))
             if key not in matched:
                 matched.add(key)
-                logger.info("compare %s and %s", name_first, name_second)
+                logger.info(
+                    "compare %s %s and %s", prefix if prefix else "", name_first, name_second
+                )
                 matches = dataset_first.compare(
                     dataset_second, **{**self.config[CONFIG_FIELD_MATCHING], **kwargs}
                 )
                 self.results[f"{prefix if prefix else ''}{name_first} vs {name_second}"] = matches
 
     def match_questionnaires_variables(self) -> ComparisonResults:
-        self.match_questionnaires(prefix="var_", compare_column="Variable", score_threshold=0.85)
+        self.match_questionnaires(
+            prefix="var_",
+            compare_column="Variable",
+            score_threshold=self.config[CONFIG_FIELD_MATCHING][CONFIG_VARIABLE_THRESHOLD],
+        )
 
     def print_analysis(self) -> None:
         analysis = self._analyse()
