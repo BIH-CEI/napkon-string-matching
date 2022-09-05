@@ -54,8 +54,8 @@ class ComparableData(Data):
     def compare(
         self,
         other,
+        compare_column: str,
         score_threshold: float = 0.1,
-        compare_column: str = "",
         cached: bool = True,
         cache_threshold: float = None,
         *args,
@@ -101,8 +101,8 @@ class ComparableData(Data):
         self,
         right,
         score_func: str,
+        compare_column: str,
         score_threshold: float = 0.1,
-        compare_column: str = "",
         *args,
         **kwargs,
     ) -> Comparable:

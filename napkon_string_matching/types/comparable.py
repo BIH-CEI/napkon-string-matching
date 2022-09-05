@@ -41,6 +41,9 @@ class ComparisonResults:
     def __setitem__(self, item, value):
         self.results[item] = value
 
+    def __getitem__(self, item):
+        return self.results[item]
+
     def items(self):
         return self.results.items()
 
