@@ -64,7 +64,7 @@ class ComparableData(Data):
 
         # Get the compare dataframe that holds the score to match all entries from
         # the left with each from right dataset
-        df_hash = self._hash_compare_args(other, *args, **kwargs)
+        df_hash = self._hash_compare_args(other, compare_column, cache_threshold)
         cache_score_file = Path(CACHE_FILE_PATTERN.format(df_hash))
         logger.debug("cache hash %s", df_hash)
 
