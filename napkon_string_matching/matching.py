@@ -8,6 +8,7 @@ from typing import Dict
 
 from napkon_string_matching.prepare.match_preparator import MatchPreparator
 from napkon_string_matching.types.comparable import ComparisonResults
+from napkon_string_matching.types.comparable_data import ComparableData
 from napkon_string_matching.types.gecco_definition import GeccoDefinition
 from napkon_string_matching.types.questionnaire import Questionnaire
 
@@ -25,7 +26,7 @@ logger = logging.getLogger(__name__)
 def match(config: Dict) -> None:
     preparator = get_preparator(config[CONFIG_FIELD_PREPARE])
 
-    datasets = {}
+    datasets: Dict[str, ComparableData] = {}
     for file in config[CONFIG_GECCO_FILES]:
         name = Path(file).stem
         dataset = GeccoDefinition.prepare(file, preparator, **config[CONFIG_FIELD_MATCHING])
