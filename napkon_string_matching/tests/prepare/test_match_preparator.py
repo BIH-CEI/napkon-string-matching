@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 from napkon_string_matching.prepare.match_preparator import MatchPreparator
 from napkon_string_matching.tests import DISABLE_DB_TESTS, DISABLE_LOCAL_FILE_TESTS
-from napkon_string_matching.types.comparable_subscriptable import ComparableColumns
+from napkon_string_matching.types.comparable_data import ComparableColumns
 from napkon_string_matching.types.questionnaire import Columns, Questionnaire
 
 
@@ -41,14 +41,14 @@ class TestMatchPreparator(unittest.TestCase):
                     Columns.ITEM.value: "An item without categories",
                     Columns.SHEET.value: "Test Sheet",
                     Columns.FILE.value: "Testfile",
-                    Columns.CATEGORIES.value: None,
+                    Columns.HEADER.value: None,
                     Columns.QUESTION.value: "This is a question",
                 },
                 {
                     Columns.ITEM.value: "An item without categories 1",
                     Columns.SHEET.value: "Test Sheet",
                     Columns.FILE.value: "Testfile",
-                    Columns.CATEGORIES.value: None,
+                    Columns.HEADER.value: None,
                     Columns.QUESTION.value: "This is another question 1",
                 },
             ]
@@ -85,7 +85,7 @@ class TestMatchPreparator(unittest.TestCase):
                 {
                     Columns.SHEET.value: "Test Sheet",
                     Columns.FILE.value: "Testfile",
-                    Columns.CATEGORIES.value: None,
+                    Columns.HEADER.value: None,
                     ComparableColumns.TERM.value: "Hatte Sie Dialyse oder sonstiges?".split(),
                 },
             ]
@@ -107,7 +107,7 @@ class TestMatchPreparator(unittest.TestCase):
                     Columns.ITEM.value: "Hatte Sie Dialyse oder sonstiges?",
                     Columns.SHEET.value: "Test Sheet",
                     Columns.FILE.value: "Testfile",
-                    Columns.CATEGORIES.value: None,
+                    Columns.HEADER.value: None,
                     Columns.QUESTION.value: "Dialyse",
                 }
             ]

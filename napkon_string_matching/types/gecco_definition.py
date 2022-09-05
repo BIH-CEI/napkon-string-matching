@@ -7,10 +7,8 @@ from typing import Dict, List
 
 import napkon_string_matching.types.comparable as comp
 import pandas as pd
-from napkon_string_matching.types.comparable_subscriptable import (
-    ComparableColumns,
-    ComparableSubscriptable,
-)
+from napkon_string_matching.types.category import Category
+from napkon_string_matching.types.comparable_data import ComparableColumns, ComparableData
 
 
 class Columns(Enum):
@@ -22,10 +20,18 @@ class Columns(Enum):
 logger = logging.getLogger(__name__)
 
 
-class GeccoDefinition(ComparableSubscriptable):
-    __slots__ = [column.name.lower() for column in Columns]
+class GeccoBase:
     __columns__ = list(ComparableColumns) + list(Columns)
+    __category_column__ = Columns.CATEGORY.value
+
+
+class GeccoCategory(GeccoBase, Category):
+    pass
+
+
+class GeccoDefinition(GeccoBase, ComparableData):
     __column_mapping__ = {ComparableColumns.IDENTIFIER.value: comp.Columns.VARIABLE.value}
+    __category_type__ = GeccoCategory
 
     @staticmethod
     def read_gecco83_definition(file: str | Path):
@@ -115,7 +121,7 @@ class GeccoDefinition(ComparableSubscriptable):
     def add_terms(self, language: str = "german"):
         logger.info("add terms...")
         result = [
-            ComparableSubscriptable.gen_term([category, parameter], language=language)
+            ComparableData.gen_term([category, parameter], language=language)
             for category, parameter in zip(self.category, self.parameter)
         ]
         self.term = result

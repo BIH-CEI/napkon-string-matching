@@ -7,17 +7,15 @@ from typing import List
 import napkon_string_matching.types.comparable as comp
 import numpy as np
 import pandas as pd
-from napkon_string_matching.types.comparable_subscriptable import (
-    ComparableColumns,
-    ComparableSubscriptable,
-)
+from napkon_string_matching.types.category import Category
+from napkon_string_matching.types.comparable_data import ComparableColumns, ComparableData
 
 
 class Columns(Enum):
     ITEM = "Item"
     SHEET = "Sheet"
     FILE = "File"
-    CATEGORIES = "Categories"
+    HEADER = "Header"
     QUESTION = "Question"
     OPTIONS = "Options"
     VARIABLE = "Variable"
@@ -39,7 +37,7 @@ DATASETTABLE_TYPE_GROUP_DEFAULT = "StandardGroup"
 DATASETTABLE_TYPE_GROUP_HORIZONAL = "HorizontalGroup"
 DATASETTABLE_TYPE_HEADER = "Headline"
 
-COLUMN_TEMP_SUBCATEGORY = "Subcategory"
+COLUMN_TEMP_SUBHEADER = "Subheader"
 
 DATASETTABLE_ITEM_SKIPABLE = "<->"
 
@@ -47,10 +45,18 @@ DATASETTABLE_ITEM_SKIPABLE = "<->"
 logger = logging.getLogger(__name__)
 
 
-class Questionnaire(ComparableSubscriptable):
-    __slots__ = [column.name.lower() for column in Columns]
+class QuestionnaireBase:
     __columns__ = list(ComparableColumns) + list(Columns)
+    __category_column__ = Columns.SHEET.value
+
+
+class QuestionnaireCategory(QuestionnaireBase, Category):
+    pass
+
+
+class Questionnaire(QuestionnaireBase, ComparableData):
     __column_mapping__ = {Columns.PARAMETER.value: comp.Columns.PARAMETER.value}
+    __category_type__ = QuestionnaireCategory
 
     def concat(self, others: List):
         if len(others) == 0:
@@ -117,8 +123,8 @@ class Questionnaire(ComparableSubscriptable):
     def add_terms(self, language: str = "german"):
         logger.info("add terms...")
         result = [
-            Questionnaire.gen_term(category, question, item, language=language)
-            for category, question, item in zip(self.categories, self.question, self.item)
+            Questionnaire.gen_term(header, question, item, language=language)
+            for header, question, item in zip(self.header, self.question, self.item)
         ]
         self.term = result
         logger.info("...done")
@@ -126,7 +132,7 @@ class Questionnaire(ComparableSubscriptable):
     @staticmethod
     def gen_term(categories: List[str], question: str, item: str, language: str = "german") -> str:
         term_parts = get_term_parts(categories, question, item)
-        return ComparableSubscriptable.gen_term(term_parts, language)
+        return ComparableData.gen_term(term_parts, language)
 
 
 def get_term_parts(categories: List[str], question: str, item: str) -> List[str]:
@@ -206,13 +212,13 @@ class SheetParser:
     ) -> Questionnaire | None:
 
         # Fill category and subcategory if available
-        sheet[Columns.CATEGORIES.value] = [
+        sheet[Columns.HEADER.value] = [
             question if type_ == DATASETTABLE_TYPE_HEADER else None
             for question, type_ in zip(
                 sheet[DATASETTABLE_COLUMN_QUESTION], sheet[DATASETTABLE_COLUMN_TYPE]
             )
         ]
-        sheet[COLUMN_TEMP_SUBCATEGORY] = [
+        sheet[COLUMN_TEMP_SUBHEADER] = [
             question
             if pd.notna(type_)
             and type_ != DATASETTABLE_TYPE_HEADER
@@ -224,19 +230,17 @@ class SheetParser:
         ]
 
         # Fill for all items category and subcategory if they belong to one
-        sheet[Columns.CATEGORIES.value] = sheet[Columns.CATEGORIES.value].ffill()
-        sheet[COLUMN_TEMP_SUBCATEGORY] = _fill_subcategories(
-            sheet[Columns.CATEGORIES.value], sheet[COLUMN_TEMP_SUBCATEGORY]
+        sheet[Columns.HEADER.value] = sheet[Columns.HEADER.value].ffill()
+        sheet[COLUMN_TEMP_SUBHEADER] = _fill_subcategories(
+            sheet[Columns.HEADER.value], sheet[COLUMN_TEMP_SUBHEADER]
         )
 
         # Combine both information in a single column
-        sheet[Columns.CATEGORIES.value] = [
-            _combine_categories(category, sub)
-            for category, sub in zip(
-                sheet[Columns.CATEGORIES.value], sheet[COLUMN_TEMP_SUBCATEGORY]
-            )
+        sheet[Columns.HEADER.value] = [
+            _combine_headers(category, sub)
+            for category, sub in zip(sheet[Columns.HEADER.value], sheet[COLUMN_TEMP_SUBHEADER])
         ]
-        sheet.drop(columns=COLUMN_TEMP_SUBCATEGORY, inplace=True)
+        sheet.drop(columns=COLUMN_TEMP_SUBHEADER, inplace=True)
 
         # Remove all entries without items and variable names
         sheet.dropna(subset=[DATASETTABLE_COLUMN_ITEM, DATASETTABLE_COLUMN_DB_COLUMN], inplace=True)
@@ -281,8 +285,8 @@ class SheetParser:
 
         # Generate parameter
         result.parameter = [
-            ":".join(get_term_parts(category, question, item))
-            for category, question, item in zip(result.categories, result.question, result.item)
+            ":".join(get_term_parts(header, question, item))
+            for header, question, item in zip(result.header, result.question, result.item)
         ]
 
         result.drop_superfluous_columns()
@@ -314,7 +318,7 @@ def _generate_options(options: str) -> List[str] | None:
     )
 
 
-def _combine_categories(first: str, second: str) -> List[str]:
+def _combine_headers(first: str, second: str) -> List[str]:
     result = []
     if pd.notna(first):
         result.append(first)

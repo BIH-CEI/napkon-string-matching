@@ -8,7 +8,7 @@ from napkon_string_matching.terminology.mesh import (
     TableRequest,
 )
 from napkon_string_matching.terminology.provider import TerminologyProvider
-from napkon_string_matching.types.comparable_subscriptable import ComparableSubscriptable
+from napkon_string_matching.types.comparable_data import ComparableData
 from tqdm import tqdm
 
 CONFIG_FIELD_TERMINOLOGY = "terminology"
@@ -32,7 +32,7 @@ class MatchPreparator:
 
     def add_tokens(
         self,
-        cs: ComparableSubscriptable,
+        cs: ComparableData,
         score_threshold: float = 0.1,
         verbose: bool = True,
         timeout=10,

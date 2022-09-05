@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Dict
 
 import pandas as pd
-from napkon_string_matching.types.subscriptable import Subscriptable
+from napkon_string_matching.types.data import Data
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ class Columns(Enum):
     MATCH_VARIABLE = "MatchVariable"
 
 
-class Comparable(Subscriptable):
+class Comparable(Data):
     __slots__ = [column.name.lower() for column in Columns]
     __columns__ = Columns
 

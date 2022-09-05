@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 from napkon_string_matching.tests import DISABLE_LOCAL_FILE_TESTS
-from napkon_string_matching.types.comparable_subscriptable import ComparableColumns
+from napkon_string_matching.types.comparable_data import ComparableColumns
 from napkon_string_matching.types.questionnaire import (
     DATASETTABLE_COLUMN_DB_COLUMN,
     DATASETTABLE_COLUMN_FILE,
@@ -87,7 +87,7 @@ class TestQuestionnaire(unittest.TestCase):
                 Columns.ITEM.value: "This is an item with options",
                 Columns.SHEET.value: "Test Sheet",
                 Columns.FILE.value: "Testfile",
-                Columns.CATEGORIES.value: ["Header", "Subheader"],
+                Columns.HEADER.value: ["Header", "Subheader"],
                 Columns.QUESTION.value: "This is a question",
                 Columns.OPTIONS.value: ["Option A", "Option B"],
                 Columns.VARIABLE.value: "foo column",
@@ -99,7 +99,7 @@ class TestQuestionnaire(unittest.TestCase):
                 Columns.ITEM.value: "Another item for same question",
                 Columns.SHEET.value: "Test Sheet",
                 Columns.FILE.value: "Testfile",
-                Columns.CATEGORIES.value: ["Header", "Subheader"],
+                Columns.HEADER.value: ["Header", "Subheader"],
                 Columns.QUESTION.value: "This is a question",
                 Columns.OPTIONS.value: None,
                 Columns.VARIABLE.value: "bar column",
