@@ -20,10 +20,9 @@ matching:
     timeout: 30
     score_threshold: 0.85
 
-gecco_definitions:
-  - input/gecco_definition.json
+gecco_definition: input/gecco_definition.json
 
 files:
-  - input/hap_test.xlsx
-  - input/pop_test.xlsx
-  - input/suep_test.xlsx
+  hap: input/hap_test.xlsx
+  pop: input/pop_test.xlsx
+  suep: input/suep_test.xlsx

@@ -35,8 +35,8 @@ class Comparable(Data):
 
 
 class ComparisonResults:
-    def __init__(self, comp_dict: Dict[str, Comparable] = dict()) -> None:
-        self.results = comp_dict
+    def __init__(self, comp_dict: Dict[str, Comparable] = None) -> None:
+        self.results = comp_dict if comp_dict else {}
 
     def __setitem__(self, item, value):
         self.results[item] = value
@@ -49,6 +49,7 @@ class ComparisonResults:
         if not path.parent.exists():
             path.parent.mkdir(parents=True)
 
+        logger.info("write result to file %s", str(file))
         writer = pd.ExcelWriter(file, engine="openpyxl")
         for name, comp in self.items():
             comp.to_excel(writer, sheet_name=name, index=False)
