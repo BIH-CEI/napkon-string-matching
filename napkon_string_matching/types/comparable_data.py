@@ -54,8 +54,8 @@ class ComparableData(Data):
     def compare(
         self,
         other,
+        compare_column: str,
         score_threshold: float = 0.1,
-        compare_column: str = "",
         cached: bool = True,
         cache_threshold: float = None,
         *args,
@@ -64,7 +64,7 @@ class ComparableData(Data):
 
         # Get the compare dataframe that holds the score to match all entries from
         # the left with each from right dataset
-        df_hash = self._hash_compare_args(other, *args, **kwargs)
+        df_hash = self._hash_compare_args(other, compare_column, cache_threshold)
         cache_score_file = Path(CACHE_FILE_PATTERN.format(df_hash))
         logger.debug("cache hash %s", df_hash)
 
@@ -92,6 +92,8 @@ class ComparableData(Data):
         result = result[result.match_score >= score_threshold]
         logger.debug("got %i filtered entries", len(result))
 
+        result.sort_by_score()
+
         return result
 
     def map_for_comparable(self) -> None:
@@ -101,8 +103,8 @@ class ComparableData(Data):
         self,
         right,
         score_func: str,
+        compare_column: str,
         score_threshold: float = 0.1,
-        compare_column: str = "",
         *args,
         **kwargs,
     ) -> Comparable:
@@ -129,8 +131,10 @@ class ComparableData(Data):
         ]
 
         # Remove not needed columns
+        logger.debug("remove superfluous columns")
         comparable.drop_superfluous_columns()
 
+        logger.debug("apply score threshold")
         comparable = comparable[comparable.match_score >= score_threshold]
         logger.debug("got %i entries", len(comparable))
 
