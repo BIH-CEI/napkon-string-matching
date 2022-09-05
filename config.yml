@@ -21,6 +21,11 @@ matching:
     score_threshold: 0.85
   variable_score_threshold: 0.9
 
+steps:
+  - variables
+  - gecco
+  - questionnaires
+
 gecco_definition: input/gecco_definition.json
 
 files:
