@@ -110,6 +110,9 @@ class Matcher:
 
         result = {}
         for name, comp in self.results.items():
+            if comp.empty:
+                continue
+
             gecco_entries = comp[[GECCO_PREFIX in entry for entry in comp.variable]]
             gecco_match_entries = comp[[GECCO_PREFIX in entry for entry in comp.match_variable]]
 
