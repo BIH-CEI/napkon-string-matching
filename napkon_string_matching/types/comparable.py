@@ -33,6 +33,9 @@ class Comparable(Data):
         logger.info("write result to %s", str(file))
         file.write_text(self.to_csv(index=False), encoding="utf-8")
 
+    def sort_by_score(self) -> None:
+        self._data.sort_values(by=Columns.MATCH_SCORE.value, ascending=False, inplace=True)
+
 
 class ComparisonResults:
     def __init__(self, comp_dict: Dict[str, Comparable] = None) -> None:

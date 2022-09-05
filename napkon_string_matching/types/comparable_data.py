@@ -92,6 +92,8 @@ class ComparableData(Data):
         result = result[result.match_score >= score_threshold]
         logger.debug("got %i filtered entries", len(result))
 
+        result.sort_by_score()
+
         return result
 
     def map_for_comparable(self) -> None:
