@@ -1,3 +1,4 @@
+import json
 import re
 import warnings
 from pathlib import Path
@@ -113,6 +114,15 @@ class Mapping:
 
     def __str__(self) -> str:
         return f"({','.join({f'{item}={str(self[item])}' for item in Mapping.__items__})})"
+
+    @staticmethod
+    def read_json(file: str | Path):
+        content = json.loads(Path(file).read_text(encoding="utf-8"))
+        return Mapping(data=content)
+
+    def write_json(self, file: str | Path):
+        dict_ = self.dict()
+        Path(file).write_text(json.dumps(dict_), encoding="utf-8")
 
     @staticmethod
     def read_excel_napkon_dataset_core(file: str | Path):
