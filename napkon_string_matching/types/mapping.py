@@ -14,64 +14,95 @@ class MappingTarget:
     def dict(self) -> Dict[str, str]:
         return self._data
 
+    def __repr__(self) -> str:
+        return f"MappingTarget({repr(self._data)})"
+
+    def __str__(self) -> str:
+        return str(self._data)
+
 
 class MappingSource:
     __items__ = ["hap", "gecco", "pop", "suep"]
 
     def __init__(self, data: Dict[str, Dict[str, str]] = None) -> None:
-        self.hap: MappingTarget = None
-        self.gecco: MappingTarget = None
-        self.pop: MappingTarget = None
-        self.suep: MappingTarget = None
-
         if data:
             for item, data_ in data.items():
                 self[item] = MappingTarget(data_)
         else:
-            self.hap = MappingTarget()
-            self.gecco = MappingTarget()
-            self.pop = MappingTarget()
-            self.suep = MappingTarget()
+            for item in self.__items__:
+                self[item] = MappingTarget()
 
     def __getitem__(self, item) -> MappingTarget:
-        if item in MappingSource.__items__:
+        if item not in MappingSource.__items__:
             raise ValueError(f"item not found: {item}")
         return getattr(self, item)
 
     def __setitem__(self, item, value) -> None:
-        if item in MappingSource.__items__:
+        if item not in MappingSource.__items__:
             raise ValueError(f"item not found: {item}")
         setattr(self, item, value)
 
     def dict(self) -> Dict[str, Dict[str, str]]:
-        return {item: self[item].dict() for item in MappingSource.__items__}
+        return {item: self[item].dict() for item in self.__items__}
+
+    def _repr_helper(self) -> str:
+        return ",".join({f"{item}={repr(self[item])}" for item in self.__items__})
+
+    def __repr__(self) -> str:
+        return f"MappingSource({self._repr_helper()})"
+
+    def __str__(self) -> str:
+        return f"({self._repr_helper})"
+
+
+class HapMappingSource(MappingSource):
+    __items__ = ["gecco", "pop", "suep"]
+
+
+class PopMappingSource(MappingSource):
+    __items__ = ["gecco", "hap", "suep"]
+
+
+class SuepMappingSource(MappingSource):
+    __items__ = ["gecco", "hap", "pop"]
 
 
 class Mapping:
     __items__ = ["hap", "pop", "suep"]
 
-    def __init__(self, data: Dict[str, Dict[str, Dict[str, str]]]) -> None:
+    def __init__(self, data: Dict[str, Dict[str, Dict[str, str]]] = None) -> None:
         self.hap: MappingSource = None
         self.pop: MappingSource = None
         self.suep: MappingSource = None
 
+        class_map = {
+            "hap": HapMappingSource,
+            "pop": PopMappingSource,
+            "suep": SuepMappingSource,
+        }
+
         if data:
             for item, data_ in data.items():
-                self[item] = MappingSource(data_)
+                self[item] = class_map[item](data_)
         else:
-            self.hap = MappingSource()
-            self.pop = MappingSource()
-            self.suep = MappingSource()
+            for item in self.__items__:
+                self[item] = class_map[item]()
 
     def __getitem__(self, item) -> MappingSource:
-        if item in Mapping.__items__:
+        if item not in Mapping.__items__:
             raise ValueError(f"item not found: {item}")
         return getattr(self, item)
 
     def __setitem__(self, item, value) -> None:
-        if item in Mapping.__items__:
+        if item not in Mapping.__items__:
             raise ValueError(f"item not found: {item}")
         setattr(self, item, value)
 
     def dict(self) -> Dict[str, Dict[str, str]]:
-        return {item: self[item].dict() for item in MappingSource.__items__}
+        return {item: self[item].dict() for item in Mapping.__items__}
+
+    def __repr__(self) -> str:
+        return f"Mapping({','.join({f'{item}={repr(self[item])}' for item in Mapping.__items__})})"
+
+    def __str__(self) -> str:
+        return f"({','.join({f'{item}={str(self[item])}' for item in Mapping.__items__})})"
