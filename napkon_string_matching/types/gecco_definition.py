@@ -89,22 +89,41 @@ class GeccoDefinition(GeccoBase, ComparableData):
         gecco.dropna(
             how="any", subset=[Columns.CATEGORY.value, Columns.PARAMETER.value], inplace=True
         )
-        gecco.reset_index(inplace=True)
 
         # Trim all whitespaces
-        gecco.id = _strip_column(gecco.id)
+        gecco.identifier = _strip_column(gecco.identifier)
         gecco.category = _strip_column(gecco.category)
         gecco.parameter = _strip_column(gecco.parameter)
         gecco.choices = _strip_column(gecco.choices)
 
-        gecco.id = _fill_id_gaps(gecco.id)
-
         gecco.choices = [
-            [choice.strip() for choice in entry.strip().split(choice_sep)] if entry else None
+            [choice.strip() for choice in entry.strip().split(choice_sep)]
+            if pd.notna(entry)
+            else None
             for entry in gecco.choices
         ]
 
-        gecco.id = id_prefix + gecco.id
+        gecco.category = [category.title().replace(" ", "") for category in gecco.category]
+
+        rows = []
+        for _, row in gecco.iterrows():
+            if not isinstance(row[Columns.CHOICES.value], list):
+                rows.append(row)
+                continue
+
+            for index, choice in enumerate(row[Columns.CHOICES.value]):
+                new_row = row.copy(deep=True)
+                new_row[Columns.CHOICES.value] = choice
+                if index != 0:
+                    new_row[ComparableColumns.IDENTIFIER.value] = None
+                rows.append(new_row)
+
+        gecco = GeccoDefinition(rows)
+
+        gecco.reset_index(inplace=True)
+
+        gecco.identifier = _fill_id_gaps(gecco.identifier)
+        gecco.identifier = id_prefix + gecco.identifier
 
         return gecco
 
