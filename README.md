@@ -19,8 +19,8 @@ prepare:
         passwd: <password>
 
 matching:
-  score_threshold: <threshold>
-  cache_threshold: <threshold used for caching>
+  score_threshold: <threshold (0.1,1.0]>
+  cache_threshold: <threshold used for caching (0.1,1.0]>
   compare_column: Item | Sheet | File | Categories | Question | Options | Term | Tokens | TokenIds | TokenMatch | Identifier | Matches
   score_func: intersection_vs_union | fuzzy_match
   calculate_tokens: True | False
@@ -29,6 +29,12 @@ matching:
   tokens:
     timeout: <threshold>
     score_threshold: <timeout>
+  variable_score_threshold: <threshold (0.1,1.0]>
+
+steps:
+  - variables
+  - gecco
+  - questionnaires
 
 gecco_definitions:
   - gecco_definition.json

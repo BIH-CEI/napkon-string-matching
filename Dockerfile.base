@@ -1,7 +1,9 @@
 ARG BASE=python:3.10-alpine
 
 
-FROM $BASE as pandas-base
+FROM $BASE
+
+LABEL org.opencontainers.image.description Base image having numpy and pandas already installed
 
 WORKDIR /app
 

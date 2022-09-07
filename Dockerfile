@@ -14,6 +14,8 @@ RUN python -m build
 
 FROM ghcr.io/bih-cei/napkon-string-matching-base:main
 
+LABEL org.opencontainers.image.description Finds matches betwen questionnaires used to update the GECCO plus FHIR profile
+
 WORKDIR /app
 
 COPY requirements.txt .
