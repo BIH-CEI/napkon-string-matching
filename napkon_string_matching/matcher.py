@@ -8,6 +8,8 @@ from napkon_string_matching.types.gecco_definition import GeccoDefinition
 from napkon_string_matching.types.questionnaire import Questionnaire
 
 CONFIG_GECCO_FILES = "gecco_definition"
+CONFIG_GECCO83 = "gecco83"
+CONFIG_GECCO_PLUS = "geccoplus"
 CONFIG_FIELD_FILES = "files"
 CONFIG_FIELD_MATCHING = "matching"
 CONFIG_VARIABLE_THRESHOLD = "variable_score_threshold"
@@ -31,9 +33,13 @@ class Matcher:
         self.clear_results()
 
     def _init_gecco_definition(self) -> None:
-        file: str | None = self.config.get(CONFIG_GECCO_FILES)
+        files: Dict[str, str] = self.config[CONFIG_GECCO_FILES]
         self.gecco = GeccoDefinition.prepare(
-            file, self.preparator, **self.config[CONFIG_FIELD_MATCHING]
+            file_name="gecco_definition.json",
+            preparator=self.preparator,
+            **self.config[CONFIG_FIELD_MATCHING],
+            gecco83_file=files.get(CONFIG_GECCO83),
+            geccoplus_file=files.get(CONFIG_GECCO_PLUS),
         )
 
         if self.gecco is None:
@@ -43,7 +49,7 @@ class Matcher:
         self.questionnaires = {}
         for name, file in self.config[CONFIG_FIELD_FILES].items():
             dataset = Questionnaire.prepare(
-                file, self.preparator, **self.config[CONFIG_FIELD_MATCHING]
+                file_name=file, preparator=self.preparator, **self.config[CONFIG_FIELD_MATCHING]
             )
 
             if dataset is None:

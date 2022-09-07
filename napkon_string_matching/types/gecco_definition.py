@@ -46,8 +46,8 @@ class GeccoDefinition(GeccoBase, ComparableData):
         )
 
     @staticmethod
-    def read_original_format(file_name, *args, **kwargs):
-        return GeccoDefinition.read_json(file_name, *args, **kwargs)
+    def read_original_format(gecco83_file: str | Path, geccoplus_file: str | Path, *args, **kwargs):
+        return GeccoDefinition.read_both_definitions(gecco83_file, geccoplus_file)
 
     @staticmethod
     def read_geccoplus_definition(file: str | Path, *args, **kwargs):
@@ -58,8 +58,14 @@ class GeccoDefinition(GeccoBase, ComparableData):
             "Antwortausprägungen": Columns.CHOICES.value,
         }
         return GeccoDefinition._read_definition(
-            file, column_mapping, choice_sep="\n", id_prefix="gecco_83+"
+            file, column_mapping, choice_sep="\n", id_prefix="gecco_plus_"
         )
+
+    @staticmethod
+    def read_both_definitions(gecco83_file: str | Path, geccoplus_file: str | Path):
+        gecco = GeccoDefinition.read_gecco83_definition(gecco83_file)
+        geccoplus = GeccoDefinition.read_geccoplus_definition(geccoplus_file)
+        return gecco.concat(geccoplus)
 
     @staticmethod
     def _read_definition(
