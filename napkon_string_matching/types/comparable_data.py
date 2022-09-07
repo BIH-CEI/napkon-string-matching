@@ -17,7 +17,7 @@ nltk.download("stopwords")
 
 
 PREPARE_REMOVE_SYMBOLS = "!?,.()[]:;*"
-CACHE_FILE_PATTERN = "compared/cache_score_{}.json"
+CACHE_FILE_PATTERN = "cache/compared__score_{}.json"
 
 logger = logging.getLogger(__name__)
 
@@ -178,10 +178,10 @@ class ComparableData(Data):
         file = Path(file_name)
         logger.info(f"prepare file {file.name}")
 
-        output_dir = Path("prepared")
+        output_dir = Path("cache")
 
         # Build output file pattern
-        file_pattern = [file.stem]
+        file_pattern = ["prepared_", file.stem]
 
         if "filter_column" in kwargs:
             file_pattern.append(kwargs["filter_column"])
@@ -198,7 +198,7 @@ class ComparableData(Data):
 
         # File names for all cache files
         # Order here is unprocessed -> terms -> prepared
-        unprocessed_file = output_dir / file_pattern.format("unprocessed")
+        unprocessed_file = output_dir / f"input__{file.stem}.json"
         terms_file = output_dir / file_pattern.format("terms")
         prepared_file = output_dir / file_pattern.format("prepared")
 

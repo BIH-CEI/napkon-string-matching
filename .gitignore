@@ -13,6 +13,7 @@ dist
 compared/
 [Oo]utput*/
 prepared/
+cache/
 
 *.xlsx
 *.csv
