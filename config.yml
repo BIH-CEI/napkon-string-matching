@@ -34,3 +34,5 @@ files:
   hap: input/hap_test.xlsx
   pop: input/pop_test.xlsx
   suep: input/suep_test.xlsx
+
+mappings: input/mappings/

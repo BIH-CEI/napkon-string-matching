@@ -1,16 +1,19 @@
 import logging
 from itertools import product
+from pathlib import Path
 from typing import Dict
 
 from napkon_string_matching.prepare.match_preparator import MatchPreparator
 from napkon_string_matching.types.comparable import ComparisonResults
 from napkon_string_matching.types.gecco_definition import GeccoDefinition
+from napkon_string_matching.types.mapping import Mapping
 from napkon_string_matching.types.questionnaire import Questionnaire
 
 CONFIG_GECCO_FILES = "gecco_definition"
 CONFIG_GECCO83 = "gecco83"
 CONFIG_GECCO_PLUS = "geccoplus"
 CONFIG_FIELD_FILES = "files"
+CONFIG_FIELD_MAPPINGS = "mappings"
 CONFIG_FIELD_MATCHING = "matching"
 CONFIG_VARIABLE_THRESHOLD = "variable_score_threshold"
 
@@ -27,9 +30,11 @@ class Matcher:
         self.gecco: GeccoDefinition = None
         self.questionnaires: Dict[str, Questionnaire] = None
         self.results: ComparisonResults = None
+        self.mappings: Mapping = None
 
         self._init_gecco_definition()
         self._init_questionnaires()
+        self._init_mappings()
         self.clear_results()
 
     def _init_gecco_definition(self) -> None:
@@ -57,6 +62,13 @@ class Matcher:
                 continue
             else:
                 self.questionnaires[name] = dataset
+
+    def _init_mappings(self) -> None:
+        self.mappings = Mapping()
+        mapping_folder = Path(self.config[CONFIG_FIELD_MAPPINGS])
+        for file in mapping_folder.glob("*.json"):
+            mapping = Mapping.read_json(file)
+            self.mappings.update(mapping)
 
     def clear_results(self) -> None:
         self.results = ComparisonResults()
