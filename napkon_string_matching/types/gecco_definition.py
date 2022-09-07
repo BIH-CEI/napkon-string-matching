@@ -58,7 +58,7 @@ class GeccoDefinition(GeccoBase, ComparableData):
             "Antwortausprägungen": Columns.CHOICES.value,
         }
         return GeccoDefinition._read_definition(
-            file, column_mapping, choice_sep="\n", id_prefix="gecco_83+"
+            file, column_mapping, choice_sep="\n", id_prefix="gecco_plus_"
         )
 
     @staticmethod
