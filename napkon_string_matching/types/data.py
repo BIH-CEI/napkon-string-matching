@@ -93,6 +93,16 @@ class Data:
 
         logger.info("...done")
 
+    def write_excel(self, file_name: str | Path):
+        logger.info("write %i entries to file %s...", len(self), str(file_name))
+
+        file = Path(file_name)
+        writer = pd.ExcelWriter(file, engine="openpyxl")
+        self._data.to_excel(writer, index=False)
+        writer.save()
+
+        logger.info("...done")
+
     def write_json(self, file_name: str | Path, *args, **kwargs) -> None:
         """
         Write data to file in JSON format
