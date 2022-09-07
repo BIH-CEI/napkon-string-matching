@@ -33,11 +33,10 @@ class MappingSource:
     __items__ = ["hap", "gecco", "pop", "suep"]
 
     def __init__(self, data: Dict[str, Dict[str, str]] = None) -> None:
-        if data:
-            for item, data_ in data.items():
-                self[item] = MappingTarget(data_)
-        else:
-            for item in self.__items__:
+        for item in self.__items__:
+            if data and item in data:
+                self[item] = MappingTarget(data[item])
+            else:
                 self[item] = MappingTarget()
 
     def __getitem__(self, item) -> MappingTarget:
@@ -89,11 +88,10 @@ class Mapping:
             "suep": SuepMappingSource,
         }
 
-        if data:
-            for item, data_ in data.items():
-                self[item] = class_map[item](data_)
-        else:
-            for item in self.__items__:
+        for item in self.__items__:
+            if data and item in data:
+                self[item] = class_map[item](data[item])
+            else:
                 self[item] = class_map[item]()
 
     def __getitem__(self, item) -> MappingSource:
