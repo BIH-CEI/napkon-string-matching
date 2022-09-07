@@ -28,6 +28,9 @@ class MappingTarget:
     def __str__(self) -> str:
         return str(self._data)
 
+    def update(self, other) -> None:
+        self._data.update(other._data)
+
 
 class MappingSource:
     __items__ = ["hap", "gecco", "pop", "suep"]
@@ -60,6 +63,10 @@ class MappingSource:
 
     def __str__(self) -> str:
         return f"({self._repr_helper})"
+
+    def update(self, other) -> None:
+        for item in self.__items__:
+            self[item].update(other[item])
 
 
 class HapMappingSource(MappingSource):
@@ -112,6 +119,10 @@ class Mapping:
 
     def __str__(self) -> str:
         return f"({','.join({f'{item}={str(self[item])}' for item in Mapping.__items__})})"
+
+    def update(self, other) -> None:
+        for item in self.__items__:
+            self[item].update(other[item])
 
     @staticmethod
     def read_json(file: str | Path):
