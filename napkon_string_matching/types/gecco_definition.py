@@ -62,6 +62,12 @@ class GeccoDefinition(GeccoBase, ComparableData):
         )
 
     @staticmethod
+    def read_both_definitions(gecco83_file: str | Path, geccoplus_file: str | Path):
+        gecco = GeccoDefinition.read_gecco83_definition(gecco83_file)
+        geccoplus = GeccoDefinition.read_geccoplus_definition(geccoplus_file)
+        return gecco.concat(geccoplus)
+
+    @staticmethod
     def _read_definition(
         file: str | Path, column_mapping: Dict[str, str], choice_sep: str, id_prefix: str = ""
     ):
