@@ -46,8 +46,8 @@ class GeccoDefinition(GeccoBase, ComparableData):
         )
 
     @staticmethod
-    def read_original_format(file_name, *args, **kwargs):
-        return GeccoDefinition.read_json(file_name, *args, **kwargs)
+    def read_original_format(gecco83_file: str | Path, geccoplus_file: str | Path, *args, **kwargs):
+        return GeccoDefinition.read_both_definitions(gecco83_file, geccoplus_file)
 
     @staticmethod
     def read_geccoplus_definition(file: str | Path, *args, **kwargs):

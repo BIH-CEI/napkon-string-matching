@@ -222,7 +222,7 @@ class ComparableData(Data):
                 logger.info("using previously cached unprocessed file")
                 data = cls.read_json(unprocessed_file)
             else:
-                data = cls.read_original_format(file, *args, **kwargs)
+                data = cls.read_original_format(file_name=file, *args, **kwargs)
 
                 if data is None:
                     return None
