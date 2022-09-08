@@ -198,8 +198,7 @@ class SheetParser:
         sheet.where(pd.notnull(sheet), None, inplace=True)
 
         # Add meta information to each row
-        sheet_name = re.sub(r"[\.\(\),]", "", sheet_name.strip(" .-"))
-        sheet_name = re.sub(r"[ \-]+", "_", sheet_name).replace("__", "_")
+        sheet_name = re.sub(r"[ \-\.\(\),]+", "_", sheet_name)
         sheet[DATASETTABLE_COLUMN_SHEET_NAME] = sheet_name
         sheet[DATASETTABLE_COLUMN_FILE] = Path(file.io).stem
 
