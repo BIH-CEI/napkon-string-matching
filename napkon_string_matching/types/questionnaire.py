@@ -1,4 +1,5 @@
 import logging
+import re
 import warnings
 from enum import Enum
 from pathlib import Path
@@ -197,6 +198,7 @@ class SheetParser:
         sheet.where(pd.notnull(sheet), None, inplace=True)
 
         # Add meta information to each row
+        sheet_name = re.sub(r"[ \-\.\(\),]+", "_", sheet_name)
         sheet[DATASETTABLE_COLUMN_SHEET_NAME] = sheet_name
         sheet[DATASETTABLE_COLUMN_FILE] = Path(file.io).stem
 
@@ -270,6 +272,11 @@ class SheetParser:
         }
         sheet.rename(columns=mappings, inplace=True)
         result = Questionnaire(sheet)
+
+        # Re-build variables using the sheet name to make them unique
+        result.variable = [
+            f"{sheet}-{variable}" for sheet, variable in zip(result.sheet, result.variable)
+        ]
 
         # Create identifier column
         result.identifier = [
