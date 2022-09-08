@@ -1,4 +1,5 @@
 import logging
+import re
 import warnings
 from enum import Enum
 from pathlib import Path
@@ -36,6 +37,9 @@ DATASETTABLE_COLUMN_VARIABLE = "Datenbankspalte"
 DATASETTABLE_TYPE_GROUP_DEFAULT = "StandardGroup"
 DATASETTABLE_TYPE_GROUP_HORIZONAL = "HorizontalGroup"
 DATASETTABLE_TYPE_HEADER = "Headline"
+
+DATASETTABLE_SHEET_HIDDEN_TAG = "Ausgeblendet"
+DATASETTABLE_SHEET_HIDDEN_TRUE = "ja"
 
 COLUMN_TEMP_SUBHEADER = "Subheader"
 
@@ -163,7 +167,7 @@ class SheetParser:
         sheet_name: str,
         *args,
         **kwargs,
-    ) -> Questionnaire:
+    ) -> Questionnaire | None:
         """
         Parses a single sheet
 
@@ -186,6 +190,11 @@ class SheetParser:
             file, sheet_name=sheet_name, na_values=DATASETTABLE_ITEM_SKIPABLE
         )
 
+        # Do not process hidden sheets
+        hidden, *_ = np.where(sheet[DATASETTABLE_COLUMN_PROJECT] == DATASETTABLE_SHEET_HIDDEN_TAG)
+        if hidden and sheet.loc[hidden[0]][2].lower() == DATASETTABLE_SHEET_HIDDEN_TRUE:
+            return None
+
         # Remove leading meta information block on sheet
         start_index = np.where(sheet[DATASETTABLE_COLUMN_PROJECT] == DATASETTABLE_COLUMN_NUMBER)[0][
             0
@@ -197,6 +206,7 @@ class SheetParser:
         sheet.where(pd.notnull(sheet), None, inplace=True)
 
         # Add meta information to each row
+        sheet_name = re.sub(r"[ \-\.\(\),]+", "_", sheet_name)
         sheet[DATASETTABLE_COLUMN_SHEET_NAME] = sheet_name
         sheet[DATASETTABLE_COLUMN_FILE] = Path(file.io).stem
 
@@ -270,6 +280,11 @@ class SheetParser:
         }
         sheet.rename(columns=mappings, inplace=True)
         result = Questionnaire(sheet)
+
+        # Re-build variables using the sheet name to make them unique
+        result.variable = [
+            f"{sheet}-{variable}" for sheet, variable in zip(result.sheet, result.variable)
+        ]
 
         # Create identifier column
         result.identifier = [

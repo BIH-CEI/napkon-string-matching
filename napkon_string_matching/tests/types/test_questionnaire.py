@@ -90,7 +90,7 @@ class TestQuestionnaire(unittest.TestCase):
                 Columns.HEADER.value: ["Header", "Subheader"],
                 Columns.QUESTION.value: "This is a question",
                 Columns.OPTIONS.value: ["Option A", "Option B"],
-                Columns.VARIABLE.value: "foo column",
+                Columns.VARIABLE.value: "Test Sheet-foo column",
                 Columns.PARAMETER.value: "Header:Subheader:This is a question:"
                 + "This is an item with options",
             },
@@ -102,7 +102,7 @@ class TestQuestionnaire(unittest.TestCase):
                 Columns.HEADER.value: ["Header", "Subheader"],
                 Columns.QUESTION.value: "This is a question",
                 Columns.OPTIONS.value: None,
-                Columns.VARIABLE.value: "bar column",
+                Columns.VARIABLE.value: "Test Sheet-bar column",
                 Columns.PARAMETER.value: "Header:Subheader:This is a question:"
                 + "Another item for same question",
             },
