@@ -274,6 +274,11 @@ class SheetParser:
         sheet.rename(columns=mappings, inplace=True)
         result = Questionnaire(sheet)
 
+        # Re-build variables using the sheet name to make them unique
+        result.variable = [
+            f"{sheet}-{variable}" for sheet, variable in zip(result.sheet, result.variable)
+        ]
+
         # Create identifier column
         result.identifier = [
             _generate_identifier(file, sheet, str(index))
