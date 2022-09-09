@@ -21,6 +21,7 @@ class Columns(Enum):
     OPTIONS = "Options"
     VARIABLE = "Variable"
     PARAMETER = "Parameter"
+    UID = "Uid"
 
 
 DATASETTABLE_COLUMN_DB_COLUMN = "Datenbankspalte"
@@ -281,15 +282,14 @@ class SheetParser:
         sheet.rename(columns=mappings, inplace=True)
         result = Questionnaire(sheet)
 
-        # Re-build variables using the sheet name to make them unique
-        result.variable = [
-            f"{sheet}-{variable}" for sheet, variable in zip(result.sheet, result.variable)
-        ]
-
         # Create identifier column
         result.identifier = [
-            _generate_identifier(file, sheet, str(index))
-            for file, sheet, index in zip(result.file, result.sheet, result.index)
+            _generate_identifier(file, sheet, variable)
+            for file, sheet, variable in zip(result.file, result.sheet, result.variable)
+        ]
+        result.uid = [
+            _generate_identifier(identifier, str(index))
+            for identifier, index in zip(result.identifier, result.index)
         ]
 
         # Set options
@@ -323,8 +323,8 @@ def _fill_subcategories(categories: pd.Series, subcategories: pd.Series) -> List
     return result
 
 
-def _generate_identifier(file: str, sheet: str, row_name: str) -> str:
-    return "#".join([file, sheet, row_name]).replace(" ", "-")
+def _generate_identifier(*args) -> str:
+    return "#".join(args).replace(" ", "-")
 
 
 def _generate_options(options: str) -> List[str] | None:

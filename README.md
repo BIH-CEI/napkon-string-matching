@@ -51,10 +51,9 @@ Run with
 ```bash
 docker run --rm \
   -v $(pwd):/configs \
-  -v $(pwd)/compared:/app/compared \
   -v $(pwd)/input:/app/input \
   -v $(pwd)/output:/app/output \
-  -v $(pwd)/prepared:/app/prepared \
+  -v $(pwd)/cache:/app/cache \
   ghcr.io/bih-cei/napkon-string-matching:main \
   --config /configs/config.yml
 ```

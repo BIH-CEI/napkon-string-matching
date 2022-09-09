@@ -83,26 +83,28 @@ class TestQuestionnaire(unittest.TestCase):
 
         expected_results = [
             {
-                ComparableColumns.IDENTIFIER.value: "Testfile#Test-Sheet#2",
+                ComparableColumns.IDENTIFIER.value: "Testfile#Test-Sheet#foo-column",
+                Columns.UID.value: "Testfile#Test-Sheet#foo-column#2",
                 Columns.ITEM.value: "This is an item with options",
                 Columns.SHEET.value: "Test Sheet",
                 Columns.FILE.value: "Testfile",
                 Columns.HEADER.value: ["Header", "Subheader"],
                 Columns.QUESTION.value: "This is a question",
                 Columns.OPTIONS.value: ["Option A", "Option B"],
-                Columns.VARIABLE.value: "Test Sheet-foo column",
+                Columns.VARIABLE.value: "foo column",
                 Columns.PARAMETER.value: "Header:Subheader:This is a question:"
                 + "This is an item with options",
             },
             {
-                ComparableColumns.IDENTIFIER.value: "Testfile#Test-Sheet#3",
+                ComparableColumns.IDENTIFIER.value: "Testfile#Test-Sheet#bar-column",
+                Columns.UID.value: "Testfile#Test-Sheet#bar-column#3",
                 Columns.ITEM.value: "Another item for same question",
                 Columns.SHEET.value: "Test Sheet",
                 Columns.FILE.value: "Testfile",
                 Columns.HEADER.value: ["Header", "Subheader"],
                 Columns.QUESTION.value: "This is a question",
                 Columns.OPTIONS.value: None,
-                Columns.VARIABLE.value: "Test Sheet-bar column",
+                Columns.VARIABLE.value: "bar column",
                 Columns.PARAMETER.value: "Header:Subheader:This is a question:"
                 + "Another item for same question",
             },
