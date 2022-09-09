@@ -7,6 +7,7 @@ from napkon_string_matching.prepare.match_preparator import MatchPreparator
 from napkon_string_matching.tests import DISABLE_DB_TESTS, DISABLE_LOCAL_FILE_TESTS
 from napkon_string_matching.types.comparable_data import ComparableColumns
 from napkon_string_matching.types.questionnaire import Columns, Questionnaire
+from napkon_string_matching.types.questionnaire_types.dataset_table import DatasetTable
 
 
 class TestMatchPreparator(unittest.TestCase):
@@ -26,50 +27,12 @@ class TestMatchPreparator(unittest.TestCase):
         }
 
         self.preparator = MatchPreparator(config)
-        self.test_file = Path("input/pop_test.xlsx")
 
     @unittest.skipIf(DISABLE_DB_TESTS, "requires active db contianer")
     def test_load_terms(self):
         self.preparator.terminology_provider.initialize()
         self.assertIsNotNone(self.preparator.terminology_provider.synonyms)
         self.assertIsNotNone(self.preparator.terminology_provider.headings)
-
-    def test_add_terms(self):
-        data = Questionnaire(
-            [
-                {
-                    Columns.ITEM.value: "An item without categories",
-                    Columns.SHEET.value: "Test Sheet",
-                    Columns.FILE.value: "Testfile",
-                    Columns.HEADER.value: None,
-                    Columns.QUESTION.value: "This is a question",
-                },
-                {
-                    Columns.ITEM.value: "An item without categories 1",
-                    Columns.SHEET.value: "Test Sheet",
-                    Columns.FILE.value: "Testfile",
-                    Columns.HEADER.value: None,
-                    Columns.QUESTION.value: "This is another question 1",
-                },
-            ]
-        )
-
-        data.add_terms(language="english")
-
-        self.assertIsNotNone(data.term)
-        self.assertEqual(2, len(data.term))
-        self.assertEqual("categories item question without".split(), data.term[0])
-        self.assertEqual("1 another categories item question without".split(), data.term[1])
-
-    @unittest.skipIf(
-        DISABLE_DB_TESTS or DISABLE_LOCAL_FILE_TESTS,
-        "requires active db contianer and local test file",
-    )
-    def test_add_terms_live(self):
-        data = Questionnaire.read_dataset_table(self.test_file)
-
-        data.add_terms()
-        self.assertIsNotNone(data.term)
 
     def test_add_tokens(self):
         data_dir = Path("napkon_string_matching/tests/data")
@@ -136,7 +99,7 @@ class TestMatchPreparator(unittest.TestCase):
         "takes long time and requires active db contianer and local test file",
     )
     def test_add_terms_and_tokens_live(self):
-        data = Questionnaire.read_dataset_table(self.test_file)
+        data = DatasetTable.read_original_format("input/pop_test.xlsx")
 
         data = data[:100]
 

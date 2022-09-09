@@ -1,16 +1,23 @@
 import logging
 from itertools import product
+from pathlib import Path
 from typing import Dict
 
 from napkon_string_matching.prepare.match_preparator import MatchPreparator
 from napkon_string_matching.types.comparable import ComparisonResults
 from napkon_string_matching.types.gecco_definition import GeccoDefinition
+from napkon_string_matching.types.gecco_definition_types.gecco_combined import (
+    GeccoCombinedDefinition,
+)
+from napkon_string_matching.types.mapping import Mapping
 from napkon_string_matching.types.questionnaire import Questionnaire
+from napkon_string_matching.types.questionnaire_types.dataset_table import DatasetTable
 
 CONFIG_GECCO_FILES = "gecco_definition"
 CONFIG_GECCO83 = "gecco83"
 CONFIG_GECCO_PLUS = "geccoplus"
 CONFIG_FIELD_FILES = "files"
+CONFIG_FIELD_MAPPINGS = "mappings"
 CONFIG_FIELD_MATCHING = "matching"
 CONFIG_VARIABLE_THRESHOLD = "variable_score_threshold"
 
@@ -27,14 +34,16 @@ class Matcher:
         self.gecco: GeccoDefinition = None
         self.questionnaires: Dict[str, Questionnaire] = None
         self.results: ComparisonResults = None
+        self.mappings: Mapping = None
 
         self._init_gecco_definition()
         self._init_questionnaires()
+        self._init_mappings()
         self.clear_results()
 
     def _init_gecco_definition(self) -> None:
         files: Dict[str, str] = self.config[CONFIG_GECCO_FILES]
-        self.gecco = GeccoDefinition.prepare(
+        self.gecco = GeccoCombinedDefinition.prepare(
             file_name="gecco_definition.json",
             preparator=self.preparator,
             **self.config[CONFIG_FIELD_MATCHING],
@@ -48,7 +57,7 @@ class Matcher:
     def _init_questionnaires(self) -> None:
         self.questionnaires = {}
         for name, file in self.config[CONFIG_FIELD_FILES].items():
-            dataset = Questionnaire.prepare(
+            dataset = DatasetTable.prepare(
                 file_name=file, preparator=self.preparator, **self.config[CONFIG_FIELD_MATCHING]
             )
 
@@ -58,13 +67,29 @@ class Matcher:
             else:
                 self.questionnaires[name] = dataset
 
+    def _init_mappings(self) -> None:
+        self.mappings = Mapping()
+        mapping_folder = Path(self.config[CONFIG_FIELD_MAPPINGS])
+        for file in mapping_folder.glob("*.json"):
+            mapping = Mapping.read_json(file)
+            self.mappings.update(mapping)
+
     def clear_results(self) -> None:
         self.results = ComparisonResults()
 
     def match_gecco_with_questionnaires(self) -> None:
         for name, questionnaire in self.questionnaires.items():
             logger.info("compare gecco and %s", name)
-            matches = self.gecco.compare(questionnaire, **self.config[CONFIG_FIELD_MATCHING])
+
+            # Get existing mappings for first and second
+            mappings = self.mappings[name]["gecco"].sources()
+
+            matches = self.gecco.compare(
+                questionnaire,
+                left_existing_mappings=[],
+                right_existing_mappings=mappings,
+                **self.config[CONFIG_FIELD_MATCHING],
+            )
             self.results[f"gecco vs {name}"] = matches
 
     def match_questionnaires(self, prefix: str = None, *args, **kwargs) -> None:
@@ -91,8 +116,16 @@ class Matcher:
                 logger.info(
                     "compare %s %s and %s", prefix if prefix else "", name_first, name_second
                 )
+
+                # Get existing mappings for first and second
+                mappings_first = self.mappings[name_first][name_second].sources()
+                mappings_second = self.mappings[name_second][name_first].sources()
+
                 matches = dataset_first.compare(
-                    dataset_second, **{**self.config[CONFIG_FIELD_MATCHING], **kwargs}
+                    dataset_second,
+                    mappings_first,
+                    mappings_second,
+                    **{**self.config[CONFIG_FIELD_MATCHING], **kwargs},
                 )
                 self.results[f"{prefix if prefix else ''}{name_first} vs {name_second}"] = matches
 

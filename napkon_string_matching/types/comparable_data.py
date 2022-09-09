@@ -2,10 +2,11 @@ import logging
 from abc import abstractmethod
 from enum import Enum
 from pathlib import Path
-from typing import List
+from typing import Dict, List
 
 import napkon_string_matching.compare.score_functions
 import nltk
+import pandas as pd
 from napkon_string_matching.types.comparable import Comparable
 from napkon_string_matching.types.data import Data, gen_hash
 from nltk.corpus import stopwords
@@ -54,6 +55,8 @@ class ComparableData(Data):
     def compare(
         self,
         other,
+        left_existing_mappings: List[str],
+        right_existing_mappings: List[str],
         compare_column: str,
         score_threshold: float = 0.1,
         cached: bool = True,
@@ -64,7 +67,9 @@ class ComparableData(Data):
 
         # Get the compare dataframe that holds the score to match all entries from
         # the left with each from right dataset
-        df_hash = self._hash_compare_args(other, compare_column, cache_threshold)
+        df_hash = self._hash_compare_args(
+            other, left_existing_mappings, right_existing_mappings, compare_column, cache_threshold
+        )
         cache_score_file = Path(CACHE_FILE_PATTERN.format(df_hash))
         logger.debug("cache hash %s", df_hash)
 
@@ -76,6 +81,8 @@ class ComparableData(Data):
                 cache_threshold = score_threshold
             result = self.gen_comparable(
                 other,
+                left_existing_mappings,
+                right_existing_mappings,
                 score_threshold=cache_threshold,
                 compare_column=compare_column,
                 *args,
@@ -102,6 +109,8 @@ class ComparableData(Data):
     def gen_comparable(
         self,
         right,
+        left_existing_mappings: List[str],
+        right_existing_mappings: List[str],
         score_func: str,
         compare_column: str,
         score_threshold: float = 0.1,
@@ -112,6 +121,10 @@ class ComparableData(Data):
 
         left = self.dropna(subset=[compare_column])
         right = right.dropna(subset=[compare_column])
+
+        # Remove existing mappings
+        left.remove_existing_mappings(left_existing_mappings)
+        right.remove_existing_mappings(right_existing_mappings)
 
         left.map_for_comparable()
         right.map_for_comparable()
@@ -140,6 +153,14 @@ class ComparableData(Data):
 
         return comparable
 
+    def remove_existing_mappings(self, existing_mappings) -> None:
+        self._data = self._data[
+            [
+                variable not in existing_mappings
+                for variable in self[ComparableColumns.IDENTIFIER.value]
+            ]
+        ]
+
     @abstractmethod
     def add_terms(self, language: str = "german"):
         raise NotImplementedError()
@@ -167,7 +188,9 @@ class ComparableData(Data):
         file_name: str,
         preparator,
         calculate_tokens: bool = False,
-        tokens=dict(),
+        tokens: Dict = None,
+        filter_column: str = None,
+        filter_prefix: str = None,
         *args,
         **kwargs,
     ):
@@ -175,6 +198,9 @@ class ComparableData(Data):
         Reads a questionnaire from file. If `calculate_tokens == True` tokens are also generated
         using the provided preparator.
         """
+        if tokens is None:
+            tokens = {}
+
         file = Path(file_name)
         logger.info(f"prepare file {file.name}")
 
@@ -183,11 +209,9 @@ class ComparableData(Data):
         # Build output file pattern
         file_pattern = ["prepared_", file.stem]
 
-        if "filter_column" in kwargs:
-            file_pattern.append(kwargs["filter_column"])
-
-        if "filter_prefix" in kwargs:
-            file_pattern.append(kwargs["filter_prefix"])
+        if filter_column and filter_prefix:
+            file_pattern.append(filter_column)
+            file_pattern.append(filter_prefix)
 
         if "score_threshold" in tokens:
             file_pattern.append(str(tokens["score_threshold"]))
@@ -229,6 +253,9 @@ class ComparableData(Data):
 
                 data.write_json(unprocessed_file)
 
+            if filter_column and filter_prefix:
+                data.filter(filter_column, filter_prefix)
+
             # No matter if unprocessed data was read from cache or dataset file,
             # the terms still needs to be generated
             data.add_terms()
@@ -243,3 +270,16 @@ class ComparableData(Data):
             data.write_csv(prepared_file.with_suffix(".csv"))
 
         return data
+
+    def filter(self, filter_column: str, filter_prefix: str):
+        before_len = len(self)
+        self.drop(
+            self[
+                [
+                    not entry.startswith(filter_prefix) if pd.notna(entry) else False
+                    for entry in self[filter_column]
+                ]
+            ].index,
+            inplace=True,
+        )
+        logger.debug("filtered %i entries", before_len - len(self))

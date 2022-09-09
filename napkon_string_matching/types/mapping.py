@@ -1,12 +1,6 @@
 import json
-import re
-import warnings
 from pathlib import Path
-from typing import Dict, List, Tuple
-
-import pandas as pd
-
-COLUMN_REGEX = re.compile(r"^([a-zA-Z]+)_([a-zA-Z\u00C0-\u00FC]+)_([a-zA-Z]+)$")
+from typing import Dict, List
 
 
 class MappingTarget:
@@ -28,16 +22,24 @@ class MappingTarget:
     def __str__(self) -> str:
         return str(self._data)
 
+    def update(self, other) -> None:
+        self._data.update(other._data)
+
+    def sources(self) -> List[str]:
+        return list(self._data.keys())
+
+    def targets(self) -> List[str]:
+        return list(self._data.values())
+
 
 class MappingSource:
     __items__ = ["hap", "gecco", "pop", "suep"]
 
     def __init__(self, data: Dict[str, Dict[str, str]] = None) -> None:
-        if data:
-            for item, data_ in data.items():
-                self[item] = MappingTarget(data_)
-        else:
-            for item in self.__items__:
+        for item in self.__items__:
+            if data and item in data:
+                self[item] = MappingTarget(data[item])
+            else:
                 self[item] = MappingTarget()
 
     def __getitem__(self, item) -> MappingTarget:
@@ -61,6 +63,10 @@ class MappingSource:
 
     def __str__(self) -> str:
         return f"({self._repr_helper})"
+
+    def update(self, other) -> None:
+        for item in self.__items__:
+            self[item].update(other[item])
 
 
 class HapMappingSource(MappingSource):
@@ -89,11 +95,10 @@ class Mapping:
             "suep": SuepMappingSource,
         }
 
-        if data:
-            for item, data_ in data.items():
-                self[item] = class_map[item](data_)
-        else:
-            for item in self.__items__:
+        for item in self.__items__:
+            if data and item in data:
+                self[item] = class_map[item](data[item])
+            else:
                 self[item] = class_map[item]()
 
     def __getitem__(self, item) -> MappingSource:
@@ -115,6 +120,10 @@ class Mapping:
     def __str__(self) -> str:
         return f"({','.join({f'{item}={str(self[item])}' for item in Mapping.__items__})})"
 
+    def update(self, other) -> None:
+        for item in self.__items__:
+            self[item].update(other[item])
+
     @staticmethod
     def read_json(file: str | Path):
         content = json.loads(Path(file).read_text(encoding="utf-8"))
@@ -123,42 +132,3 @@ class Mapping:
     def write_json(self, file: str | Path):
         dict_ = self.dict()
         Path(file).write_text(json.dumps(dict_), encoding="utf-8")
-
-    @staticmethod
-    def read_excel_napkon_dataset_core(file: str | Path):
-        excel_file: pd.ExcelFile = None
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("always")
-            excel_file = pd.ExcelFile(file, engine="openpyxl")
-
-        mapping = Mapping()
-        for sheet_name in excel_file.sheet_names:
-            sheet = excel_file.parse(sheet_name)
-            sheet_name = sheet_name.lower().replace("ü", "ue")
-            groups = Mapping._get_groups(sheet.columns)
-            for group in groups:
-                gecco_column, napkon_column = Mapping._get_columns(group, sheet.columns)
-                for gecco, napkon in zip(sheet[gecco_column], sheet[napkon_column]):
-                    if pd.isna(napkon) or pd.isna(gecco):
-                        continue
-                    mapping[sheet_name].gecco[napkon] = gecco
-        return mapping
-
-    @staticmethod
-    def _get_groups(columns: List[str]) -> List[str]:
-        group_names = set()
-        for column in columns:
-            if match := COLUMN_REGEX.match(column):
-                group_names.add(match.group(1))
-        return list(group_names)
-
-    @staticmethod
-    def _get_columns(group_name: str, columns: List[str]) -> Tuple[str, str]:
-        result = []
-        for column in columns:
-            match = COLUMN_REGEX.match(column)
-            if match and match.group(1) == group_name:
-                result.append(column)
-        if len(result) != 2:
-            raise Exception("got incorrect number of columns: {}", str(len(result)))
-        return tuple(result)
