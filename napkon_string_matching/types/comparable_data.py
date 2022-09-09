@@ -55,6 +55,8 @@ class ComparableData(Data):
     def compare(
         self,
         other,
+        left_existing_mappings: List[str],
+        right_existing_mappings: List[str],
         compare_column: str,
         score_threshold: float = 0.1,
         cached: bool = True,
@@ -65,7 +67,9 @@ class ComparableData(Data):
 
         # Get the compare dataframe that holds the score to match all entries from
         # the left with each from right dataset
-        df_hash = self._hash_compare_args(other, compare_column, cache_threshold)
+        df_hash = self._hash_compare_args(
+            other, left_existing_mappings, right_existing_mappings, compare_column, cache_threshold
+        )
         cache_score_file = Path(CACHE_FILE_PATTERN.format(df_hash))
         logger.debug("cache hash %s", df_hash)
 
@@ -77,6 +81,8 @@ class ComparableData(Data):
                 cache_threshold = score_threshold
             result = self.gen_comparable(
                 other,
+                left_existing_mappings,
+                right_existing_mappings,
                 score_threshold=cache_threshold,
                 compare_column=compare_column,
                 *args,
@@ -103,6 +109,8 @@ class ComparableData(Data):
     def gen_comparable(
         self,
         right,
+        left_existing_mappings: List[str],
+        right_existing_mappings: List[str],
         score_func: str,
         compare_column: str,
         score_threshold: float = 0.1,
@@ -113,6 +121,10 @@ class ComparableData(Data):
 
         left = self.dropna(subset=[compare_column])
         right = right.dropna(subset=[compare_column])
+
+        # Remove existing mappings
+        left.remove_existing_mappings(left_existing_mappings)
+        right.remove_existing_mappings(right_existing_mappings)
 
         left.map_for_comparable()
         right.map_for_comparable()
@@ -140,6 +152,14 @@ class ComparableData(Data):
         logger.debug("got %i entries", len(comparable))
 
         return comparable
+
+    def remove_existing_mappings(self, existing_mappings) -> None:
+        self._data = self._data[
+            [
+                variable not in existing_mappings
+                for variable in self[ComparableColumns.IDENTIFIER.value]
+            ]
+        ]
 
     @abstractmethod
     def add_terms(self, language: str = "german"):

@@ -76,7 +76,16 @@ class Matcher:
     def match_gecco_with_questionnaires(self) -> None:
         for name, questionnaire in self.questionnaires.items():
             logger.info("compare gecco and %s", name)
-            matches = self.gecco.compare(questionnaire, **self.config[CONFIG_FIELD_MATCHING])
+
+            # Get existing mappings for first and second
+            mappings = self.mappings[name]["gecco"].sources()
+
+            matches = self.gecco.compare(
+                questionnaire,
+                left_existing_mappings=[],
+                right_existing_mappings=mappings,
+                **self.config[CONFIG_FIELD_MATCHING],
+            )
             self.results[f"gecco vs {name}"] = matches
 
     def match_questionnaires(self, prefix: str = None, *args, **kwargs) -> None:
@@ -103,8 +112,16 @@ class Matcher:
                 logger.info(
                     "compare %s %s and %s", prefix if prefix else "", name_first, name_second
                 )
+
+                # Get existing mappings for first and second
+                mappings_first = self.mappings[name_first][name_second].sources()
+                mappings_second = self.mappings[name_second][name_first].sources()
+
                 matches = dataset_first.compare(
-                    dataset_second, **{**self.config[CONFIG_FIELD_MATCHING], **kwargs}
+                    dataset_second,
+                    mappings_first,
+                    mappings_second,
+                    **{**self.config[CONFIG_FIELD_MATCHING], **kwargs},
                 )
                 self.results[f"{prefix if prefix else ''}{name_first} vs {name_second}"] = matches
 

@@ -31,6 +31,12 @@ class MappingTarget:
     def update(self, other) -> None:
         self._data.update(other._data)
 
+    def sources(self) -> List[str]:
+        return list(self._data.keys())
+
+    def targets(self) -> List[str]:
+        return list(self._data.values())
+
 
 class MappingSource:
     __items__ = ["hap", "gecco", "pop", "suep"]

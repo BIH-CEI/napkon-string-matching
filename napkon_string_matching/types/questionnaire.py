@@ -270,8 +270,8 @@ class SheetParser:
 
         # Create identifier column
         result.identifier = [
-            _generate_identifier(file, sheet, variable)
-            for file, sheet, variable in zip(result.file, result.sheet, result.variable)
+            _generate_identifier(sheet, variable)
+            for sheet, variable in zip(result.sheet, result.variable)
         ]
         result.uid = [
             _generate_identifier(identifier, str(index))
