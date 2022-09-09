@@ -6,6 +6,9 @@ from typing import Dict
 from napkon_string_matching.prepare.match_preparator import MatchPreparator
 from napkon_string_matching.types.comparable import ComparisonResults
 from napkon_string_matching.types.gecco_definition import GeccoDefinition
+from napkon_string_matching.types.gecco_definition_types.gecco_combined import (
+    GeccoCombinedDefinition,
+)
 from napkon_string_matching.types.mapping import Mapping
 from napkon_string_matching.types.questionnaire import Questionnaire
 from napkon_string_matching.types.questionnaire_types.dataset_table import DatasetTable
@@ -40,7 +43,7 @@ class Matcher:
 
     def _init_gecco_definition(self) -> None:
         files: Dict[str, str] = self.config[CONFIG_GECCO_FILES]
-        self.gecco = GeccoDefinition.prepare(
+        self.gecco = GeccoCombinedDefinition.prepare(
             file_name="gecco_definition.json",
             preparator=self.preparator,
             **self.config[CONFIG_FIELD_MATCHING],
