@@ -8,6 +8,7 @@ from napkon_string_matching.types.comparable import ComparisonResults
 from napkon_string_matching.types.gecco_definition import GeccoDefinition
 from napkon_string_matching.types.mapping import Mapping
 from napkon_string_matching.types.questionnaire import Questionnaire
+from napkon_string_matching.types.questionnaire_types.dataset_table import DatasetTable
 
 CONFIG_GECCO_FILES = "gecco_definition"
 CONFIG_GECCO83 = "gecco83"
@@ -53,7 +54,7 @@ class Matcher:
     def _init_questionnaires(self) -> None:
         self.questionnaires = {}
         for name, file in self.config[CONFIG_FIELD_FILES].items():
-            dataset = Questionnaire.prepare(
+            dataset = DatasetTable.prepare(
                 file_name=file, preparator=self.preparator, **self.config[CONFIG_FIELD_MATCHING]
             )
 
