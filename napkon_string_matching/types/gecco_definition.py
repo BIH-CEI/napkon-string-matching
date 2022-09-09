@@ -152,6 +152,9 @@ class GeccoDefinition(GeccoBase, ComparableData):
         self.term = result
         logger.info("...done")
 
+    def filter(self, filter_column: str, filter_prefix: str):
+        pass
+
 
 def _strip_column(column: pd.Series) -> pd.Series:
     return [str(entry).replace("\xa0", "") if not pd.isna(entry) else None for entry in column]

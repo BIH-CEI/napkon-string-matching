@@ -2,10 +2,11 @@ import logging
 from abc import abstractmethod
 from enum import Enum
 from pathlib import Path
-from typing import List
+from typing import Dict, List
 
 import napkon_string_matching.compare.score_functions
 import nltk
+import pandas as pd
 from napkon_string_matching.types.comparable import Comparable
 from napkon_string_matching.types.data import Data, gen_hash
 from nltk.corpus import stopwords
@@ -167,7 +168,9 @@ class ComparableData(Data):
         file_name: str,
         preparator,
         calculate_tokens: bool = False,
-        tokens=dict(),
+        tokens: Dict = None,
+        filter_column: str = None,
+        filter_prefix: str = None,
         *args,
         **kwargs,
     ):
@@ -175,6 +178,9 @@ class ComparableData(Data):
         Reads a questionnaire from file. If `calculate_tokens == True` tokens are also generated
         using the provided preparator.
         """
+        if tokens is None:
+            tokens = {}
+
         file = Path(file_name)
         logger.info(f"prepare file {file.name}")
 
@@ -183,11 +189,9 @@ class ComparableData(Data):
         # Build output file pattern
         file_pattern = ["prepared_", file.stem]
 
-        if "filter_column" in kwargs:
-            file_pattern.append(kwargs["filter_column"])
-
-        if "filter_prefix" in kwargs:
-            file_pattern.append(kwargs["filter_prefix"])
+        if filter_column and filter_prefix:
+            file_pattern.append(filter_column)
+            file_pattern.append(filter_prefix)
 
         if "score_threshold" in tokens:
             file_pattern.append(str(tokens["score_threshold"]))
@@ -229,6 +233,9 @@ class ComparableData(Data):
 
                 data.write_json(unprocessed_file)
 
+            if filter_column and filter_prefix:
+                data.filter(filter_column, filter_prefix)
+
             # No matter if unprocessed data was read from cache or dataset file,
             # the terms still needs to be generated
             data.add_terms()
@@ -243,3 +250,16 @@ class ComparableData(Data):
             data.write_csv(prepared_file.with_suffix(".csv"))
 
         return data
+
+    def filter(self, filter_column: str, filter_prefix: str):
+        before_len = len(self)
+        self.drop(
+            self[
+                [
+                    not entry.startswith(filter_prefix) if pd.notna(entry) else False
+                    for entry in self[filter_column]
+                ]
+            ].index,
+            inplace=True,
+        )
+        logger.debug("filtered %i entries", before_len - len(self))

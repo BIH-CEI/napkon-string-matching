@@ -216,8 +216,6 @@ class SheetParser:
     def parse_rows(
         self,
         sheet: pd.DataFrame,
-        filter_column: str = None,
-        filter_prefix: str = None,
         *args,
         **kwargs,
     ) -> Questionnaire | None:
@@ -258,18 +256,6 @@ class SheetParser:
 
         # Fill down questions to sub-items
         sheet[DATASETTABLE_COLUMN_QUESTION] = sheet[DATASETTABLE_COLUMN_QUESTION].ffill()
-
-        # Filter entries if filter provided
-        if filter_column and filter_prefix:
-            sheet.drop(
-                sheet[
-                    [
-                        not entry.startswith(filter_prefix) if pd.notna(entry) else False
-                        for entry in sheet[filter_column]
-                    ]
-                ].index,
-                inplace=True,
-            )
 
         # Rename columns
         mappings = {
