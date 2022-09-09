@@ -200,8 +200,8 @@ class SheetParser:
             for sheet, variable in zip(result.sheet, result.variable)
         ]
         result.uid = [
-            _generate_identifier(identifier, str(index))
-            for identifier, index in zip(result.identifier, result.index)
+            _generate_identifier(file, identifier, str(index))
+            for file, identifier, index in zip(result.file, result.identifier, result.index)
         ]
 
         # Set options
