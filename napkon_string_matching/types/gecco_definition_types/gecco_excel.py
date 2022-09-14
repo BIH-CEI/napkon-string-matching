@@ -80,7 +80,12 @@ class GeccoExcelDefinition(GeccoDefinition):
 
 
 def _strip_column(column: pd.Series) -> pd.Series:
-    return [str(entry).replace("\xa0", "") if not pd.isna(entry) else None for entry in column]
+    return [
+        re.sub(r"[\xa0]", "", str(entry)).replace("<br>", "").strip()
+        if not pd.isna(entry)
+        else None
+        for entry in column
+    ]
 
 
 def _fill_id_gaps(id_column: pd.Series) -> List:
