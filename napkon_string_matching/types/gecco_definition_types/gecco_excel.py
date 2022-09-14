@@ -7,6 +7,7 @@ from typing import Dict, List
 import pandas as pd
 from napkon_string_matching.types.comparable_data import ComparableColumns
 from napkon_string_matching.types.gecco_definition import Columns, GeccoDefinition
+from napkon_string_matching.types.gecco_definition_types.not_split_choices import NOT_SPLIT_CHOICES
 
 logger = logging.getLogger(__name__)
 
@@ -58,11 +59,22 @@ class GeccoExcelDefinition(GeccoDefinition):
 
         rows = []
         for _, row in gecco.iterrows():
-            if not isinstance(row[Columns.CHOICES.value], list):
+            choices = row[Columns.CHOICES.value]
+            if not isinstance(choices, list) or any(
+                [
+                    all(
+                        [
+                            no_split_choice.lower() in choice.lower()
+                            for choice, no_split_choice in zip(choices, not_split_choices)
+                        ]
+                    )
+                    for not_split_choices in NOT_SPLIT_CHOICES
+                ]
+            ):
                 rows.append(row)
                 continue
 
-            for index, choice in enumerate(row[Columns.CHOICES.value]):
+            for index, choice in enumerate(choices):
                 new_row = row.copy(deep=True)
                 new_row[Columns.CHOICES.value] = choice
                 if index != 0:
@@ -71,7 +83,7 @@ class GeccoExcelDefinition(GeccoDefinition):
 
         gecco = cls(rows)
 
-        gecco.reset_index(inplace=True)
+        gecco.reset_index(inplace=True, drop=True)
 
         gecco.identifier = _fill_id_gaps(gecco.identifier)
         gecco.identifier = id_prefix + gecco.identifier
@@ -80,7 +92,12 @@ class GeccoExcelDefinition(GeccoDefinition):
 
 
 def _strip_column(column: pd.Series) -> pd.Series:
-    return [str(entry).replace("\xa0", "") if not pd.isna(entry) else None for entry in column]
+    return [
+        re.sub(r"[\xa0]", "", str(entry)).replace("<br>", "").strip()
+        if not pd.isna(entry)
+        else None
+        for entry in column
+    ]
 
 
 def _fill_id_gaps(id_column: pd.Series) -> List:

@@ -16,5 +16,5 @@ class Gecco83Definition(GeccoExcelDefinition):
         }
 
         return super(cls, cls)._read_definition(
-            file, column_mapping, choice_sep="|", id_prefix="gecco_"
+            file, column_mapping, choice_sep="|", id_prefix="gecco83_"
         )
