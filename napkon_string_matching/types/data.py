@@ -89,7 +89,7 @@ class Data:
         logger.info("write %i entries to file %s...", len(self), str(file_name))
 
         file = Path(file_name)
-        file.write_text(self.to_csv(), encoding="utf-8")
+        file.write_text(self.to_csv(index=False), encoding="utf-8")
 
         logger.info("...done")
 
@@ -115,7 +115,7 @@ class Data:
         logger.info("write %i entries to file %s...", len(self), str(file_name))
 
         file = Path(file_name)
-        file.write_text(self.to_json(), encoding="utf-8")
+        file.write_text(self.to_json(orient="records", indent=4), encoding="utf-8")
 
         logger.info("...done")
 
