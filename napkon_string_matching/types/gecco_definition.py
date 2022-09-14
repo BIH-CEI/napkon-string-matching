@@ -1,5 +1,6 @@
 import logging
 from enum import Enum
+from pathlib import Path
 
 import napkon_string_matching.types.comparable as comp
 import pandas as pd
@@ -50,3 +51,18 @@ class GeccoDefinition(GeccoBase, ComparableData):
 
     def filter(self, filter_column: str, filter_prefix: str):
         pass
+
+    def write_csv(self, file_name: str | Path, *args, **kwargs) -> None:
+        gecco = self.stringify_list_columns()
+        super(GeccoDefinition, gecco).write_csv(file_name, *args, **kwargs)
+
+    def write_excel(self, file_name: str | Path):
+        gecco = self.stringify_list_columns()
+        super(GeccoDefinition, gecco).write_excel(file_name)
+
+    def stringify_list_columns(self):
+        gecco = GeccoDefinition(self.dataframe().copy(deep=True))
+        gecco.choices = [
+            " | ".join(choice) if isinstance(choice, list) else choice for choice in gecco.choices
+        ]
+        return gecco
