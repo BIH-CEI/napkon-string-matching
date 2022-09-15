@@ -36,12 +36,17 @@ steps:
   - gecco
   - questionnaires
 
-gecco_definitions:
-  - gecco_definition.json
+gecco_definition:
+  gecco83: gecco83_definition.xlsx
+  geccoplus: geccoplus_definition.xlsx
+  json: gecco_definition.json
 
 files:
-  - file1.xlsx
-  - file2.xlsx
+  hap: file1.xlsx
+  pop: file2.xlsx
+  suep: file3.xlsx
+
+mappings: <folder to existing mappings>
 ```
 
 ## Docker
