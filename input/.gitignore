@@ -1,3 +1,4 @@
 !.gitignore
 !mappings/*
+!input__gecco_definition.json
 *.xlsx

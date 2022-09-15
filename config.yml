@@ -29,6 +29,7 @@ steps:
 gecco_definition:
   gecco83: input/FINAL_GECCO83_DS.xlsx
   geccoplus: input/20211118_GECCOplus_final.xlsx
+  json: input/input__gecco_definition.json
 
 files:
   hap: input/hap_test.xlsx
