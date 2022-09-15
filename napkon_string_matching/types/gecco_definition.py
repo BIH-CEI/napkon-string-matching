@@ -52,6 +52,10 @@ class GeccoDefinition(GeccoBase, ComparableData):
     def filter(self, filter_column: str, filter_prefix: str):
         pass
 
+    @classmethod
+    def read_original_format(cls, file_name: str | Path, *args, **kwargs):
+        return cls.read_json(file_name, *args, **kwargs)
+
     def write_csv(self, file_name: str | Path, *args, **kwargs) -> None:
         gecco = self.stringify_list_columns()
         super(GeccoDefinition, gecco).write_csv(file_name, *args, **kwargs)
