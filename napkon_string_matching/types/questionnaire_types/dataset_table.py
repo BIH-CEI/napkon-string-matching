@@ -25,6 +25,7 @@ DATASETTABLE_TYPE_HEADER = "Headline"
 
 DATASETTABLE_SHEET_HIDDEN_TAG = "Ausgeblendet"
 DATASETTABLE_SHEET_HIDDEN_TRUE = "ja"
+DATASETTABLE_SHEET_TABLES_TAG = "Tabelle(n)"
 
 COLUMN_TEMP_SUBHEADER = "Subheader"
 
@@ -118,9 +119,13 @@ class SheetParser:
         )
 
         # Do not process hidden sheets
-        hidden, *_ = np.where(sheet[DATASETTABLE_COLUMN_PROJECT] == DATASETTABLE_SHEET_HIDDEN_TAG)
-        if hidden and sheet.loc[hidden[0]][2].lower() == DATASETTABLE_SHEET_HIDDEN_TRUE:
+        hidden = _get_meta(sheet, DATASETTABLE_SHEET_HIDDEN_TAG)
+        if hidden and hidden.lower() == DATASETTABLE_SHEET_HIDDEN_TRUE:
             return None
+
+        table_names = _get_meta(sheet, DATASETTABLE_SHEET_TABLES_TAG)
+        if table_names:
+            table_names = table_names.replace(" ", "").split(",")
 
         # Remove leading meta information block on sheet
         start_index = np.where(sheet[DATASETTABLE_COLUMN_PROJECT] == DATASETTABLE_COLUMN_NUMBER)[0][
@@ -219,6 +224,11 @@ class SheetParser:
         result.drop_superfluous_columns()
 
         return result
+
+
+def _get_meta(sheet: pd.DataFrame, entry_name: str) -> str | None:
+    index, *_ = np.where(sheet[DATASETTABLE_COLUMN_PROJECT] == entry_name)
+    return sheet.loc[index[0]][2] if index else None
 
 
 def _fill_subcategories(categories: pd.Series, subcategories: pd.Series) -> List:
