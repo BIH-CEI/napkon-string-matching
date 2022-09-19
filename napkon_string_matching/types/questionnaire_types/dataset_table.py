@@ -26,8 +26,9 @@ DATASETTABLE_TYPE_HEADER = "Headline"
 DATASETTABLE_SHEET_HIDDEN_TAG = "Ausgeblendet"
 DATASETTABLE_SHEET_HIDDEN_TRUE = "ja"
 DATASETTABLE_SHEET_TABLES_TAG = "Tabelle(n)"
+DATASETTABLE_SHEET_TABLES_MAIN_PREFIX = "mnp"
 
-COLUMN_TEMP_SUBHEADER = "Subheader"
+COLUMN_TEMP_TABLE = "Temp_Table"
 
 DATASETTABLE_ITEM_SKIPABLE = "<->"
 
@@ -142,14 +143,31 @@ class SheetParser:
         sheet[DATASETTABLE_COLUMN_SHEET_NAME] = sheet_name
         sheet[DATASETTABLE_COLUMN_FILE] = Path(file.io).stem
 
-        return self.parse_rows(sheet, *args, **kwargs)
+        return self.parse_rows(sheet, table_names, *args, **kwargs)
 
     def parse_rows(
         self,
         sheet: pd.DataFrame,
+        table_names: List[str],
         *args,
         **kwargs,
     ) -> Questionnaire | None:
+
+        main_table = None
+        if len(table_names) >= 1 and table_names[0].startswith(
+            DATASETTABLE_SHEET_TABLES_MAIN_PREFIX
+        ):
+            main_table = table_names[0]
+
+        # Generate column with database table names
+        sheet[COLUMN_TEMP_TABLE] = [
+            main_table
+            if pd.notna(type_) and type_ == DATASETTABLE_TYPE_HEADER
+            else type_
+            if pd.notna(type_) and all(entry not in type_ for entry in ["Group", "Matrix"])
+            else None
+            for type_ in sheet[DATASETTABLE_COLUMN_TYPE]
+        ]
 
         # Fill category and subcategory if available
         sheet[Columns.HEADER.value] = [
