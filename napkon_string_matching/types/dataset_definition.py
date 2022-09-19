@@ -1,3 +1,4 @@
+import json
 import logging
 from copy import deepcopy
 from pathlib import Path
@@ -29,19 +30,8 @@ class DatasetDefinition:
         logger.info("read from file %s...", str(file))
         df: pd.DataFrame = pd.read_csv(file, names=[COLUMN_TABLE, COLUMN_VARIABLE], usecols=[3, 4])
         dataset = DatasetDefinition()
-        subtables = {}
         for _, row in df.iterrows():
-            tables = row[COLUMN_TABLE].split(",")
-            # Check if sub-table is included in mutiple tables
-            if len(tables) > 1:
-                table = tables[0]
-                subtable = tables[1]
-                if subtable in subtables and subtables[subtable] != table:
-                    logger.warning(
-                        "%s found in table %s and %s", subtable, subtables[subtable], table
-                    )
-                subtables[subtable] = table
-            item = tables[-1].strip()
+            item = row[COLUMN_TABLE].replace(", ", ":")
             value = row[COLUMN_VARIABLE]
             dataset[item] = [*dataset[item], value]
         logger.info("got %i tables", len(dataset.data.keys()))
@@ -60,6 +50,14 @@ class DatasetDefinitions:
 
     def to_dict(self) -> Dict[str, Dict[str, List[str]]]:
         return {key: value.to_dict() for key, value in self.data.items()}
+
+    def write_json(self, file: str | Path) -> None:
+        Path(file).write_text(json.dumps(self.to_dict(), indent=4))
+
+    @classmethod
+    def read_json(cls, file: str | Path):
+        data = json.loads(Path(file).read_text())
+        return cls(data)
 
     def add_from_file(self, item: str, file: str | Path) -> None:
         self[item] = DatasetDefinition.read_csv(file)
