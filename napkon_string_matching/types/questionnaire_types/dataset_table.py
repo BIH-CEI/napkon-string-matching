@@ -28,6 +28,7 @@ DATASETTABLE_SHEET_HIDDEN_TRUE = "ja"
 DATASETTABLE_SHEET_TABLES_TAG = "Tabelle(n)"
 DATASETTABLE_SHEET_TABLES_MAIN_PREFIX = "mnp"
 
+COLUMN_TEMP_SUBHEADER = "Temp_Subheader"
 COLUMN_TEMP_TABLE = "Temp_Table"
 
 DATASETTABLE_ITEM_SKIPABLE = "<->"
@@ -168,6 +169,7 @@ class SheetParser:
             else None
             for type_ in sheet[DATASETTABLE_COLUMN_TYPE]
         ]
+        sheet[COLUMN_TEMP_TABLE] = sheet[COLUMN_TEMP_TABLE].ffill().fillna(value=main_table)
 
         # Fill category and subcategory if available
         sheet[Columns.HEADER.value] = [
