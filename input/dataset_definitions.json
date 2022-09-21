@@ -5188,6 +5188,14 @@
             "visitgroup": "\u00dcber Zuordnungen zu Gruppen k\u00f6nnen verschiedene Visiten gleichzeitig wiederholt werden.",
             "visitplanarm": "Bei der Aufteilung des Visitenplans in verschiedene Behandlungsarme werden diese in dieser Tabelle in Abh\u00e4ngigkeit von einer Formular-Regel definiert. Visiten k\u00f6nnen dann einem Behandlungsarm zugewiesen werden.",
             "visitplanarmrelation": "Behandlungsarme k\u00f6nnen miteinander kombiniert werden. In dieser Tabelle werden die m\u00f6glichen Relatione der Arme gespeichert."
+        },
+        "subtables": {
+            "mnpnum3interview_aufn": [
+                "emnpnum3covid_impf"
+            ],
+            "mnpnum3dauermed": [
+                "emnpnum3dauermed"
+            ]
         }
     },
     "hap": {
@@ -13069,6 +13077,62 @@
             "visitgroup": "\u00dcber Zuordnungen zu Gruppen k\u00f6nnen verschiedene Visiten gleichzeitig wiederholt werden.",
             "visitplanarm": "Bei der Aufteilung des Visitenplans in verschiedene Behandlungsarme werden diese in dieser Tabelle in Abh\u00e4ngigkeit von einer Formular-Regel definiert. Visiten k\u00f6nnen dann einem Behandlungsarm zugewiesen werden.",
             "visitplanarmrelation": "Behandlungsarme k\u00f6nnen miteinander kombiniert werden. In dieser Tabelle werden die m\u00f6glichen Relatione der Arme gespeichert."
+        },
+        "subtables": {
+            "mnpnum2_demo": [
+                "emnpnum2_schwanger"
+            ],
+            "mnpnum2_risiko3": [
+                "emnpnum2_erkrankung",
+                "emnpnum2_therapie"
+            ],
+            "mnpnum2_abg_med": [
+                "emnpnum2_abg_med"
+            ],
+            "mnpnum2_demo_cm": [
+                "emnpnum2_schwanger"
+            ],
+            "mnpnum2_ana": [
+                "emnpnum2_adiag",
+                "emnpnum2_impf",
+                "emnpnum2_aimpf"
+            ],
+            "mnpnum2_gesp": [
+                "emnpnum2_gesp"
+            ],
+            "mnpnum2_idiag": [
+                "emnpnum2_proben"
+            ],
+            "mnpnum2_imaghis": [
+                "emnpnum2_roenthis"
+            ],
+            "mnpnum2_imaging": [
+                "emnpnum2_roentgen"
+            ],
+            "mnpnum2_imaging_cm": [
+                "emnpnum2_roentgen"
+            ],
+            "mnpnum2_symp": [
+                "emnpnum2_symptom"
+            ],
+            "mnpnum2_symp_cm": [
+                "emnpnum2_symptom"
+            ],
+            "mnpnum2_echoq": [
+                "emnpnum2_subechoq"
+            ],
+            "mnpnum2_mede_ops": [
+                "emnpnum2_icd",
+                "emnpnum2_ops"
+            ],
+            "mnpnum2_cm": [
+                "emnpnum2_cm",
+                "emnpnum2_cm_atc",
+                "emnpnum2_cmcov"
+            ],
+            "mnpnum2_osfci": [
+                "emnpnum2_osfci"
+            ]
         }
     },
     "suep": {
@@ -20190,6 +20254,195 @@
             "visitgroup": "\u00dcber Zuordnungen zu Gruppen k\u00f6nnen verschiedene Visiten gleichzeitig wiederholt werden.",
             "visitplanarm": "Bei der Aufteilung des Visitenplans in verschiedene Behandlungsarme werden diese in dieser Tabelle in Abh\u00e4ngigkeit von einer Formular-Regel definiert. Visiten k\u00f6nnen dann einem Behandlungsarm zugewiesen werden.",
             "visitplanarmrelation": "Behandlungsarme k\u00f6nnen miteinander kombiniert werden. In dieser Tabelle werden die m\u00f6glichen Relatione der Arme gespeichert."
+        },
+        "subtables": {
+            "mnpnum1fv1": [
+                "emnpnum1site",
+                "emnpnum1appoint",
+                "emnpnum1home",
+                "emnpnum1school",
+                "emnpnum1resid",
+                "emnpnum1ward"
+            ],
+            "mnpnum1fv2_1": [
+                "emnpnum1diagahf",
+                "emnpnum1diagmi",
+                "emnpnum1diagafib",
+                "emnpnum1diagarrthyt",
+                "emnpnum1diagdvt",
+                "emnpnum1diagcoag",
+                "emnpnum1diagcoagdic",
+                "emnpnum1diagrevasc"
+            ],
+            "mnpnum1fv2_2": [
+                "emnpnum1diagards",
+                "emnpnum1diagpards",
+                "emnpnum1diagaki",
+                "emnpnum1diagasc",
+                "emnpnum1diagenc",
+                "emnpnum1diagpankr"
+            ],
+            "mnpnum1fv2_3": [
+                "emnpnum1diagon",
+                "emnpnum1diagonhema",
+                "emnpnum1diagonprot",
+                "emnpnum1onradio"
+            ],
+            "mnpnum1fv2_4": [
+                "emnpnum1diagcihem",
+                "emnpnum1diagtia",
+                "emnpnum1diagciisch",
+                "emnpnum1diagmeng",
+                "emnpnum1diagseiz",
+                "emnpnum1diagrhabdo",
+                "emnpnum1diaganaphy"
+            ],
+            "mnpnum1fv2_5": [
+                "emnpnum1txheart",
+                "emnpnum1txlung",
+                "emnpnum1txvl",
+                "emnpnum1txkidney",
+                "emnpnum1txpancr",
+                "emnpnum1txoth",
+                "emnpnum1sctxauto",
+                "emnpnum1sctxallo"
+            ],
+            "mnpnum1fv2_6": [
+                "emnpnum1diagoth"
+            ],
+            "mnpnum1fv2p": [
+                "emnpnum1diagvit",
+                "emnpnum1diagstill",
+                "emnpnum1diaghus",
+                "emnpnum1diagchdis"
+            ],
+            "mnpnum1fv3_1": [
+                "emnpnum1fever",
+                "emnpnum1appet",
+                "emnpnum1lymph",
+                "emnpnum1dizzi",
+                "emnpnum1heada",
+                "emnpnum1earp",
+                "emnpnum1breastp",
+                "emnpnum1myalg",
+                "emnpnum1arthr",
+                "emnpnum1skin",
+                "emnpnum1ap",
+                "emnpnum1pai"
+            ],
+            "mnpnum1fv3_2": [
+                "emnpnum1sore",
+                "emnpnum1rhin",
+                "emnpnum1stuf",
+                "emnpnum1sneez",
+                "emnpnum1cougt",
+                "emnpnum1dysp",
+                "emnpnum1wheez",
+                "emnpnum1abdp",
+                "emnpnum1naus",
+                "emnpnum1vom",
+                "emnpnum1diar"
+            ],
+            "mnpnum1fv3_3": [
+                "emnpnum1smell",
+                "emnpnum1taste",
+                "emnpnum1vis",
+                "emnpnum1oculo",
+                "emnpnum1speec",
+                "emnpnum1neur",
+                "emnpnum1atax",
+                "emnpnum1conf",
+                "emnpnum1kogn",
+                "emnpnum1fg",
+                "emnpnum1syoth"
+            ],
+            "mnpnum1fv4": [
+                "emnpnum1newb_ward",
+                "emnpnum1newb_breast",
+                "emnpnum1newb_ward",
+                "emnpnum1newb_breast"
+            ],
+            "mnpnum1fv4p": [
+                "emnpnum1co_typ",
+                "emnpnum1preco_typ",
+                "emnpnum1neoinf",
+                "emnpnum1neodis",
+                "emnpnum1pbreast"
+            ],
+            "mnpnum1fv5": [
+                "emnpnum1med_c",
+                "emnpnum1med_i",
+                "emnpnum1med_ih",
+                "emnpnum1med_oth",
+                "emnpnum1study"
+            ],
+            "mnpnum1fv6": [
+                "emnpnum1aph",
+                "emnpnum1oxy",
+                "emnpnum1pronepos",
+                "emnpnum1inextub",
+                "emnpnum1exgas",
+                "emnpnum1interv",
+                "emnpnum1oral",
+                "emnpnum1syst",
+                "emnpnum1treat",
+                "emnpnum1medit",
+                "emnpnum1limit"
+            ],
+            "mnpnum1fv7": [
+                "emnpnum1vac_infl",
+                "emnpnum1vac_pneu",
+                "emnpnum1vac_sars",
+                "emnpnum1vac_rsv",
+                "emnpnum1vac_oth"
+            ],
+            "mnpnum1fv8": [
+                "emnpnum1path",
+                "emnpnum1mrsa"
+            ],
+            "mnpnum1fv8_2": [
+                "emnpnum1path"
+            ],
+            "mnpnum1fv9": [
+                "emnpnum1pcr",
+                "emnpnum1igg",
+                "emnpnum1iga",
+                "emnpnum1igm",
+                "emnpnum1neutrig"
+            ],
+            "mnpnum1fv10": [
+                "emnpnum1urin",
+                "emnpnum1urin_auto",
+                "emnpnum1urinspez",
+                "emnpnum1liquor"
+            ],
+            "mnpnum1fv11": [
+                "emnpnum1us_ab",
+                "emnpnum1ct_ab",
+                "emnpnum1mr_ab"
+            ],
+            "mnpnum1fv12": [
+                "emnpnum1ecg",
+                "emnpnum1echo",
+                "emnpnum1cmr",
+                "emnpnum1cardiacct"
+            ],
+            "mnpnum1fv13": [
+                "emnpnum1spiro",
+                "emnpnum1diff",
+                "emnpnum1xray",
+                "emnpnum1ct",
+                "emnpnum1lus",
+                "emnpnum1lmr"
+            ],
+            "mnpnum1fv14": [
+                "emnpnum1eeg",
+                "emnpnum1eng",
+                "emnpnum1ephy",
+                "emnpnum1cct",
+                "emnpnum1mrt",
+                "emnpnum1srmr"
+            ]
         }
     }
 }
