@@ -13,28 +13,23 @@ COLUMN_VARIABLE = "Variable"
 
 
 DEFINITION_TABLE_ITEMS = "table_items"
-DEFINITION_TABLE_NAMES = "table_names"
 DEFINITION_SUBTABLES = "subtables"
 
 
 class DatasetDefinition:
     def __init__(self, data: Dict[str, Dict[str, List[str]]] = None):
         self._table_items: DefinitionTableItems = None
-        self._table_names: DefinitionTableNames = None
         self._subtables: DefinitionSubtables = None
 
         if data:
             if table_items := data.get(DEFINITION_TABLE_ITEMS):
                 self._table_items = DefinitionTableItems(table_items)
-            if table_names := data.get(DEFINITION_TABLE_NAMES):
-                self._table_names = DefinitionTableNames(table_names)
+
             if subtables := data.get(DEFINITION_SUBTABLES):
                 self._subtables = DefinitionSubtables(subtables)
 
         if not self._table_items:
             self._table_items = DefinitionTableItems()
-        if not self._table_names:
-            self._table_names = DefinitionTableNames()
         if not self._subtables:
             self._subtables = DefinitionSubtables()
 
@@ -49,15 +44,13 @@ class DatasetDefinition:
     def to_dict(self) -> Dict[str, List[str]]:
         return {
             DEFINITION_TABLE_ITEMS: self._table_items.to_dict(),
-            DEFINITION_TABLE_NAMES: self._table_names.to_dict(),
             DEFINITION_SUBTABLES: self._subtables.to_dict(),
         }
 
     @classmethod
-    def read_csv(cls, column_file: str | Path, tables_file: str | Path, dataset_file: str | Path):
+    def read_csv(cls, column_file: str | Path, dataset_file: str | Path):
         dataset = DatasetDefinition()
         dataset._table_items = DefinitionTableItems.read_csv(column_file)
-        dataset._table_names = DefinitionTableNames.read_csv(tables_file)
         dataset._subtables = DefinitionSubtables.read_csv(dataset_file)
         return dataset
 
@@ -83,10 +76,8 @@ class DatasetDefinitions:
         data = json.loads(Path(file).read_text())
         return cls(data)
 
-    def add_from_file(
-        self, item: str, column_file: str | Path, tables_file: str | Path, dataset_file: str | Path
-    ) -> None:
-        self[item] = DatasetDefinition.read_csv(column_file, tables_file, dataset_file)
+    def add_from_file(self, item: str, column_file: str | Path, dataset_file: str | Path) -> None:
+        self[item] = DatasetDefinition.read_csv(column_file, dataset_file)
 
 
 class DefinitionTableItems:
@@ -118,42 +109,6 @@ class DefinitionTableItems:
             if table not in result:
                 result[table] = []
             result[table].append(item.lower())
-        logger.info("got %i tables", len(result.data.keys()))
-        return result
-
-
-class DefinitionTableNames:
-    def __init__(self, data: Dict[str, str] = None):
-        self.data = data if data else {}
-
-    def __getitem__(self, item: str) -> str:
-        return self.data.get(item, None)
-
-    def __setitem__(self, item: str, value: str) -> None:
-        self.data[item] = value
-
-    def __contains__(self, item: str) -> bool:
-        return item in self.data
-
-    def to_dict(self) -> Dict[str, str]:
-        return deepcopy(self.data)
-
-    @classmethod
-    def read_csv(cls, file: str | Path):
-        logger.info("read from file %s...", str(file))
-        df: pd.DataFrame = pd.read_csv(file, usecols=[0, 2])
-        result = cls()
-        for _, row in df.iterrows():
-            table, name = tuple(row)
-            if table in result:
-                logger.warning(
-                    "could not assign %s, %s has already assigned the name %s",
-                    name,
-                    table,
-                    result[table],
-                )
-                continue
-            result[table.lower()] = name
         logger.info("got %i tables", len(result.data.keys()))
         return result
 
