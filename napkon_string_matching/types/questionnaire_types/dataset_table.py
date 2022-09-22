@@ -151,15 +151,17 @@ class SheetParser:
     def parse_rows(
         self,
         sheet: pd.DataFrame,
-        table_names: List[str],
+        table_names: List[str] = None,
         dataset_definitions: DatasetDefinition = None,
         *args,
         **kwargs,
     ) -> Questionnaire | None:
 
         main_table = None
-        if len(table_names) >= 1 and table_names[0].startswith(
-            DATASETTABLE_SHEET_TABLES_MAIN_PREFIX
+        if (
+            table_names
+            and len(table_names) >= 1
+            and table_names[0].startswith(DATASETTABLE_SHEET_TABLES_MAIN_PREFIX)
         ):
             main_table = table_names[0]
 
@@ -172,7 +174,9 @@ class SheetParser:
             else None
             for type_ in sheet[DATASETTABLE_COLUMN_TYPE]
         ]
-        sheet[COLUMN_TEMP_TABLE] = sheet[COLUMN_TEMP_TABLE].ffill().fillna(value=main_table)
+        sheet[COLUMN_TEMP_TABLE] = sheet[COLUMN_TEMP_TABLE].ffill()
+        if main_table:
+            sheet[COLUMN_TEMP_TABLE].fillna(value=main_table, inplace=True)
 
         if dataset_definitions:
             # Update table name from dataset definitions
