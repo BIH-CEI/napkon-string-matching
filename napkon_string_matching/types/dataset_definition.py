@@ -5,12 +5,12 @@ from pathlib import Path
 from typing import Dict, List
 
 import pandas as pd
+from napkon_string_matching.types.identifier import TABLE_SEPARATOR
 
 logger = logging.getLogger(__name__)
 
 COLUMN_TABLE = "Table"
 COLUMN_VARIABLE = "Variable"
-
 
 DEFINITION_TABLE_ITEMS = "table_items"
 DEFINITION_SUBTABLES = "subtables"
@@ -38,8 +38,32 @@ class DatasetDefinition:
         return self._table_items
 
     @property
-    def table_names(self):
-        return self._table_names
+    def subtables(self):
+        return self._subtables
+
+    def get_correct_full_table_names(self, table: str, item: str) -> str:
+        # Split the table string into the different table names
+        table_names = table.split(TABLE_SEPARATOR)
+        table_name = table_names[-1]
+
+        # Get the (updated) correct table name
+        new_table_name = self._get_correct_table_name(table_name, item)
+
+        # Check if there is a parent table
+        parent_table = self.subtables.get_parent(new_table_name)
+
+        # Return combined table string
+        if parent_table:
+            new_table_name = f"{parent_table}{TABLE_SEPARATOR}{new_table_name}"
+        return new_table_name
+
+    def _get_correct_table_name(self, table: str, item: str) -> str:
+        # If the item is already correct just return the current name
+        if self.table_items.in_table(table, item):
+            return table
+        # Otherwise, search for the correct one
+        else:
+            return self.table_items.get_table_name(item)
 
     def to_dict(self) -> Dict[str, List[str]]:
         return {
@@ -93,6 +117,15 @@ class DefinitionTableItems:
     def __contains__(self, item: str) -> bool:
         return item in self.data
 
+    def in_table(self, table: str, item: str) -> bool:
+        return item in self[table]
+
+    def get_table_name(self, item) -> str | None:
+        for table, item_ in self.data.items():
+            if item == item_:
+                return table
+        return None
+
     def to_dict(self) -> Dict[str, List[str]]:
         return deepcopy(self.data)
 
@@ -125,6 +158,12 @@ class DefinitionSubtables:
 
     def __contains__(self, item: str) -> bool:
         return item in self.data
+
+    def get_parent(self, table: str) -> str:
+        for parent, tables in self.data.items():
+            if table in tables:
+                return parent
+        return None
 
     def to_dict(self) -> Dict[str, List[str]]:
         return deepcopy(self.data)

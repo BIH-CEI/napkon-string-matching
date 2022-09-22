@@ -6,6 +6,7 @@ from typing import List
 
 import numpy as np
 import pandas as pd
+from napkon_string_matching.types.dataset_definition import DatasetDefinition
 from napkon_string_matching.types.questionnaire import Columns, Questionnaire, get_term_parts
 
 DATASETTABLE_COLUMN_DB_COLUMN = "Datenbankspalte"
@@ -150,6 +151,7 @@ class SheetParser:
         self,
         sheet: pd.DataFrame,
         table_names: List[str],
+        dataset_definitions: DatasetDefinition,
         *args,
         **kwargs,
     ) -> Questionnaire | None:
@@ -170,6 +172,12 @@ class SheetParser:
             for type_ in sheet[DATASETTABLE_COLUMN_TYPE]
         ]
         sheet[COLUMN_TEMP_TABLE] = sheet[COLUMN_TEMP_TABLE].ffill().fillna(value=main_table)
+
+        # Update table name from dataset definitions
+        sheet[COLUMN_TEMP_TABLE] = [
+            dataset_definitions.get_correct_full_table_names(table, item)
+            for table, item in zip(sheet[COLUMN_TEMP_TABLE], sheet[DATASETTABLE_COLUMN_VARIABLE])
+        ]
 
         # Fill category and subcategory if available
         sheet[Columns.HEADER.value] = [
