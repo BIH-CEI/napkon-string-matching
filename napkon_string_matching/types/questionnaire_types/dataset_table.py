@@ -7,6 +7,7 @@ from typing import List
 import numpy as np
 import pandas as pd
 from napkon_string_matching.types.dataset_definition import DatasetDefinition
+from napkon_string_matching.types.identifier import generate_id
 from napkon_string_matching.types.questionnaire import Columns, Questionnaire, get_term_parts
 
 DATASETTABLE_COLUMN_DB_COLUMN = "Datenbankspalte"
@@ -229,11 +230,11 @@ class SheetParser:
 
         # Create identifier column
         result.identifier = [
-            _generate_identifier(sheet, variable)
-            for sheet, variable in zip(result.sheet, result.variable)
+            generate_id(sheet, variable)
+            for sheet, variable in zip(sheet[COLUMN_TEMP_TABLE], result.variable)
         ]
         result.uid = [
-            _generate_identifier(file, identifier, str(index))
+            generate_id(file, identifier, str(index))
             for file, identifier, index in zip(result.file, result.identifier, result.index)
         ]
 
@@ -271,10 +272,6 @@ def _fill_subcategories(categories: pd.Series, subcategories: pd.Series) -> List
         else:
             result.append(sub)
     return result
-
-
-def _generate_identifier(*args) -> str:
-    return "#".join(args).replace(" ", "-")
 
 
 def _generate_options(options: str) -> List[str] | None:
