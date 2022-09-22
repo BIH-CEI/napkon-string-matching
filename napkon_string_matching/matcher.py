@@ -5,6 +5,7 @@ from typing import Dict
 
 from napkon_string_matching.prepare.match_preparator import MatchPreparator
 from napkon_string_matching.types.comparable import ComparisonResults
+from napkon_string_matching.types.dataset_definition import DatasetDefinitions
 from napkon_string_matching.types.gecco_definition import GeccoDefinition
 from napkon_string_matching.types.mapping import Mapping
 from napkon_string_matching.types.questionnaire import Questionnaire
@@ -14,6 +15,7 @@ CONFIG_GECCO_FILES = "gecco_definition"
 CONFIG_GECCO83 = "gecco83"
 CONFIG_GECCO_PLUS = "geccoplus"
 CONFIG_GECCO_JSON = "json"
+CONFIG_DATASET_DEFINITION = "dataset_definition"
 CONFIG_FIELD_FILES = "files"
 CONFIG_FIELD_MAPPINGS = "mappings"
 CONFIG_FIELD_MATCHING = "matching"
@@ -35,6 +37,7 @@ class Matcher:
         self.mappings: Mapping = None
 
         self._init_gecco_definition()
+        self._init_dataset_definition()
         self._init_questionnaires()
         self._init_mappings()
         self.clear_results()
@@ -52,11 +55,18 @@ class Matcher:
         if self.gecco is None:
             logger.warning("didn't get any data")
 
+    def _init_dataset_definition(self) -> None:
+        file = self.config[CONFIG_DATASET_DEFINITION]
+        self.dataset_def = DatasetDefinitions.read_json(file)
+
     def _init_questionnaires(self) -> None:
         self.questionnaires = {}
         for name, file in self.config[CONFIG_FIELD_FILES].items():
             dataset = DatasetTable.prepare(
-                file_name=file, preparator=self.preparator, **self.config[CONFIG_FIELD_MATCHING]
+                file_name=file,
+                preparator=self.preparator,
+                **self.config[CONFIG_FIELD_MATCHING],
+                dataset_definitions=self.dataset_def[name],
             )
 
             if dataset is None:

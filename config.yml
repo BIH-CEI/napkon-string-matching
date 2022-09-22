@@ -31,6 +31,8 @@ gecco_definition:
   geccoplus: input/20211118_GECCOplus_final.xlsx
   json: input/input__gecco_definition.json
 
+dataset_definition: input/dataset_definitions.json
+
 files:
   hap: input/hap_test.xlsx
   pop: input/pop_test.xlsx

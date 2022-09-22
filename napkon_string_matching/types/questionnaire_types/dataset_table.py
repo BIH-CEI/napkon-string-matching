@@ -6,6 +6,8 @@ from typing import List
 
 import numpy as np
 import pandas as pd
+from napkon_string_matching.types.dataset_definition import DatasetDefinition
+from napkon_string_matching.types.identifier import generate_id
 from napkon_string_matching.types.questionnaire import Columns, Questionnaire, get_term_parts
 
 DATASETTABLE_COLUMN_DB_COLUMN = "Datenbankspalte"
@@ -25,8 +27,11 @@ DATASETTABLE_TYPE_HEADER = "Headline"
 
 DATASETTABLE_SHEET_HIDDEN_TAG = "Ausgeblendet"
 DATASETTABLE_SHEET_HIDDEN_TRUE = "ja"
+DATASETTABLE_SHEET_TABLES_TAG = "Tabelle(n)"
+DATASETTABLE_SHEET_TABLES_MAIN_PREFIX = "mnp"
 
-COLUMN_TEMP_SUBHEADER = "Subheader"
+COLUMN_TEMP_SUBHEADER = "Temp_Subheader"
+COLUMN_TEMP_TABLE = "Temp_Table"
 
 DATASETTABLE_ITEM_SKIPABLE = "<->"
 
@@ -118,9 +123,13 @@ class SheetParser:
         )
 
         # Do not process hidden sheets
-        hidden, *_ = np.where(sheet[DATASETTABLE_COLUMN_PROJECT] == DATASETTABLE_SHEET_HIDDEN_TAG)
-        if hidden and sheet.loc[hidden[0]][2].lower() == DATASETTABLE_SHEET_HIDDEN_TRUE:
+        hidden = _get_meta(sheet, DATASETTABLE_SHEET_HIDDEN_TAG)
+        if hidden and hidden.lower() == DATASETTABLE_SHEET_HIDDEN_TRUE:
             return None
+
+        table_names = _get_meta(sheet, DATASETTABLE_SHEET_TABLES_TAG)
+        if table_names:
+            table_names = table_names.replace(" ", "").split(",")
 
         # Remove leading meta information block on sheet
         start_index = np.where(sheet[DATASETTABLE_COLUMN_PROJECT] == DATASETTABLE_COLUMN_NUMBER)[0][
@@ -137,45 +146,68 @@ class SheetParser:
         sheet[DATASETTABLE_COLUMN_SHEET_NAME] = sheet_name
         sheet[DATASETTABLE_COLUMN_FILE] = Path(file.io).stem
 
-        return self.parse_rows(sheet, *args, **kwargs)
+        return self.parse_rows(sheet, table_names, *args, **kwargs)
 
     def parse_rows(
         self,
         sheet: pd.DataFrame,
+        table_names: List[str] = None,
+        dataset_definitions: DatasetDefinition = None,
         *args,
         **kwargs,
     ) -> Questionnaire | None:
 
-        # Fill category and subcategory if available
+        main_table = None
+        if (
+            table_names
+            and len(table_names) >= 1
+            and table_names[0].startswith(DATASETTABLE_SHEET_TABLES_MAIN_PREFIX)
+        ):
+            main_table = table_names[0]
+
+        # Generate column with database table names
+        sheet[COLUMN_TEMP_TABLE] = [
+            main_table
+            if pd.notna(type_) and type_ == DATASETTABLE_TYPE_HEADER
+            else type_
+            if pd.notna(type_) and all(entry not in type_ for entry in ["Group", "Matrix"])
+            else None
+            for type_ in sheet[DATASETTABLE_COLUMN_TYPE]
+        ]
+        sheet[COLUMN_TEMP_TABLE] = sheet[COLUMN_TEMP_TABLE].ffill()
+        if main_table:
+            sheet[COLUMN_TEMP_TABLE].fillna(value=main_table, inplace=True)
+
+        if dataset_definitions:
+            # Update table name from dataset definitions
+            sheet[COLUMN_TEMP_TABLE] = [
+                dataset_definitions.get_correct_full_table_names(table, item)
+                for table, item in zip(
+                    sheet[COLUMN_TEMP_TABLE], sheet[DATASETTABLE_COLUMN_VARIABLE]
+                )
+            ]
+
+        # Fill category
         sheet[Columns.HEADER.value] = [
             question if type_ == DATASETTABLE_TYPE_HEADER else None
             for question, type_ in zip(
                 sheet[DATASETTABLE_COLUMN_QUESTION], sheet[DATASETTABLE_COLUMN_TYPE]
             )
         ]
-        sheet[COLUMN_TEMP_SUBHEADER] = [
-            question
-            if pd.notna(type_)
-            and type_ != DATASETTABLE_TYPE_HEADER
-            and all(entry not in type_ for entry in ["Group", "Matrix"])
-            else None
+        sheet[Columns.HEADER.value] = sheet[Columns.HEADER.value].ffill()
+
+        subgroups = {
+            type_: question
             for question, type_ in zip(
                 sheet[DATASETTABLE_COLUMN_QUESTION], sheet[DATASETTABLE_COLUMN_TYPE]
             )
-        ]
+            if pd.notna(type_) and type_.startswith("emnp")
+        }
 
-        # Fill for all items category and subcategory if they belong to one
-        sheet[Columns.HEADER.value] = sheet[Columns.HEADER.value].ffill()
-        sheet[COLUMN_TEMP_SUBHEADER] = _fill_subcategories(
-            sheet[Columns.HEADER.value], sheet[COLUMN_TEMP_SUBHEADER]
-        )
-
-        # Combine both information in a single column
         sheet[Columns.HEADER.value] = [
-            _combine_headers(category, sub)
-            for category, sub in zip(sheet[Columns.HEADER.value], sheet[COLUMN_TEMP_SUBHEADER])
+            generate_header(header, subgroups.get(table.split(":")[-1]) if table else None)
+            for header, table in zip(sheet[Columns.HEADER.value], sheet[COLUMN_TEMP_TABLE])
         ]
-        sheet.drop(columns=COLUMN_TEMP_SUBHEADER, inplace=True)
 
         # Remove all entries without items and variable names
         sheet.dropna(subset=[DATASETTABLE_COLUMN_ITEM, DATASETTABLE_COLUMN_DB_COLUMN], inplace=True)
@@ -196,11 +228,11 @@ class SheetParser:
 
         # Create identifier column
         result.identifier = [
-            _generate_identifier(sheet, variable)
-            for sheet, variable in zip(result.sheet, result.variable)
+            generate_id(sheet, variable)
+            for sheet, variable in zip(sheet[COLUMN_TEMP_TABLE], result.variable)
         ]
         result.uid = [
-            _generate_identifier(file, identifier, str(index))
+            generate_id(file, identifier, str(index))
             for file, identifier, index in zip(result.file, result.identifier, result.index)
         ]
 
@@ -212,7 +244,7 @@ class SheetParser:
 
         # Generate parameter
         result.parameter = [
-            ":".join(get_term_parts(header, question, item))
+            generate_parameter(header, question, item)
             for header, question, item in zip(result.header, result.question, result.item)
         ]
 
@@ -221,34 +253,22 @@ class SheetParser:
         return result
 
 
-def _fill_subcategories(categories: pd.Series, subcategories: pd.Series) -> List:
-    result = []
-    for index, entry in enumerate(zip(categories, subcategories)):
-        prev_cat = categories[index - 1] if index > 0 else -1
-        prev_sub = result[index - 1] if index > 0 else -1
-        cat, sub = entry
-
-        if not sub and prev_sub and prev_cat == cat:
-            result.append(prev_sub)
-        else:
-            result.append(sub)
-    return result
+def _get_meta(sheet: pd.DataFrame, entry_name: str) -> str | None:
+    index, *_ = np.where(sheet[DATASETTABLE_COLUMN_PROJECT] == entry_name)
+    return sheet.loc[index[0]][2] if index else None
 
 
-def _generate_identifier(*args) -> str:
-    return "#".join(args).replace(" ", "-")
+def generate_header(*args) -> List[str] | None:
+    result = [entry for entry in args if entry]
+    return result if result else None
+
+
+def generate_parameter(*args) -> str:
+    cleaned_args = list(dict.fromkeys(get_term_parts(*args)))
+    return ":".join(cleaned_args)
 
 
 def _generate_options(options: str) -> List[str] | None:
     return (
         options.replace(";", "\n").replace("\n\n", "\n").splitlines() if pd.notna(options) else None
     )
-
-
-def _combine_headers(first: str, second: str) -> List[str]:
-    result = []
-    if pd.notna(first):
-        result.append(first)
-    if pd.notna(second):
-        result.append(second)
-    return result if result else None

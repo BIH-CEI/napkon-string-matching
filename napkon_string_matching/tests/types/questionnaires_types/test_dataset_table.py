@@ -49,7 +49,7 @@ class TestSheetParser(unittest.TestCase):
                 DATASETTABLE_COLUMN_FILE: "Testfile",
             },
             {
-                DATASETTABLE_COLUMN_TYPE: "other",
+                DATASETTABLE_COLUMN_TYPE: "emnpother",
                 DATASETTABLE_COLUMN_QUESTION: "Subheader",
                 DATASETTABLE_COLUMN_ITEM: None,
                 DATASETTABLE_COLUMN_DB_COLUMN: None,
@@ -75,8 +75,8 @@ class TestSheetParser(unittest.TestCase):
 
         expected_results = [
             {
-                ComparableColumns.IDENTIFIER.value: "Test-Sheet#foo-column",
-                Columns.UID.value: "Testfile#Test-Sheet#foo-column#2",
+                ComparableColumns.IDENTIFIER.value: "emnpother#foo-column",
+                Columns.UID.value: "Testfile#emnpother#foo-column#2",
                 Columns.ITEM.value: "This is an item with options",
                 Columns.SHEET.value: "Test Sheet",
                 Columns.FILE.value: "Testfile",
@@ -88,8 +88,8 @@ class TestSheetParser(unittest.TestCase):
                 + "This is an item with options",
             },
             {
-                ComparableColumns.IDENTIFIER.value: "Test-Sheet#bar-column",
-                Columns.UID.value: "Testfile#Test-Sheet#bar-column#3",
+                ComparableColumns.IDENTIFIER.value: "emnpother#bar-column",
+                Columns.UID.value: "Testfile#emnpother#bar-column#3",
                 Columns.ITEM.value: "Another item for same question",
                 Columns.SHEET.value: "Test Sheet",
                 Columns.FILE.value: "Testfile",
@@ -106,6 +106,7 @@ class TestSheetParser(unittest.TestCase):
         input = pd.DataFrame(row_dicts)
         result = parser.parse_rows(input)
 
+        self.maxDiff = None
         for row, expected in zip(result.iterrows(), expected_results):
             _, row = row
             self.assertDictEqual(expected, row.to_dict())
