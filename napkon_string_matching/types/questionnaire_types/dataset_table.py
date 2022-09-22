@@ -152,7 +152,7 @@ class SheetParser:
         self,
         sheet: pd.DataFrame,
         table_names: List[str],
-        dataset_definitions: DatasetDefinition,
+        dataset_definitions: DatasetDefinition = None,
         *args,
         **kwargs,
     ) -> Questionnaire | None:
@@ -174,11 +174,14 @@ class SheetParser:
         ]
         sheet[COLUMN_TEMP_TABLE] = sheet[COLUMN_TEMP_TABLE].ffill().fillna(value=main_table)
 
-        # Update table name from dataset definitions
-        sheet[COLUMN_TEMP_TABLE] = [
-            dataset_definitions.get_correct_full_table_names(table, item)
-            for table, item in zip(sheet[COLUMN_TEMP_TABLE], sheet[DATASETTABLE_COLUMN_VARIABLE])
-        ]
+        if dataset_definitions:
+            # Update table name from dataset definitions
+            sheet[COLUMN_TEMP_TABLE] = [
+                dataset_definitions.get_correct_full_table_names(table, item)
+                for table, item in zip(
+                    sheet[COLUMN_TEMP_TABLE], sheet[DATASETTABLE_COLUMN_VARIABLE]
+                )
+            ]
 
         # Fill category
         sheet[Columns.HEADER.value] = [
