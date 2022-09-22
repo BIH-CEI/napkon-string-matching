@@ -198,11 +198,7 @@ class SheetParser:
         }
 
         sheet[Columns.HEADER.value] = [
-            [header]
-            if header
-            else [] + [subgroups[table.split(":")[-1]]]
-            if table and table.split(":")[-1] in subgroups
-            else []
+            generate_header(header, subgroups.get(table.split(":")[-1]) if table else None)
             for header, table in zip(sheet[Columns.HEADER.value], sheet[COLUMN_TEMP_TABLE])
         ]
 
@@ -241,7 +237,7 @@ class SheetParser:
 
         # Generate parameter
         result.parameter = [
-            ":".join(get_term_parts(header, question, item))
+            generate_parameter(header, question, item)
             for header, question, item in zip(result.header, result.question, result.item)
         ]
 
@@ -255,30 +251,17 @@ def _get_meta(sheet: pd.DataFrame, entry_name: str) -> str | None:
     return sheet.loc[index[0]][2] if index else None
 
 
-def _fill_subcategories(categories: pd.Series, subcategories: pd.Series) -> List:
-    result = []
-    for index, entry in enumerate(zip(categories, subcategories)):
-        prev_cat = categories[index - 1] if index > 0 else -1
-        prev_sub = result[index - 1] if index > 0 else -1
-        cat, sub = entry
+def generate_header(*args) -> List[str] | None:
+    result = [entry for entry in args if entry]
+    return result if result else None
 
-        if not sub and prev_sub and prev_cat == cat:
-            result.append(prev_sub)
-        else:
-            result.append(sub)
-    return result
+
+def generate_parameter(*args) -> str:
+    cleaned_args = list(dict.fromkeys(get_term_parts(*args)))
+    return ":".join(cleaned_args)
 
 
 def _generate_options(options: str) -> List[str] | None:
     return (
         options.replace(";", "\n").replace("\n\n", "\n").splitlines() if pd.notna(options) else None
     )
-
-
-def _combine_headers(first: str, second: str) -> List[str]:
-    result = []
-    if pd.notna(first):
-        result.append(first)
-    if pd.notna(second):
-        result.append(second)
-    return result if result else None
