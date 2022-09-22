@@ -180,36 +180,31 @@ class SheetParser:
             for table, item in zip(sheet[COLUMN_TEMP_TABLE], sheet[DATASETTABLE_COLUMN_VARIABLE])
         ]
 
-        # Fill category and subcategory if available
+        # Fill category
         sheet[Columns.HEADER.value] = [
             question if type_ == DATASETTABLE_TYPE_HEADER else None
             for question, type_ in zip(
                 sheet[DATASETTABLE_COLUMN_QUESTION], sheet[DATASETTABLE_COLUMN_TYPE]
             )
         ]
-        sheet[COLUMN_TEMP_SUBHEADER] = [
-            question
-            if pd.notna(type_)
-            and type_ != DATASETTABLE_TYPE_HEADER
-            and all(entry not in type_ for entry in ["Group", "Matrix"])
-            else None
+        sheet[Columns.HEADER.value] = sheet[Columns.HEADER.value].ffill()
+
+        subgroups = {
+            type_: question
             for question, type_ in zip(
                 sheet[DATASETTABLE_COLUMN_QUESTION], sheet[DATASETTABLE_COLUMN_TYPE]
             )
-        ]
+            if pd.notna(type_) and type_.startswith("emnp")
+        }
 
-        # Fill for all items category and subcategory if they belong to one
-        sheet[Columns.HEADER.value] = sheet[Columns.HEADER.value].ffill()
-        sheet[COLUMN_TEMP_SUBHEADER] = _fill_subcategories(
-            sheet[Columns.HEADER.value], sheet[COLUMN_TEMP_SUBHEADER]
-        )
-
-        # Combine both information in a single column
         sheet[Columns.HEADER.value] = [
-            _combine_headers(category, sub)
-            for category, sub in zip(sheet[Columns.HEADER.value], sheet[COLUMN_TEMP_SUBHEADER])
+            [header]
+            if header
+            else [] + [subgroups[table.split(":")[-1]]]
+            if table and table.split(":")[-1] in subgroups
+            else []
+            for header, table in zip(sheet[Columns.HEADER.value], sheet[COLUMN_TEMP_TABLE])
         ]
-        sheet.drop(columns=COLUMN_TEMP_SUBHEADER, inplace=True)
 
         # Remove all entries without items and variable names
         sheet.dropna(subset=[DATASETTABLE_COLUMN_ITEM, DATASETTABLE_COLUMN_DB_COLUMN], inplace=True)
