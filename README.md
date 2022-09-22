@@ -41,6 +41,8 @@ gecco_definition:
   geccoplus: geccoplus_definition.xlsx
   json: gecco_definition.json
 
+dataset_definition: dataset_definition.json
+
 files:
   hap: file1.xlsx
   pop: file2.xlsx
