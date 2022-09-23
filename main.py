@@ -18,6 +18,7 @@ def get_args():
     parser = ArgumentParser()
 
     parser.add_argument("--config", default="config.yml")
+    parser.add_argument("--no-cache", action="store_true", default=False)
 
     args = parser.parse_args()
     return args
@@ -28,4 +29,4 @@ if __name__ == "__main__":
 
     config = yaml.safe_load(Path(args.config).read_text())
 
-    matching.match(config)
+    matching.match(config, use_cache=not args.no_cache)

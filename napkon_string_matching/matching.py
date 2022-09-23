@@ -15,9 +15,9 @@ CONFIG_FIELD_STEPS = "steps"
 logger = logging.getLogger(__name__)
 
 
-def match(config: Dict) -> None:
+def match(config: Dict, use_cache=True) -> None:
     preparator = MatchPreparator(config[CONFIG_FIELD_PREPARE])
-    matcher = Matcher(preparator, config)
+    matcher = Matcher(preparator, config, use_cache=use_cache)
 
     for step in config[CONFIG_FIELD_STEPS]:
         match step:
