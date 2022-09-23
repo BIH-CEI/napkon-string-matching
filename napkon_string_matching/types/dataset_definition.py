@@ -58,12 +58,20 @@ class DatasetDefinition:
         return new_table_name
 
     def _get_correct_table_name(self, table: str, item: str) -> str:
+        if not item:
+            return table
+
         # If the item is already correct just return the current name
-        if self.table_items.in_table(table, item):
+        if table and self.table_items.in_table(table, item):
             return table
         # Otherwise, search for the correct one
         else:
-            return self.table_items.get_table_name(item)
+            new_table = self.table_items.get_table_name(item)
+            if new_table:
+                return new_table
+            else:
+                logger.info("did not find table for '%s', returning previous '%s'", item, table)
+                return table
 
     def to_dict(self) -> Dict[str, List[str]]:
         return {
@@ -121,8 +129,8 @@ class DefinitionTableItems:
         return item in self[table]
 
     def get_table_name(self, item) -> str | None:
-        for table, item_ in self.data.items():
-            if item == item_:
+        for table, items in self.data.items():
+            if item in items:
                 return table
         return None
 

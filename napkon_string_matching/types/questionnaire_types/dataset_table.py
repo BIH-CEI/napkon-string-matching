@@ -176,7 +176,7 @@ class SheetParser:
         ]
         sheet[COLUMN_TEMP_TABLE] = sheet[COLUMN_TEMP_TABLE].ffill()
         if main_table:
-            sheet[COLUMN_TEMP_TABLE].fillna(value=main_table, inplace=True)
+            sheet[COLUMN_TEMP_TABLE] = sheet[COLUMN_TEMP_TABLE].fillna(value=main_table)
 
         if dataset_definitions:
             # Update table name from dataset definitions

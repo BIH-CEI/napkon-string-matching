@@ -28,13 +28,14 @@ logger = logging.getLogger(__name__)
 
 
 class Matcher:
-    def __init__(self, preparator: MatchPreparator, config: Dict) -> None:
+    def __init__(self, preparator: MatchPreparator, config: Dict, use_cache=True) -> None:
         self.preparator = preparator
         self.config = config
         self.gecco: GeccoDefinition = None
         self.questionnaires: Dict[str, Questionnaire] = None
         self.results: ComparisonResults = None
         self.mappings: Mapping = None
+        self.use_cache = use_cache
 
         self._init_gecco_definition()
         self._init_dataset_definition()
@@ -50,6 +51,7 @@ class Matcher:
             **self.config[CONFIG_FIELD_MATCHING],
             gecco83_file=files.get(CONFIG_GECCO83),
             geccoplus_file=files.get(CONFIG_GECCO_PLUS),
+            use_cache=self.use_cache,
         )
 
         if self.gecco is None:
@@ -67,6 +69,7 @@ class Matcher:
                 preparator=self.preparator,
                 **self.config[CONFIG_FIELD_MATCHING],
                 dataset_definitions=self.dataset_def[name],
+                use_cache=self.use_cache,
             )
 
             if dataset is None:

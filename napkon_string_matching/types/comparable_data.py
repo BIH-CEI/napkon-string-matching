@@ -191,6 +191,7 @@ class ComparableData(Data):
         tokens: Dict = None,
         filter_column: str = None,
         filter_prefix: str = None,
+        use_cache=True,
         *args,
         **kwargs,
     ):
@@ -227,22 +228,22 @@ class ComparableData(Data):
         prepared_file = output_dir / file_pattern.format("prepared")
 
         # Create output director if not existing
-        if not output_dir.exists():
+        if use_cache and not output_dir.exists():
             output_dir.mkdir(parents=True)
 
         # If prepared already exists, read it and return data
-        if prepared_file.exists():
+        if use_cache and prepared_file.exists():
             logger.info("using previously cached prepared file")
             data = cls.read_json(prepared_file)
             return data
 
         # If term file exists read its data
-        if terms_file.exists():
+        if use_cache and terms_file.exists():
             logger.info("using previously cached terms file")
             data = cls.read_json(terms_file)
         else:
             # If unprocessed file exists, read it; otherwise calculate
-            if unprocessed_file.exists():
+            if use_cache and unprocessed_file.exists():
                 logger.info("using previously cached unprocessed file")
                 data = cls.read_json(unprocessed_file)
             else:
@@ -251,7 +252,8 @@ class ComparableData(Data):
                 if data is None:
                     return None
 
-                data.write_json(unprocessed_file)
+                if use_cache:
+                    data.write_json(unprocessed_file)
 
             if filter_column and filter_prefix:
                 data.filter(filter_column, filter_prefix)
@@ -259,14 +261,16 @@ class ComparableData(Data):
             # No matter if unprocessed data was read from cache or dataset file,
             # the terms still needs to be generated
             data.add_terms()
-            data.write_json(terms_file)
+            if use_cache:
+                data.write_json(terms_file)
 
         # No matter if terms data was read or calculated,
         # the tokens still need to be generated if required
         if calculate_tokens:
             config = {"score_threshold": 0.9, "timeout": 30, **tokens}
             preparator.add_tokens(data, **config)
-            data.write_json(prepared_file)
+            if use_cache:
+                data.write_json(prepared_file)
             data.write_csv(prepared_file.with_suffix(".csv"))
 
         return data
