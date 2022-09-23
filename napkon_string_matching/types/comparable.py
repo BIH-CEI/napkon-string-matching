@@ -13,10 +13,12 @@ class Columns(Enum):
     IDENTIFIER = "Identifier"
     PARAMETER = "Parameter"
     VARIABLE = "Variable"
+    SHEET = "Sheet"
     MATCH_SCORE = "MatchScore"
     MATCH_IDENTIFIER = "MatchIdentifier"
     MATCH_PARAMETER = "MatchParameter"
     MATCH_VARIABLE = "MatchVariable"
+    MATCH_SHEET = "MatchSheet"
 
 
 class Comparable(Data):
