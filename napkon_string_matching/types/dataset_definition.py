@@ -129,8 +129,8 @@ class DefinitionTableItems:
         return item in self[table]
 
     def get_table_name(self, item) -> str | None:
-        for table, item_ in self.data.items():
-            if item == item_:
+        for table, items in self.data.items():
+            if item in items:
                 return table
         return None
 
