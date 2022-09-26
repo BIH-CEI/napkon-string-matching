@@ -7,7 +7,7 @@ from typing import Dict, List
 import napkon_string_matching.compare.score_functions
 import nltk
 import pandas as pd
-from napkon_string_matching.types.comparable import Comparable
+from napkon_string_matching.types.comparable import COLUMN_NAMES, Columns, Comparable
 from napkon_string_matching.types.data import Data, gen_hash
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -114,6 +114,8 @@ class ComparableData(Data):
         score_func: str,
         compare_column: str,
         score_threshold: float = 0.1,
+        left_name: str = None,
+        right_name: str = None,
         *args,
         **kwargs,
     ) -> Comparable:
@@ -129,23 +131,34 @@ class ComparableData(Data):
         left.map_for_comparable()
         right.map_for_comparable()
 
-        right = right.add_prefix("Match")
-        compare_df = left.merge(right, how="cross").dataframe()
+        left_prefix = left_name.title()
+        right_prefix = right_name.title()
+
+        left = left.add_prefix(left_prefix)
+        right = right.add_prefix(right_prefix)
+        compare_df = left.merge(right, how="cross")
 
         logger.info("calculate score")
-        comparable = Comparable(compare_df)
+        comparable = Comparable(data=compare_df, left_name=left_prefix, right_name=right_prefix)
 
         comparable.match_score = [
             score_func(param, match_param)
             for param, match_param in tqdm(
-                zip(comparable[compare_column], comparable["Match" + compare_column]),
+                zip(
+                    comparable[left_prefix + compare_column],
+                    comparable[right_prefix + compare_column],
+                ),
                 total=len(comparable),
             )
         ]
 
         # Remove not needed columns
         logger.debug("remove superfluous columns")
-        comparable.drop_superfluous_columns()
+        columns = [
+            prefix + column for prefix in [left_prefix, right_prefix] for column in COLUMN_NAMES
+        ]
+        columns.append(Columns.MATCH_SCORE.value)
+        comparable.drop_superfluous_columns(columns)
 
         logger.debug("apply score threshold")
         comparable = comparable[comparable.match_score >= score_threshold]
