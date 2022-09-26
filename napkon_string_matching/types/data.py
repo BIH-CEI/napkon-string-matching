@@ -37,7 +37,10 @@ class Data:
         return super().__new__(cls)
 
     def __init__(self, data=None):
-        self._data = pd.DataFrame(data)
+        if isinstance(data, Data):
+            self._data = data
+        else:
+            self._data = pd.DataFrame(data)
 
     def __getattr__(self, __name: str):
         return getattr(self._data, __name)
