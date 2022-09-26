@@ -6,12 +6,13 @@ from typing import List
 
 import pandas as pd
 from napkon_string_matching.types.base.readable_json_frame import ReadableJsonFrame
+from napkon_string_matching.types.base.writable_excel import WritableExcel
 from napkon_string_matching.types.base.writable_json import WritableJson
 
 logger = logging.getLogger(__name__)
 
 
-class Data(ReadableJsonFrame, WritableJson):
+class Data(ReadableJsonFrame, WritableJson, WritableExcel):
     __slots__ = ["_data"]
     __columns__ = []
 
@@ -103,15 +104,8 @@ class Data(ReadableJsonFrame, WritableJson):
 
         logger.info("...done")
 
-    def write_excel(self, file_name: str | Path):
-        logger.info("write %i entries to file %s...", len(self), str(file_name))
-
-        file = Path(file_name)
-        writer = pd.ExcelWriter(file, engine="openpyxl")
-        self._data.to_excel(writer, index=False)
-        writer.save()
-
-        logger.info("...done")
+    def get_items(self):
+        return [("Sheet1", self._data)]
 
     def to_json(self, *args, **kwargs):
         return self._data.to_json(*args, **kwargs)

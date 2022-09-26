@@ -4,6 +4,7 @@ from pathlib import Path
 
 import napkon_string_matching.types.comparable as comp
 import pandas as pd
+from napkon_string_matching.types.base.writable_excel import WritableExcel
 from napkon_string_matching.types.category import Category
 from napkon_string_matching.types.comparable_data import ComparableColumns, ComparableData
 
@@ -26,7 +27,7 @@ class GeccoCategory(GeccoBase, Category):
     pass
 
 
-class GeccoDefinition(GeccoBase, ComparableData):
+class GeccoDefinition(GeccoBase, ComparableData, WritableExcel):
     __column_mapping__ = {ComparableColumns.IDENTIFIER.value: comp.Columns.VARIABLE.value}
     __category_type__ = GeccoCategory
 
@@ -49,9 +50,6 @@ class GeccoDefinition(GeccoBase, ComparableData):
         self.term = result
         logger.info("...done")
 
-    def filter(self, filter_column: str, filter_prefix: str):
-        pass
-
     @classmethod
     def read_original_format(cls, file_name: str | Path, *args, **kwargs):
         return cls.read_json(file_name, *args, **kwargs)
@@ -60,9 +58,8 @@ class GeccoDefinition(GeccoBase, ComparableData):
         gecco = self.stringify_list_columns()
         super(GeccoDefinition, gecco).write_csv(file_name, *args, **kwargs)
 
-    def write_excel(self, file_name: str | Path):
-        gecco = self.stringify_list_columns()
-        super(GeccoDefinition, gecco).write_excel(file_name)
+    def get_items(self):
+        return [("Sheet1", self.stringify_list_columns())]
 
     def stringify_list_columns(self):
         gecco = GeccoDefinition(self.dataframe().copy(deep=True))

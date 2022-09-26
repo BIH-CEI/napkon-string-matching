@@ -1,11 +1,11 @@
 import json
 import logging
 from enum import Enum
-from pathlib import Path
 from typing import Dict, List
 
 import pandas as pd
 from napkon_string_matching.types.base.readable_json import ReadableJson
+from napkon_string_matching.types.base.writable_excel import WritableExcel
 from napkon_string_matching.types.base.writable_json import WritableJson
 from napkon_string_matching.types.data import Data
 
@@ -138,7 +138,7 @@ class Comparable(ReadableJson, WritableJson):
         self.data.drop_superfluous_columns(self.__column_names__ if columns is None else columns)
 
 
-class ComparisonResults:
+class ComparisonResults(WritableExcel):
     def __init__(self, comp_dict: Dict[str, Comparable] = None) -> None:
         self.results = comp_dict if comp_dict else {}
 
@@ -149,15 +149,7 @@ class ComparisonResults:
         return self.results[item]
 
     def items(self):
+        return self.get_items()
+
+    def get_items(self):
         return self.results.items()
-
-    def write_excel(self, file: str):
-        path = Path(file)
-        if not path.parent.exists():
-            path.parent.mkdir(parents=True)
-
-        logger.info("write result to file %s", str(file))
-        writer = pd.ExcelWriter(file, engine="openpyxl")
-        for name, comp in self.items():
-            comp.to_excel(writer, sheet_name=name, index=False)
-        writer.save()
