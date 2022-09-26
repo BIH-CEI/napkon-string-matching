@@ -52,6 +52,9 @@ class Data:
         else:
             return result
 
+    def __setitem__(self, item, value):
+        setitem(self._data, item, value)
+
     def __repr__(self) -> str:
         return repr(self._data)
 
