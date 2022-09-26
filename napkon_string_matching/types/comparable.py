@@ -1,3 +1,4 @@
+import json
 import logging
 from enum import Enum
 from pathlib import Path
@@ -48,7 +49,7 @@ class Comparable:
                 f"Either provide 'left_name' AND 'right_name' or a dictionary in 'data' providing the entries {LEFT_NAME}, {RIGHT_NAME} AND {DATA_NAME}"
             )
 
-    def to_json(self, *args, **kwargs) -> str:
+    def write_json(self, file_name: str | Path, *args, **kwargs) -> None:
         """
         Write data to file in JSON format
 
@@ -64,15 +65,26 @@ class Comparable:
 
         logger.info("...done")
 
-    def write_csv(self, file_name: str | Path) -> None:
+    def to_json(self, *args, **kwargs):
+        result = {
+            LEFT_NAME: self.left_name,
+            RIGHT_NAME: self.right_name,
+            DATA_NAME: self.data.to_dict(orient=kwargs.pop("orient", None)),
+        }
+        return json.dumps(result, *args, **kwargs)
+
+    @classmethod
+    def read_json(cls, file_name: str | Path, *args, **kwargs):
+        logger.info("read from file %s...", str(file_name))
+
         file = Path(file_name)
-        if not file.parent.exists():
-            file.parent.mkdir(parents=True)
+        definition = json.loads(file.read_text(encoding="utf-8"))
 
-        logger.info("prepare result data for output...")
+        result = cls(definition)
+        result.reset_index(drop=True, inplace=True)
 
-        logger.info("write result to %s", str(file))
-        file.write_text(self.to_csv(index=False), encoding="utf-8")
+        logger.info("...got %i entries", len(result))
+        return result
 
     def sort_by_score(self) -> None:
         self._data.sort_values(by=Columns.MATCH_SCORE.value, ascending=False, inplace=True)
