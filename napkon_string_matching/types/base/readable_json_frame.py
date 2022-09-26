@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from napkon_string_matching.types.readable_json import ReadableJson
+from napkon_string_matching.types.base.readable_json import ReadableJson
 
 
 class ReadableJsonFrame(ReadableJson):

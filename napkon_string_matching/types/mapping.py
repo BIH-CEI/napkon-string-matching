@@ -1,9 +1,8 @@
 import json
-from pathlib import Path
 from typing import Dict, List
 
-from napkon_string_matching.types.readable_json import ReadableJson
-from napkon_string_matching.types.writable_json import WritableJson
+from napkon_string_matching.types.base.readable_json import ReadableJson
+from napkon_string_matching.types.base.writable_json import WritableJson
 
 
 class MappingTarget:
@@ -138,6 +137,3 @@ class Mapping(ReadableJson, WritableJson):
 
     def __len__(self) -> int:
         return len(self.hap) + len(self.pop) + len(self.suep)
-
-    def to_json(self, indent: int | None = None, *args, **kwargs):
-        return json.dumps(self.dict(), indent=indent)

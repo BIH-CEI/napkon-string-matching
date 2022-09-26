@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import List
 
 import pandas as pd
-from napkon_string_matching.types.readable_json_frame import ReadableJsonFrame
-from napkon_string_matching.types.writable_json import WritableJson
+from napkon_string_matching.types.base.readable_json_frame import ReadableJsonFrame
+from napkon_string_matching.types.base.writable_json import WritableJson
 
 logger = logging.getLogger(__name__)
 

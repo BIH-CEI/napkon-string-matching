@@ -5,9 +5,9 @@ from pathlib import Path
 from typing import Dict, List
 
 import pandas as pd
+from napkon_string_matching.types.base.readable_json import ReadableJson
+from napkon_string_matching.types.base.writable_json import WritableJson
 from napkon_string_matching.types.data import Data
-from napkon_string_matching.types.readable_json import ReadableJson
-from napkon_string_matching.types.writable_json import WritableJson
 
 logger = logging.getLogger(__name__)
 
