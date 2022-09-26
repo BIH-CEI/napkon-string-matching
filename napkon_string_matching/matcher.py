@@ -99,6 +99,8 @@ class Matcher:
                 questionnaire,
                 left_existing_mappings=[],
                 right_existing_mappings=mappings,
+                left_name="gecco",
+                right_name=name,
                 **self.config[CONFIG_FIELD_MATCHING],
             )
             self.results[f"gecco vs {name}"] = matches
@@ -136,6 +138,8 @@ class Matcher:
                     dataset_second,
                     mappings_first,
                     mappings_second,
+                    left_name=name_first,
+                    right_name=name_second,
                     **{**self.config[CONFIG_FIELD_MATCHING], **kwargs},
                 )
                 self.results[f"{prefix if prefix else ''}{name_first} vs {name_second}"] = matches
