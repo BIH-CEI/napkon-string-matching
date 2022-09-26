@@ -2,6 +2,8 @@ import json
 from pathlib import Path
 from typing import Dict, List
 
+from napkon_string_matching.types.readable_json import ReadableJson
+
 
 class MappingTarget:
     def __init__(self, data: Dict[str, str] = None) -> None:
@@ -30,6 +32,9 @@ class MappingTarget:
 
     def targets(self) -> List[str]:
         return list(self._data.values())
+
+    def __len__(self) -> int:
+        return len(self._data)
 
 
 class MappingSource:
@@ -64,6 +69,9 @@ class MappingSource:
     def __str__(self) -> str:
         return f"({self._repr_helper})"
 
+    def __len__(self) -> int:
+        return sum([len(self[item]) for item in self.__items__])
+
     def update(self, other) -> None:
         for item in self.__items__:
             self[item].update(other[item])
@@ -81,7 +89,7 @@ class SuepMappingSource(MappingSource):
     __items__ = ["gecco", "hap", "pop"]
 
 
-class Mapping:
+class Mapping(ReadableJson):
     __items__ = ["hap", "pop", "suep"]
 
     def __init__(self, data: Dict[str, Dict[str, Dict[str, str]]] = None) -> None:
@@ -124,10 +132,11 @@ class Mapping:
         for item in self.__items__:
             self[item].update(other[item])
 
-    @staticmethod
-    def read_json(file: str | Path):
-        content = json.loads(Path(file).read_text(encoding="utf-8"))
-        return Mapping(data=content)
+    def to_json(self, indent: int | None = None, *args, **kwargs):
+        return json.dumps(self.dict(), indent=indent)
+
+    def __len__(self) -> int:
+        return len(self.hap) + len(self.pop) + len(self.suep)
 
     def write_json(self, file: str | Path):
         dict_ = self.dict()

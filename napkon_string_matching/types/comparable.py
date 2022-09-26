@@ -6,6 +6,7 @@ from typing import Dict, List
 
 import pandas as pd
 from napkon_string_matching.types.data import Data
+from napkon_string_matching.types.readable_json import ReadableJson
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ RIGHT_NAME = "right_name"
 DATA_NAME = "data"
 
 
-class Comparable:
+class Comparable(ReadableJson):
     left_name: str = None
     right_name: str = None
     data: Data = None
@@ -72,19 +73,6 @@ class Comparable:
             DATA_NAME: self.data.to_dict(orient=kwargs.pop("orient", None)),
         }
         return json.dumps(result, *args, **kwargs)
-
-    @classmethod
-    def read_json(cls, file_name: str | Path, *args, **kwargs):
-        logger.info("read from file %s...", str(file_name))
-
-        file = Path(file_name)
-        definition = json.loads(file.read_text(encoding="utf-8"))
-
-        result = cls(definition)
-        result.reset_index(drop=True, inplace=True)
-
-        logger.info("...got %i entries", len(result))
-        return result
 
     def sort_by_score(self) -> None:
         self._data.sort_values(by=Columns.MATCH_SCORE.value, ascending=False, inplace=True)

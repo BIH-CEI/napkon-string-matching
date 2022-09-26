@@ -6,6 +6,7 @@ from typing import Dict, List
 
 import pandas as pd
 from napkon_string_matching.types.identifier import TABLE_SEPARATOR
+from napkon_string_matching.types.readable_json import ReadableJson
 
 logger = logging.getLogger(__name__)
 
@@ -86,8 +87,11 @@ class DatasetDefinition:
         dataset._subtables = DefinitionSubtables.read_csv(dataset_file)
         return dataset
 
+    def __len__(self) -> int:
+        return len(self.subtables) + len(self.table_items)
 
-class DatasetDefinitions:
+
+class DatasetDefinitions(ReadableJson):
     def __init__(self, data: Dict[str, Dict[str, List[str]]] = None):
         self.data = {key: DatasetDefinition(value) for key, value in data.items()} if data else {}
 
@@ -103,13 +107,11 @@ class DatasetDefinitions:
     def write_json(self, file: str | Path) -> None:
         Path(file).write_text(json.dumps(self.to_dict(), indent=4))
 
-    @classmethod
-    def read_json(cls, file: str | Path):
-        data = json.loads(Path(file).read_text())
-        return cls(data)
-
     def add_from_file(self, item: str, column_file: str | Path, dataset_file: str | Path) -> None:
         self[item] = DatasetDefinition.read_csv(column_file, dataset_file)
+
+    def __len__(self) -> int:
+        return sum([len(value) for value in self.data.values()])
 
 
 class DefinitionTableItems:
@@ -124,6 +126,9 @@ class DefinitionTableItems:
 
     def __contains__(self, item: str) -> bool:
         return item in self.data
+
+    def __len__(self) -> int:
+        return len(self.data)
 
     def in_table(self, table: str, item: str) -> bool:
         return item in self[table]
@@ -166,6 +171,9 @@ class DefinitionSubtables:
 
     def __contains__(self, item: str) -> bool:
         return item in self.data
+
+    def __len__(self) -> int:
+        return len(self.data)
 
     def get_parent(self, table: str) -> str:
         for parent, tables in self.data.items():

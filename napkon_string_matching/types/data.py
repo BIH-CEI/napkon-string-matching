@@ -1,4 +1,3 @@
-import json
 import logging
 from hashlib import md5
 from operator import getitem, setitem
@@ -6,11 +5,12 @@ from pathlib import Path
 from typing import List
 
 import pandas as pd
+from napkon_string_matching.types.readable_json_frame import ReadableJsonFrame
 
 logger = logging.getLogger(__name__)
 
 
-class Data:
+class Data(ReadableJsonFrame):
     __slots__ = ["_data"]
     __columns__ = []
 
@@ -127,31 +127,6 @@ class Data:
         file.write_text(self.to_json(orient="records", indent=4), encoding="utf-8")
 
         logger.info("...done")
-
-    @classmethod
-    def read_json(cls, file_name: str | Path, *args, **kwargs):
-        """
-        Read data stored as JSON from file
-
-        Attributes
-        ---
-            file_path (str|Path):   file path to read from
-
-        Returns
-        ---
-            Self:  from the file contents
-        """
-
-        logger.info("read from file %s...", str(file_name))
-
-        file = Path(file_name)
-        definition = json.loads(file.read_text(encoding="utf-8"))
-
-        result = cls(definition)
-        result.reset_index(drop=True, inplace=True)
-
-        logger.info("...got %i entries", len(result))
-        return result
 
     def hash(self) -> str:
         return gen_hash(self._data.to_csv())
