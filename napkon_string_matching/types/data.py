@@ -3,6 +3,7 @@ import logging
 from hashlib import md5
 from operator import getitem, setitem
 from pathlib import Path
+from typing import List
 
 import pandas as pd
 
@@ -79,8 +80,10 @@ class Data:
     def dataframe(self) -> pd.DataFrame:
         return self._data
 
-    def drop_superfluous_columns(self) -> None:
-        remove_columns = set(self.columns).difference(set(self.__column_names__))
+    def drop_superfluous_columns(self, columns: List[str] = None) -> None:
+        remove_columns = set(self.columns).difference(
+            set(columns if columns is not None else self.__column_names__)
+        )
         self.drop(columns=remove_columns, inplace=True)
 
     def write_csv(self, file_name: str | Path, *args, **kwargs) -> None:
