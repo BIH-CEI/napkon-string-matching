@@ -6,11 +6,12 @@ from typing import List
 
 import pandas as pd
 from napkon_string_matching.types.readable_json_frame import ReadableJsonFrame
+from napkon_string_matching.types.writable_json import WritableJson
 
 logger = logging.getLogger(__name__)
 
 
-class Data(ReadableJsonFrame):
+class Data(ReadableJsonFrame, WritableJson):
     __slots__ = ["_data"]
     __columns__ = []
 
@@ -112,21 +113,8 @@ class Data(ReadableJsonFrame):
 
         logger.info("...done")
 
-    def write_json(self, file_name: str | Path, *args, **kwargs) -> None:
-        """
-        Write data to file in JSON format
-
-        Attributes
-        ---
-            file_path (str|Path):   file path to write to
-        """
-
-        logger.info("write %i entries to file %s...", len(self), str(file_name))
-
-        file = Path(file_name)
-        file.write_text(self.to_json(orient="records", indent=4), encoding="utf-8")
-
-        logger.info("...done")
+    def to_json(self, *args, **kwargs):
+        return self._data.to_json(*args, **kwargs)
 
     def hash(self) -> str:
         return gen_hash(self._data.to_csv())

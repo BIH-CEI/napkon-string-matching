@@ -7,6 +7,7 @@ from typing import Dict, List
 import pandas as pd
 from napkon_string_matching.types.identifier import TABLE_SEPARATOR
 from napkon_string_matching.types.readable_json import ReadableJson
+from napkon_string_matching.types.writable_json import WritableJson
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +92,7 @@ class DatasetDefinition:
         return len(self.subtables) + len(self.table_items)
 
 
-class DatasetDefinitions(ReadableJson):
+class DatasetDefinitions(ReadableJson, WritableJson):
     def __init__(self, data: Dict[str, Dict[str, List[str]]] = None):
         self.data = {key: DatasetDefinition(value) for key, value in data.items()} if data else {}
 
@@ -104,8 +105,8 @@ class DatasetDefinitions(ReadableJson):
     def to_dict(self) -> Dict[str, Dict[str, List[str]]]:
         return {key: value.to_dict() for key, value in self.data.items()}
 
-    def write_json(self, file: str | Path) -> None:
-        Path(file).write_text(json.dumps(self.to_dict(), indent=4))
+    def to_json(self, indent: int | None = None, *args, **kwargs):
+        return json.dumps(self.to_dict(), indent=indent)
 
     def add_from_file(self, item: str, column_file: str | Path, dataset_file: str | Path) -> None:
         self[item] = DatasetDefinition.read_csv(column_file, dataset_file)

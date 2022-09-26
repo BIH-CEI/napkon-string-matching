@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Dict, List
 
 from napkon_string_matching.types.readable_json import ReadableJson
+from napkon_string_matching.types.writable_json import WritableJson
 
 
 class MappingTarget:
@@ -89,7 +90,7 @@ class SuepMappingSource(MappingSource):
     __items__ = ["gecco", "hap", "pop"]
 
 
-class Mapping(ReadableJson):
+class Mapping(ReadableJson, WritableJson):
     __items__ = ["hap", "pop", "suep"]
 
     def __init__(self, data: Dict[str, Dict[str, Dict[str, str]]] = None) -> None:
@@ -138,6 +139,5 @@ class Mapping(ReadableJson):
     def __len__(self) -> int:
         return len(self.hap) + len(self.pop) + len(self.suep)
 
-    def write_json(self, file: str | Path):
-        dict_ = self.dict()
-        Path(file).write_text(json.dumps(dict_), encoding="utf-8")
+    def to_json(self, indent: int | None = None, *args, **kwargs):
+        return json.dumps(self.dict(), indent=indent)

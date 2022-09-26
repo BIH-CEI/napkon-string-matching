@@ -7,6 +7,7 @@ from typing import Dict, List
 import pandas as pd
 from napkon_string_matching.types.data import Data
 from napkon_string_matching.types.readable_json import ReadableJson
+from napkon_string_matching.types.writable_json import WritableJson
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ RIGHT_NAME = "right_name"
 DATA_NAME = "data"
 
 
-class Comparable(ReadableJson):
+class Comparable(ReadableJson, WritableJson):
     left_name: str = None
     right_name: str = None
     data: Data = None
@@ -50,27 +51,11 @@ class Comparable(ReadableJson):
                 f"Either provide 'left_name' AND 'right_name' or a dictionary in 'data' providing the entries {LEFT_NAME}, {RIGHT_NAME} AND {DATA_NAME}"
             )
 
-    def write_json(self, file_name: str | Path, *args, **kwargs) -> None:
-        """
-        Write data to file in JSON format
-
-        Attributes
-        ---
-            file_path (str|Path):   file path to write to
-        """
-
-        logger.info("write %i entries to file %s...", len(self), str(file_name))
-
-        file = Path(file_name)
-        file.write_text(self.to_json(orient="records", indent=4), encoding="utf-8")
-
-        logger.info("...done")
-
-    def to_json(self, *args, **kwargs):
+    def to_json(self, orient: str | None = None, *args, **kwargs):
         result = {
             LEFT_NAME: self.left_name,
             RIGHT_NAME: self.right_name,
-            DATA_NAME: self.data.to_dict(orient=kwargs.pop("orient", None)),
+            DATA_NAME: self.data.to_dict(orient=orient),
         }
         return json.dumps(result, *args, **kwargs)
 
