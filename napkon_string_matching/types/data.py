@@ -1,16 +1,18 @@
-import json
 import logging
 from hashlib import md5
 from operator import getitem, setitem
-from pathlib import Path
 from typing import List
 
 import pandas as pd
+from napkon_string_matching.types.base.readable_json_frame import ReadableJsonFrame
+from napkon_string_matching.types.base.writable_csv import WritableCsv
+from napkon_string_matching.types.base.writable_excel import WritableExcel
+from napkon_string_matching.types.base.writable_json import WritableJson
 
 logger = logging.getLogger(__name__)
 
 
-class Data:
+class Data(ReadableJsonFrame, WritableCsv, WritableJson, WritableExcel):
     __slots__ = ["_data"]
     __columns__ = []
 
@@ -86,72 +88,14 @@ class Data:
         )
         self.drop(columns=remove_columns, inplace=True)
 
-    def write_csv(self, file_name: str | Path, *args, **kwargs) -> None:
-        """
-        Write data to file in JSON format
+    def to_csv(self) -> str:
+        return self._data.to_csv(index=False)
 
-        Attributes
-        ---
-            file_path (str|Path):   file path to write to
-        """
+    def get_items(self):
+        return [("Sheet1", self._data)]
 
-        logger.info("write %i entries to file %s...", len(self), str(file_name))
-
-        file = Path(file_name)
-        file.write_text(self.to_csv(index=False), encoding="utf-8")
-
-        logger.info("...done")
-
-    def write_excel(self, file_name: str | Path):
-        logger.info("write %i entries to file %s...", len(self), str(file_name))
-
-        file = Path(file_name)
-        writer = pd.ExcelWriter(file, engine="openpyxl")
-        self._data.to_excel(writer, index=False)
-        writer.save()
-
-        logger.info("...done")
-
-    def write_json(self, file_name: str | Path, *args, **kwargs) -> None:
-        """
-        Write data to file in JSON format
-
-        Attributes
-        ---
-            file_path (str|Path):   file path to write to
-        """
-
-        logger.info("write %i entries to file %s...", len(self), str(file_name))
-
-        file = Path(file_name)
-        file.write_text(self.to_json(orient="records", indent=4), encoding="utf-8")
-
-        logger.info("...done")
-
-    @classmethod
-    def read_json(cls, file_name: str | Path, *args, **kwargs):
-        """
-        Read data stored as JSON from file
-
-        Attributes
-        ---
-            file_path (str|Path):   file path to read from
-
-        Returns
-        ---
-            Self:  from the file contents
-        """
-
-        logger.info("read from file %s...", str(file_name))
-
-        file = Path(file_name)
-        definition = json.loads(file.read_text(encoding="utf-8"))
-
-        result = cls(definition)
-        result.reset_index(drop=True, inplace=True)
-
-        logger.info("...got %i entries", len(result))
-        return result
+    def to_json(self, *args, **kwargs):
+        return self._data.to_json(*args, **kwargs)
 
     def hash(self) -> str:
         return gen_hash(self._data.to_csv())

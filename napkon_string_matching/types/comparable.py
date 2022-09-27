@@ -1,10 +1,12 @@
 import json
 import logging
 from enum import Enum
-from pathlib import Path
 from typing import Dict, List
 
 import pandas as pd
+from napkon_string_matching.types.base.readable_json import ReadableJson
+from napkon_string_matching.types.base.writable_excel import WritableExcel
+from napkon_string_matching.types.base.writable_json import WritableJson
 from napkon_string_matching.types.data import Data
 
 logger = logging.getLogger(__name__)
@@ -30,7 +32,7 @@ RIGHT_NAME = "right_name"
 DATA_NAME = "data"
 
 
-class Comparable:
+class Comparable(ReadableJson, WritableJson):
     left_name: str = None
     right_name: str = None
     data: Data = None
@@ -49,42 +51,13 @@ class Comparable:
                 f"Either provide 'left_name' AND 'right_name' or a dictionary in 'data' providing the entries {LEFT_NAME}, {RIGHT_NAME} AND {DATA_NAME}"
             )
 
-    def write_json(self, file_name: str | Path, *args, **kwargs) -> None:
-        """
-        Write data to file in JSON format
-
-        Attributes
-        ---
-            file_path (str|Path):   file path to write to
-        """
-
-        logger.info("write %i entries to file %s...", len(self), str(file_name))
-
-        file = Path(file_name)
-        file.write_text(self.to_json(orient="records", indent=4), encoding="utf-8")
-
-        logger.info("...done")
-
-    def to_json(self, *args, **kwargs):
+    def to_json(self, orient: str | None = None, *args, **kwargs):
         result = {
             LEFT_NAME: self.left_name,
             RIGHT_NAME: self.right_name,
-            DATA_NAME: self.data.to_dict(orient=kwargs.pop("orient", None)),
+            DATA_NAME: self.data.to_dict(orient=orient),
         }
         return json.dumps(result, *args, **kwargs)
-
-    @classmethod
-    def read_json(cls, file_name: str | Path, *args, **kwargs):
-        logger.info("read from file %s...", str(file_name))
-
-        file = Path(file_name)
-        definition = json.loads(file.read_text(encoding="utf-8"))
-
-        result = cls(definition)
-        result.reset_index(drop=True, inplace=True)
-
-        logger.info("...got %i entries", len(result))
-        return result
 
     def sort_by_score(self) -> None:
         self._data.sort_values(by=Columns.MATCH_SCORE.value, ascending=False, inplace=True)
@@ -165,7 +138,7 @@ class Comparable:
         self.data.drop_superfluous_columns(self.__column_names__ if columns is None else columns)
 
 
-class ComparisonResults:
+class ComparisonResults(WritableExcel):
     def __init__(self, comp_dict: Dict[str, Comparable] = None) -> None:
         self.results = comp_dict if comp_dict else {}
 
@@ -176,15 +149,7 @@ class ComparisonResults:
         return self.results[item]
 
     def items(self):
+        return self.get_items()
+
+    def get_items(self):
         return self.results.items()
-
-    def write_excel(self, file: str):
-        path = Path(file)
-        if not path.parent.exists():
-            path.parent.mkdir(parents=True)
-
-        logger.info("write result to file %s", str(file))
-        writer = pd.ExcelWriter(file, engine="openpyxl")
-        for name, comp in self.items():
-            comp.to_excel(writer, sheet_name=name, index=False)
-        writer.save()
