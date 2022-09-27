@@ -54,9 +54,8 @@ class GeccoDefinition(GeccoBase, ComparableData, WritableExcel):
     def read_original_format(cls, file_name: str | Path, *args, **kwargs):
         return cls.read_json(file_name, *args, **kwargs)
 
-    def write_csv(self, file_name: str | Path, *args, **kwargs) -> None:
-        gecco = self.stringify_list_columns()
-        super(GeccoDefinition, gecco).write_csv(file_name, *args, **kwargs)
+    def to_csv(self) -> str:
+        return self.stringify_list_columns()
 
     def get_items(self):
         return [("Sheet1", self.stringify_list_columns())]

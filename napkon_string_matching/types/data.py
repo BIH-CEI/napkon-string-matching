@@ -1,18 +1,18 @@
 import logging
 from hashlib import md5
 from operator import getitem, setitem
-from pathlib import Path
 from typing import List
 
 import pandas as pd
 from napkon_string_matching.types.base.readable_json_frame import ReadableJsonFrame
+from napkon_string_matching.types.base.writable_csv import WritableCsv
 from napkon_string_matching.types.base.writable_excel import WritableExcel
 from napkon_string_matching.types.base.writable_json import WritableJson
 
 logger = logging.getLogger(__name__)
 
 
-class Data(ReadableJsonFrame, WritableJson, WritableExcel):
+class Data(ReadableJsonFrame, WritableCsv, WritableJson, WritableExcel):
     __slots__ = ["_data"]
     __columns__ = []
 
@@ -88,21 +88,8 @@ class Data(ReadableJsonFrame, WritableJson, WritableExcel):
         )
         self.drop(columns=remove_columns, inplace=True)
 
-    def write_csv(self, file_name: str | Path, *args, **kwargs) -> None:
-        """
-        Write data to file in JSON format
-
-        Attributes
-        ---
-            file_path (str|Path):   file path to write to
-        """
-
-        logger.info("write %i entries to file %s...", len(self), str(file_name))
-
-        file = Path(file_name)
-        file.write_text(self.to_csv(index=False), encoding="utf-8")
-
-        logger.info("...done")
+    def to_csv(self) -> str:
+        return self._data.to_csv(index=False)
 
     def get_items(self):
         return [("Sheet1", self._data)]
