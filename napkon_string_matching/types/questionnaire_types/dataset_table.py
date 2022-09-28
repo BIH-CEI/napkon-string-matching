@@ -234,7 +234,7 @@ class SheetParser:
 
         subgroup_map = {}
         for table in sheet[COLUMN_TEMP_TABLE].unique():
-            if len(parts := table.split(":")) > 1:
+            if table and len(parts := table.split(":")) > 1:
                 group = parts[0]
                 if group not in subgroup_map:
                     subgroup_map[group] = []
