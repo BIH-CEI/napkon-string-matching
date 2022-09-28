@@ -1,3 +1,4 @@
+import json
 import logging
 import re
 import warnings
@@ -35,6 +36,10 @@ COLUMN_TEMP_TABLE = "Temp_Table"
 
 DATASETTABLE_ITEM_SKIPABLE = "<->"
 
+JSON_DATA = "data"
+JSON_SUBGROUP_NAMES = "subgroup_names"
+JSON_SUBGROUPS = "subgroups"
+
 logger = logging.getLogger(__name__)
 
 
@@ -45,9 +50,19 @@ class DatasetTable(Questionnaire):
         subgroup_names: Dict[str, str] = None,
         subgroups: Dict[str, List[str]] = None,
     ):
-        super().__init__(data)
-        self.subgroup_names = subgroup_names if subgroup_names else {}
-        self.subgroups = subgroups if subgroups else {}
+        if (
+            data is not None
+            and JSON_DATA in data
+            and JSON_SUBGROUP_NAMES in data
+            and JSON_SUBGROUPS in data
+        ):
+            super().__init__(data[JSON_DATA])
+            self.subgroup_names = data[JSON_SUBGROUP_NAMES]
+            self.subgroups = data[JSON_SUBGROUPS]
+        else:
+            super().__init__(data)
+            self.subgroup_names = subgroup_names if subgroup_names else {}
+            self.subgroups = subgroups if subgroups else {}
 
     @staticmethod
     def read_original_format(file_name: str | Path, *args, **kwargs):
@@ -98,6 +113,14 @@ class DatasetTable(Questionnaire):
         result.subgroup_names = {k: v for d in others for k, v in d.subgroup_names.items()}
         result.subgroups = {k: v for d in others for k, v in d.subgroups.items()}
         return result
+
+    def to_json(self, orient: str = None, *args, **kwargs) -> str:
+        data = {
+            JSON_DATA: self._data.to_dict(orient=orient),
+            JSON_SUBGROUP_NAMES: self.subgroup_names,
+            JSON_SUBGROUPS: self.subgroups,
+        }
+        return json.dumps(data, *args, **kwargs)
 
 
 class SheetParser:
