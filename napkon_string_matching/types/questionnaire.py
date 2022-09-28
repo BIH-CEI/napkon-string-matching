@@ -47,8 +47,8 @@ class Questionnaire(QuestionnaireBase, ComparableData):
                 )
             )
 
-        return Questionnaire(
-            pd.concat([self._data, *[other._data for other in others]], ignore_index=True)
+        return self.__class__(
+            data=pd.concat([self._data, *[other._data for other in others]], ignore_index=True)
         )
 
     def add_terms(self, language: str = "german"):

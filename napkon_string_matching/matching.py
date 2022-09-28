@@ -16,8 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 def match(config: Dict, use_cache=True) -> None:
-    preparator = MatchPreparator(config[CONFIG_FIELD_PREPARE])
-    matcher = Matcher(preparator, config, use_cache=use_cache)
+    matcher = create_matcher(config, use_cache)
 
     for step in config[CONFIG_FIELD_STEPS]:
         match step:
@@ -31,3 +30,9 @@ def match(config: Dict, use_cache=True) -> None:
     matcher.print_analysis()
 
     matcher.write_results()
+
+
+def create_matcher(config: Dict, use_cache=True):
+    preparator = MatchPreparator(config[CONFIG_FIELD_PREPARE])
+    matcher = Matcher(preparator, config, use_cache=use_cache)
+    return matcher
