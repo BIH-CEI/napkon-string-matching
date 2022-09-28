@@ -38,6 +38,7 @@ DATASETTABLE_ITEM_SKIPABLE = "<->"
 
 JSON_DATA = "data"
 JSON_SUBGROUP_NAMES = "subgroup_names"
+JSON_GROUPS = "groups"
 JSON_SUBGROUPS = "subgroups"
 
 logger = logging.getLogger(__name__)
@@ -48,6 +49,7 @@ class DatasetTable(Questionnaire):
         self,
         data=None,
         subgroup_names: Dict[str, str] = None,
+        groups: Dict[str, str] = None,
         subgroups: Dict[str, List[str]] = None,
     ):
         if (
@@ -58,11 +60,13 @@ class DatasetTable(Questionnaire):
         ):
             super().__init__(data[JSON_DATA])
             self.subgroup_names = data[JSON_SUBGROUP_NAMES]
+            self.groups = data[JSON_GROUPS]
             self.subgroups = data[JSON_SUBGROUPS]
         else:
             super().__init__(data)
-            self.subgroup_names = subgroup_names if subgroup_names else {}
-            self.subgroups = subgroups if subgroups else {}
+            self.subgroup_names = subgroup_names if subgroup_names is not None else {}
+            self.groups = groups if groups is not None else {}
+            self.subgroups = subgroups if subgroups is not None else {}
 
     @staticmethod
     def read_original_format(file_name: str | Path, *args, **kwargs):
@@ -111,6 +115,7 @@ class DatasetTable(Questionnaire):
     def concat(self, others: List):
         result = super().concat(others)
         result.subgroup_names = {k: v for d in others for k, v in d.subgroup_names.items()}
+        result.groups = {k: v for d in others for k, v in d.groups.items()}
         result.subgroups = {k: v for d in others for k, v in d.subgroups.items()}
         return result
 
@@ -118,6 +123,7 @@ class DatasetTable(Questionnaire):
         data = {
             JSON_DATA: self._data.to_dict(orient=orient),
             JSON_SUBGROUP_NAMES: self.subgroup_names,
+            JSON_GROUPS: self.groups,
             JSON_SUBGROUPS: self.subgroups,
         }
         return json.dumps(data, *args, **kwargs)
@@ -169,6 +175,13 @@ class SheetParser:
         table_names = _get_meta(sheet, DATASETTABLE_SHEET_TABLES_TAG)
         if table_names:
             table_names = table_names.replace(" ", "").split(",")
+        main_table = None
+        if (
+            table_names
+            and len(table_names) >= 1
+            and table_names[0].startswith(DATASETTABLE_SHEET_TABLES_MAIN_PREFIX)
+        ):
+            main_table = table_names[0]
 
         # Remove leading meta information block on sheet
         start_index = np.where(sheet[DATASETTABLE_COLUMN_PROJECT] == DATASETTABLE_COLUMN_NUMBER)[0][
@@ -185,25 +198,18 @@ class SheetParser:
         sheet[DATASETTABLE_COLUMN_SHEET_NAME] = sheet_name
         sheet[DATASETTABLE_COLUMN_FILE] = Path(file.io).stem
 
-        return self.parse_rows(sheet, table_names, *args, **kwargs)
+        result = self.parse_rows(sheet, main_table, *args, **kwargs)
+        result.groups[main_table] = sheet_name
+        return result
 
     def parse_rows(
         self,
         sheet: pd.DataFrame,
-        table_names: List[str] = None,
+        main_table: str = None,
         dataset_definitions: DatasetDefinition = None,
         *args,
         **kwargs,
     ) -> DatasetTable | None:
-
-        main_table = None
-        if (
-            table_names
-            and len(table_names) >= 1
-            and table_names[0].startswith(DATASETTABLE_SHEET_TABLES_MAIN_PREFIX)
-        ):
-            main_table = table_names[0]
-
         # Generate column with database table names
         sheet[COLUMN_TEMP_TABLE] = [
             main_table
