@@ -39,9 +39,15 @@ logger = logging.getLogger(__name__)
 
 
 class DatasetTable(Questionnaire):
-    def __init__(self, data=None, subgroup_names: Dict[str, str] = None):
+    def __init__(
+        self,
+        data=None,
+        subgroup_names: Dict[str, str] = None,
+        subgroups: Dict[str, List[str]] = None,
+    ):
         super().__init__(data)
         self.subgroup_names = subgroup_names if subgroup_names else {}
+        self.subgroups = subgroups if subgroups else {}
 
     @staticmethod
     def read_original_format(file_name: str | Path, *args, **kwargs):
@@ -90,6 +96,7 @@ class DatasetTable(Questionnaire):
     def concat(self, others: List):
         result = super().concat(others)
         result.subgroup_names = {k: v for d in others for k, v in d.subgroup_names.items()}
+        result.subgroups = {k: v for d in others for k, v in d.subgroups.items()}
         return result
 
 
@@ -196,6 +203,14 @@ class SheetParser:
                 )
             ]
 
+        subgroup_map = {}
+        for table in sheet[COLUMN_TEMP_TABLE].unique():
+            if len(parts := table.split(":")) > 1:
+                group = parts[0]
+                if group not in subgroup_map:
+                    subgroup_map[group] = []
+                subgroup_map[group].append(parts[1])
+
         # Fill category
         sheet[Columns.HEADER.value] = [
             question if type_ == DATASETTABLE_TYPE_HEADER else None
@@ -233,7 +248,7 @@ class SheetParser:
             DATASETTABLE_COLUMN_VARIABLE: Columns.VARIABLE.value,
         }
         sheet.rename(columns=mappings, inplace=True)
-        result = DatasetTable(sheet, subgroups)
+        result = DatasetTable(sheet, subgroup_names=subgroups, subgroups=subgroup_map)
 
         # Create identifier column
         result.identifier = [
