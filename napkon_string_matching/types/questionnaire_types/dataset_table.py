@@ -2,7 +2,7 @@ import logging
 import re
 import warnings
 from pathlib import Path
-from typing import List
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -39,6 +39,10 @@ logger = logging.getLogger(__name__)
 
 
 class DatasetTable(Questionnaire):
+    def __init__(self, data=None, subgroup_names: Dict[str, str] = None):
+        super().__init__(data)
+        self.subgroup_names = subgroup_names if subgroup_names else {}
+
     @staticmethod
     def read_original_format(file_name: str | Path, *args, **kwargs):
         """
@@ -77,10 +81,15 @@ class DatasetTable(Questionnaire):
             logger.warn("...dit not get any entries")
             return None
 
-        result = Questionnaire().concat(sheets)
+        result = DatasetTable().concat(sheets)
 
         logger.info("...got %i entries", len(result))
 
+        return result
+
+    def concat(self, others: List):
+        result = super().concat(others)
+        result.subgroup_names = {k: v for d in others for k, v in d.subgroup_names.items()}
         return result
 
 
@@ -99,7 +108,7 @@ class SheetParser:
         sheet_name: str,
         *args,
         **kwargs,
-    ) -> Questionnaire | None:
+    ) -> DatasetTable | None:
         """
         Parses a single sheet
 
@@ -155,7 +164,7 @@ class SheetParser:
         dataset_definitions: DatasetDefinition = None,
         *args,
         **kwargs,
-    ) -> Questionnaire | None:
+    ) -> DatasetTable | None:
 
         main_table = None
         if (
@@ -224,7 +233,7 @@ class SheetParser:
             DATASETTABLE_COLUMN_VARIABLE: Columns.VARIABLE.value,
         }
         sheet.rename(columns=mappings, inplace=True)
-        result = Questionnaire(sheet)
+        result = DatasetTable(sheet, subgroups)
 
         # Create identifier column
         result.identifier = [
