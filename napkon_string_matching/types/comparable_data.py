@@ -244,48 +244,86 @@ class ComparableData(Data):
         if use_cache and not output_dir.exists():
             output_dir.mkdir(parents=True)
 
-        # If prepared already exists, read it and return data
+        data = cls._get_prepared_data(
+            file=file,
+            prepared_file=prepared_file,
+            terms_file=terms_file,
+            unprocessed_file=unprocessed_file,
+            tokens=tokens,
+            preparator=preparator,
+            use_cache=use_cache,
+            calculate_tokens=calculate_tokens,
+            *args,
+            **kwargs,
+        )
+        return data
+
+    @classmethod
+    def _get_prepared_data(
+        cls,
+        prepared_file: Path,
+        preparator,
+        tokens: Dict,
+        use_cache: bool = True,
+        calculate_tokens: bool = False,
+        *args,
+        **kwargs,
+    ):
         if use_cache and prepared_file.exists():
             logger.info("using previously cached prepared file")
-            data = cls.read_json(prepared_file)
-            return data
+            return cls.read_json(prepared_file)
 
-        # If term file exists read its data
-        if use_cache and terms_file.exists():
-            logger.info("using previously cached terms file")
-            data = cls.read_json(terms_file)
-        else:
-            # If unprocessed file exists, read it; otherwise calculate
-            if use_cache and unprocessed_file.exists():
-                logger.info("using previously cached unprocessed file")
-                data = cls.read_json(unprocessed_file)
-            else:
-                data = cls.read_original_format(file_name=file, *args, **kwargs)
-
-                if data is None:
-                    return None
-
-                if use_cache:
-                    data.write_json(unprocessed_file)
-
-            if filter_column and filter_prefix:
-                data.filter(filter_column, filter_prefix)
-
-            # No matter if unprocessed data was read from cache or dataset file,
-            # the terms still needs to be generated
-            data.add_terms()
-            if use_cache:
-                data.write_json(terms_file)
-
-        # No matter if terms data was read or calculated,
-        # the tokens still need to be generated if required
+        data = cls._get_terms_data(use_cache=use_cache, *args, **kwargs)
         if calculate_tokens:
             config = {"score_threshold": 0.9, "timeout": 30, **tokens}
             preparator.add_tokens(data, **config)
             if use_cache:
                 data.write_json(prepared_file)
             data.write_csv(prepared_file.with_suffix(".csv"))
+        return data
 
+    @classmethod
+    def _get_terms_data(
+        cls,
+        terms_file: Path,
+        filter_column: str = None,
+        filter_prefix: str = None,
+        use_cache: bool = True,
+        *args,
+        **kwargs,
+    ):
+        # If term file exists read its data
+        if use_cache and terms_file.exists():
+            logger.info("using previously cached terms file")
+            return cls.read_json(terms_file)
+
+        data = cls._get_unprocessed_file(use_cache=use_cache, *args, **kwargs)
+
+        if filter_column and filter_prefix:
+            data.filter(filter_column, filter_prefix)
+
+        # No matter if unprocessed data was read from cache or dataset file,
+        # the terms still needs to be generated
+        data.add_terms()
+        if use_cache:
+            data.write_json(terms_file)
+        return data
+
+    @classmethod
+    def _get_unprocessed_file(
+        cls, unprocessed_file: Path, file: str, use_cache: bool = True, *args, **kwargs
+    ):
+        if use_cache and unprocessed_file.exists():
+            logger.info("using previously cached unprocessed file")
+            return cls.read_json(unprocessed_file)
+
+        data = cls.read_original_format(file_name=file, *args, **kwargs)
+
+        if data is None:
+            return None
+
+        if use_cache:
+            data.write_json(unprocessed_file)
         return data
 
     def filter(self, filter_column: str, filter_prefix: str):
