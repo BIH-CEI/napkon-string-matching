@@ -48,7 +48,8 @@ class Comparable(ReadableJson, WritableJson):
             object.__setattr__(self, "data", Data(data[DATA_NAME]))
         else:
             raise AttributeError(
-                f"Either provide 'left_name' AND 'right_name' or a dictionary in 'data' providing the entries {LEFT_NAME}, {RIGHT_NAME} AND {DATA_NAME}"
+                "Either provide 'left_name' AND 'right_name' or a dictionary in 'data' providing the "
+                f"entries {LEFT_NAME}, {RIGHT_NAME} AND {DATA_NAME}"
             )
 
     def to_json(self, orient: str | None = None, *args, **kwargs):
