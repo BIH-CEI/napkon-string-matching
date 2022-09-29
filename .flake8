@@ -1,9 +1,8 @@
 [flake8]
-
 exclude =
     .git
     .venv
     __pycache__
     .history
-
-max-line-length = 100
+max-line-length = 127
+max-complexity = 10
