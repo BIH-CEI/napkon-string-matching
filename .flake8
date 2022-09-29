@@ -6,3 +6,25 @@ exclude =
     .history
 max-line-length = 127
 max-complexity = 10
+ignore = 
+    # First default ignores
+    # continuation line under-indented for hanging indent
+    E121,
+    # closing bracket does not match indentation of opening bracket’s line
+    E123,
+    # continuation line over-indented for hanging indent
+    E126,
+    # closing bracket is missing indentation
+    E133,
+    # missing whitespace around arithmetic operator
+    E226,
+    # multiple spaces after ‘,’ & tab after ‘,’
+    E24,
+    # multiple statements on one line (def)
+    E704,
+    # line break before or after binary operator and doc line too long (82 > 79 characters)
+    W5,
+    # Custom ignores
+    # whitespace before ‘,’, ‘;’, or ‘:’
+    # Error is caused by black auto-formmating slicing
+    E203,
