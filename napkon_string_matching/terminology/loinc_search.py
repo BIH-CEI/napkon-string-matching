@@ -1,18 +1,71 @@
-# import REST and parsing modules
 import logging
+import yaml
 
 import numpy as np
 import pandas as pd
 import requests
+
+from nltk.corpus import stopwords
 from bs4 import BeautifulSoup
 
+LANGUAGE_CODE = "de_DE"
+
 URL_AUTH = "https://loinc.org/wp-login.php?redirect_to=https%3A%2F%2Floinc.org%2Fsearch%2F&reauth=1"
-URL_SEARCH = "https://loinc.org/search/?t=1&s={search_term}&l=de_DE"
+URL_SEARCH = "https://loinc.org/search/?t=1&s={search_term}&l=" + LANGUAGE_CODE
 
 RESPONSE_NO_ENTRIES = "Keine passenden Einträge gefunden"
 RESPONSE_LOGIN = "Log In ‹ LOINC — WordPress"
 
+STOP_WORDS = set(stopwords.words('german'))
+
+EXAMPLEOUTCOME_ITEMS = [
+    """Dialyse:""",
+    """Invasiver Beatmung:""",
+    """Sauerstoff:""",
+    """Trachealkanüle:""",
+    """Respiratorisches Outcome (Sauerstoff-Therapie):"""]
+
+EXAMPLE_QUESTIONS = [
+    """Wurde der Barthel-Index vor der Entlassung durchgeführt?""",
+    """Fatigue Screening durchgeführt? Datum der Durchführung""",
+    """Wurde der "PROMIS Dyspnoe-Funktionseinschränkungen" durchgeführt?"""]
+
 logger = logging.getLogger(__name__)
+
+
+def remove_non_alphanumerics(token: str):
+    """
+    removes all non alphanumerics in token
+            Parameters:
+                    token (str): The input char sequence
+            Returns:
+                    token (str): Same token without special chars
+    """
+    return ''.join(e for e in token if e.isalnum())
+
+
+def remove_stop_words(tokens: list = []):
+    """
+    removes stop words from tokenized list
+            Parameters:
+                    tokens (list): List of tokens
+            Returns:
+                    tokens (list): List of tokens without stop words
+    """
+    return [t for t in tokens if t.lower() not in STOP_WORDS]
+
+
+def get_search_syntax_string(tokens: list = []):
+    """
+    adds syntax for LOINC search and gets search string 
+    tokens are combined with OR and fuzzy searched with ~
+    see https://loinc.org/kb/search/advanced-search-syntax/
+            Parameters:
+                    tokens (list): List of tokens
+            Returns:
+                    search string (str): String with search syntax
+    """
+    return '~ OR '.join(e for e in tokens) + '~'
 
 
 def get_auth_payload(user_name: str, password: str):
@@ -118,5 +171,29 @@ def start_search_session(search_terms: list = []):
 
 
 if __name__ == "__main__":
+    search_strings = []
     # example call
-    start_search_session(["systolischer Blutdruck", "COVID"])
+    for item in EXAMPLEOUTCOME_ITEMS:
+        # tokenize according to space
+        tokens = item.split(" ")
+        # make tokens alphanumeric
+        tokens = [remove_non_alphanumerics(t) for t in tokens]
+        # remove stop words
+        tokens = remove_stop_words(tokens=tokens)
+        # create search syntax string and append to list
+        search_strings.append(get_search_syntax_string(tokens=tokens))
+    # starting session and search getting one df per search
+    search_results = start_search_session(search_strings)
+
+# TODO maybe use this in base class for mesh and loinc?
+def __read_config_yml(file_path): 
+    """ reading yml config file """
+    with open(file_path, 'r') as f:
+        return yaml.load(f)
+
+# TODO maybe use this in base class for mesh and loinc?
+class Credentials():
+    """ credential instance holding user name and password """
+    def __init__(self, user, passwd) -> None:
+        self.user = user
+        self.passwd = passwd

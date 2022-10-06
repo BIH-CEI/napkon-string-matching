@@ -15,7 +15,7 @@ class TestMatchPreparator(unittest.TestCase):
         config = {
             "terminology": {
                 "mesh": {
-                    "db": {
+                    "db": { # TODO why is this not configured and parsed in yml file?
                         "host": "localhost",
                         "port": 5432,
                         "db": "mesh",
