@@ -4,8 +4,7 @@ from pathlib import Path
 import pandas as pd
 from napkon_string_matching.tests import DISABLE_DB_TESTS, DISABLE_LOCAL_FILE_TESTS
 from napkon_string_matching.types.comparable_data import ComparableColumns
-from napkon_string_matching.types.questionnaire import Columns
-from napkon_string_matching.types.questionnaire_types.dataset_table import (
+from napkon_string_matching.types.dataset_table.dataset_table import (
     DATASETTABLE_COLUMN_DB_COLUMN,
     DATASETTABLE_COLUMN_FILE,
     DATASETTABLE_COLUMN_ITEM,
@@ -17,6 +16,7 @@ from napkon_string_matching.types.questionnaire_types.dataset_table import (
     DatasetTable,
     SheetParser,
 )
+from napkon_string_matching.types.questionnaire import Columns
 
 
 class TestDatasetTable(unittest.TestCase):

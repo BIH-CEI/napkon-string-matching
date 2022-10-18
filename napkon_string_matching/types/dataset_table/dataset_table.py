@@ -209,7 +209,7 @@ class SheetParser:
         dataset_definitions: DatasetDefinition = None,
         *args,
         **kwargs,
-    ) -> DatasetTable | None:
+    ) -> DatasetTable:
         # Generate column with database table names
         sheet[COLUMN_TEMP_TABLE] = [
             main_table

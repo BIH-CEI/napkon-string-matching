@@ -9,7 +9,7 @@ from napkon_string_matching.types.dataset_definition import DatasetDefinitions
 from napkon_string_matching.types.gecco_definition import GeccoDefinition
 from napkon_string_matching.types.mapping import Mapping
 from napkon_string_matching.types.questionnaire import Questionnaire
-from napkon_string_matching.types.questionnaire_types.dataset_table import DatasetTable
+from napkon_string_matching.types.dataset_table.dataset_table import DatasetTable
 
 CONFIG_GECCO_FILES = "gecco_definition"
 CONFIG_GECCO83 = "gecco83"
