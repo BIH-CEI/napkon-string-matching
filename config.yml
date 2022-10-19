@@ -38,4 +38,6 @@ files:
   pop: input/pop_test.xlsx
   suep: input/suep_test.xlsx
 
+table_definitions: input/table_definitions.json
+
 mappings: input/mappings/

@@ -1,6 +1,6 @@
 from typing import Dict
 
-from napkon_string_matching.types.questionnaire_types.dataset_table import DatasetTable
+from napkon_string_matching.types.dataset_table.dataset_table import DatasetTable
 
 
 def get_all_table_subgroup_name_combinations(dataset_tables: Dict[str, DatasetTable]):
