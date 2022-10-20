@@ -18,6 +18,7 @@ class Columns(Enum):
     VARIABLE = "Variable"
     PARAMETER = "Parameter"
     UID = "Uid"
+    CATEGORY = "Category"
 
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 class QuestionnaireBase:
     __columns__ = list(ComparableColumns) + list(Columns)
-    __category_column__ = Columns.SHEET.value
+    __category_column__ = Columns.CATEGORY.value
 
 
 class QuestionnaireCategory(QuestionnaireBase, Category):

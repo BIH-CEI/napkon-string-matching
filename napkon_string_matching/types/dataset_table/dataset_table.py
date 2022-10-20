@@ -1,4 +1,3 @@
-import json
 import logging
 import re
 import warnings
@@ -36,40 +35,15 @@ COLUMN_TEMP_TABLE = "Temp_Table"
 
 DATASETTABLE_ITEM_SKIPABLE = "<->"
 
-JSON_DATA = "data"
-JSON_SUBGROUP_NAMES = "subgroup_names"
-JSON_GROUPS = "groups"
-JSON_SUBGROUPS = "subgroups"
 
 logger = logging.getLogger(__name__)
 
 
 class DatasetTable(Questionnaire):
-    def __init__(
-        self,
-        data=None,
-        subgroup_names: Dict[str, str] = None,
-        groups: Dict[str, str] = None,
-        subgroups: Dict[str, List[str]] = None,
-    ):
-        if (
-            data is not None
-            and JSON_DATA in data
-            and JSON_SUBGROUP_NAMES in data
-            and JSON_SUBGROUPS in data
-        ):
-            super().__init__(data[JSON_DATA])
-            self.subgroup_names = data[JSON_SUBGROUP_NAMES]
-            self.groups = data[JSON_GROUPS]
-            self.subgroups = data[JSON_SUBGROUPS]
-        else:
-            super().__init__(data)
-            self.subgroup_names = subgroup_names if subgroup_names is not None else {}
-            self.groups = groups if groups is not None else {}
-            self.subgroups = subgroups if subgroups is not None else {}
-
     @staticmethod
-    def read_original_format(file_name: str | Path, *args, **kwargs):
+    def read_original_format(
+        file_name: str | Path, table_categories: Dict[str, List[str]] = None, *args, **kwargs
+    ):
         """
         Read a xlsx file
 
@@ -87,7 +61,6 @@ class DatasetTable(Questionnaire):
 
         logger.info("read from file %s...", str(file_name))
 
-        file: pd.ExcelFile = None
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("always")
             file = pd.ExcelFile(file_name, engine="openpyxl")
@@ -98,7 +71,9 @@ class DatasetTable(Questionnaire):
         parser = SheetParser()
         sheets = []
         for sheet_name in sheet_names:
-            data_list = parser.parse(file, sheet_name, *args, **kwargs)
+            data_list = parser.parse(
+                file, sheet_name, table_categories=table_categories, *args, **kwargs
+            )
             if data_list is not None:
                 sheets.append(data_list)
 
@@ -111,22 +86,6 @@ class DatasetTable(Questionnaire):
         logger.info("...got %i entries", len(result))
 
         return result
-
-    def concat(self, others: List):
-        result = super().concat(others)
-        result.subgroup_names = {k: v for d in others for k, v in d.subgroup_names.items()}
-        result.groups = {k: v for d in others for k, v in d.groups.items()}
-        result.subgroups = {k: v for d in others for k, v in d.subgroups.items()}
-        return result
-
-    def to_json(self, orient: str = None, *args, **kwargs) -> str:
-        data = {
-            JSON_DATA: self._data.to_dict(orient=orient),
-            JSON_SUBGROUP_NAMES: self.subgroup_names,
-            JSON_GROUPS: self.groups,
-            JSON_SUBGROUPS: self.subgroups,
-        }
-        return json.dumps(data, *args, **kwargs)
 
 
 class SheetParser:
@@ -194,22 +153,28 @@ class SheetParser:
         sheet.where(pd.notnull(sheet), None, inplace=True)
 
         # Add meta information to each row
-        sheet_name = re.sub(r"[ \-\.\(\),]+", "_", sheet_name)
-        sheet[DATASETTABLE_COLUMN_SHEET_NAME] = sheet_name
         sheet[DATASETTABLE_COLUMN_FILE] = Path(file.io).stem
 
-        result = self.parse_rows(sheet, main_table, *args, **kwargs)
-        result.groups[main_table] = sheet_name
+        result = self.parse_rows(
+            sheet=sheet, main_table=main_table, sheet_name=sheet_name, *args, **kwargs
+        )
+
         return result
 
     def parse_rows(
         self,
         sheet: pd.DataFrame,
-        main_table: str = None,
-        dataset_definitions: DatasetDefinition = None,
+        sheet_name: str,
+        table_categories: Dict[str, List[str]] = None,
+        main_table: str | None = None,
+        dataset_definitions: DatasetDefinition | None = None,
         *args,
         **kwargs,
-    ) -> DatasetTable | None:
+    ) -> DatasetTable:
+        # Add meta information to each row
+        sheet_name = re.sub(r"[ \-\.\(\),]+", "_", sheet_name)
+        sheet[DATASETTABLE_COLUMN_SHEET_NAME] = sheet_name
+
         # Generate column with database table names
         sheet[COLUMN_TEMP_TABLE] = [
             main_table
@@ -231,14 +196,6 @@ class SheetParser:
                     sheet[COLUMN_TEMP_TABLE], sheet[DATASETTABLE_COLUMN_VARIABLE]
                 )
             ]
-
-        subgroup_map = {}
-        for table in sheet[COLUMN_TEMP_TABLE].unique():
-            if table and len(parts := table.split(":")) > 1:
-                group = parts[0]
-                if group not in subgroup_map:
-                    subgroup_map[group] = []
-                subgroup_map[group].append(parts[1])
 
         # Fill category
         sheet[Columns.HEADER.value] = [
@@ -277,7 +234,7 @@ class SheetParser:
             DATASETTABLE_COLUMN_VARIABLE: Columns.VARIABLE.value,
         }
         sheet.rename(columns=mappings, inplace=True)
-        result = DatasetTable(sheet, subgroup_names=subgroups, subgroups=subgroup_map)
+        result = DatasetTable(sheet)
 
         # Create identifier column
         result.identifier = [
@@ -301,6 +258,11 @@ class SheetParser:
             for header, question, item in zip(result.header, result.question, result.item)
         ]
 
+        result.category = [
+            _get_table_categories(table_categories, table_name)
+            for table_name in sheet[COLUMN_TEMP_TABLE]
+        ]
+
         result.drop_superfluous_columns()
 
         return result
@@ -308,7 +270,7 @@ class SheetParser:
 
 def _get_meta(sheet: pd.DataFrame, entry_name: str) -> str | None:
     index, *_ = np.where(sheet[DATASETTABLE_COLUMN_PROJECT] == entry_name)
-    return sheet.loc[index[0]][2] if index else None
+    return str(sheet.loc[index[0]][2]) if index else None
 
 
 def generate_header(*args) -> List[str] | None:
@@ -325,3 +287,13 @@ def _generate_options(options: str) -> List[str] | None:
     return (
         options.replace(";", "\n").replace("\n\n", "\n").splitlines() if pd.notna(options) else None
     )
+
+
+def _get_table_categories(
+    table_categories: Dict[str, List[str]], table_name: str
+) -> List[str] | None:
+    if table_categories is None:
+        logger.warning("no table categories available")
+        return []
+    else:
+        return table_categories.get(table_name, [])
