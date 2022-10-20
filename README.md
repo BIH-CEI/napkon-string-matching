@@ -30,6 +30,7 @@ matching:
     timeout: <threshold>
     score_threshold: <timeout>
   variable_score_threshold: <threshold (0.1,1.0]>
+  filter_categories: True | False
 
 steps:
   - variables
@@ -43,10 +44,15 @@ gecco_definition:
 
 dataset_definition: dataset_definition.json
 
+categories_file: input/categories.json
+categories_excel_file: input/categories.xlsx
+
 files:
   hap: file1.xlsx
   pop: file2.xlsx
   suep: file3.xlsx
+
+table_definitions: input/table_definitions.json
 
 mappings: <folder to existing mappings>
 ```
