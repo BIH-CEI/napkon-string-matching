@@ -39,7 +39,9 @@ class ComparableData(Data):
 
     @property
     def categories(self) -> List[str]:
-        return list(self._data[self.__category_column__].unique())
+        return list(
+            set([subentry for entry in self._data[self.__category_column__] for subentry in entry])
+        )
 
     def get_category(self, category: str) -> __category_type__:
         return self.__category_type__(self._data, category)
