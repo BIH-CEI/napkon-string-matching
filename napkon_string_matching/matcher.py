@@ -8,12 +8,14 @@ from napkon_string_matching.prepare.match_preparator import MatchPreparator
 from napkon_string_matching.types.comparable import ComparisonResults
 from napkon_string_matching.types.dataset_definition import DatasetDefinitions
 from napkon_string_matching.types.dataset_table.dataset_table import DatasetTable
+from napkon_string_matching.types.dataset_table.definitions import DatasetTablesDefinitions
 from napkon_string_matching.types.dataset_table.definitions_types.excel_definitions import (
     DatasetTablesExcelDefinitions,
 )
 from napkon_string_matching.types.gecco_definition import GeccoDefinition
 from napkon_string_matching.types.mapping import Mapping
 from napkon_string_matching.types.questionnaire import Questionnaire
+from napkon_string_matching.types.table_categories import TableCategories
 
 CONFIG_GECCO_FILES = "gecco_definition"
 CONFIG_GECCO83 = "gecco83"
@@ -25,6 +27,8 @@ CONFIG_FIELD_MAPPINGS = "mappings"
 CONFIG_FIELD_MATCHING = "matching"
 CONFIG_VARIABLE_THRESHOLD = "variable_score_threshold"
 CONFIG_TABLE_DEFINITIONS = "table_definitions"
+CONFIG_TABLE_CATEGORIES = "categories_file"
+CONFIG_TABLE_CATEGORIES_EXCEL = "categories_excel_file"
 
 RESULTS_FILE_PATTERN = "output/result_{score_threshold}_{compare_column}_{score_func}.xlsx"
 
@@ -40,12 +44,15 @@ class Matcher:
         self.questionnaires: Dict[str, Questionnaire] = None
         self.results: ComparisonResults = None
         self.mappings: Mapping = None
+        self.table_definitions: DatasetTablesDefinitions = None
+        self.table_categories: TableCategories | None = None
         self.use_cache = use_cache
 
         self._init_gecco_definition()
+        self._init_dataset_table_definitions()
+        self._init_table_categories()
         self._init_dataset_definition()
         self._init_questionnaires()
-        self._init_dataset_table_definitions()
         self._init_mappings()
         self.clear_results()
 
@@ -75,6 +82,9 @@ class Matcher:
                 preparator=self.preparator,
                 **self.config[CONFIG_FIELD_MATCHING],
                 dataset_definitions=self.dataset_def[name],
+                table_categories=self.table_categories[name]
+                if self.table_categories is not None
+                else None,
                 use_cache=self.use_cache,
             )
 
@@ -96,6 +106,18 @@ class Matcher:
                         cohort, file, dataset_definitions=self.dataset_def[cohort]
                     )
             self.table_definitions.write_json(definitions_file)
+
+    def _init_table_categories(self) -> None:
+        file = self.config.get(CONFIG_TABLE_CATEGORIES)
+        if file is not None:
+            if Path(file).exists():
+                self.table_categories = TableCategories.read_json(file)
+            else:
+                self.table_categories = TableCategories.read_excel(
+                    excel_path=self.config[CONFIG_TABLE_CATEGORIES_EXCEL],
+                    tables_definitions=self.table_definitions,
+                )
+                self.table_categories.write_json(file)
 
     def _init_mappings(self) -> None:
         self.mappings = Mapping()

@@ -33,6 +33,9 @@ gecco_definition:
 
 dataset_definition: input/dataset_definitions.json
 
+categories_file: input/categories.json
+categories_excel_file: input/categories.xlsx
+
 files:
   hap: input/hap_test.xlsx
   pop: input/pop_test.xlsx

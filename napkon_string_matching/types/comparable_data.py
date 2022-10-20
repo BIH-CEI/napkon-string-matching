@@ -204,6 +204,7 @@ class ComparableData(Data):
         tokens: Dict = None,
         filter_column: str = None,
         filter_prefix: str = None,
+        table_categories: Dict[str, List[str]] | None = None,
         use_cache=True,
         *args,
         **kwargs,
@@ -253,6 +254,7 @@ class ComparableData(Data):
             preparator=preparator,
             use_cache=use_cache,
             calculate_tokens=calculate_tokens,
+            table_categories=table_categories,
             *args,
             **kwargs,
         )

@@ -1,4 +1,3 @@
-import json
 import logging
 import re
 import warnings
@@ -42,7 +41,9 @@ logger = logging.getLogger(__name__)
 
 class DatasetTable(Questionnaire):
     @staticmethod
-    def read_original_format(file_name: str | Path, *args, **kwargs):
+    def read_original_format(
+        file_name: str | Path, table_categories: Dict[str, List[str]], *args, **kwargs
+    ):
         """
         Read a xlsx file
 
@@ -70,7 +71,9 @@ class DatasetTable(Questionnaire):
         parser = SheetParser()
         sheets = []
         for sheet_name in sheet_names:
-            data_list = parser.parse(file, sheet_name, *args, **kwargs)
+            data_list = parser.parse(
+                file, sheet_name, table_categories=table_categories, *args, **kwargs
+            )
             if data_list is not None:
                 sheets.append(data_list)
 
@@ -162,6 +165,7 @@ class SheetParser:
         self,
         sheet: pd.DataFrame,
         sheet_name: str,
+        table_categories: Dict[str, List[str]],
         main_table: str | None = None,
         dataset_definitions: DatasetDefinition | None = None,
         *args,
@@ -254,6 +258,11 @@ class SheetParser:
             for header, question, item in zip(result.header, result.question, result.item)
         ]
 
+        result.category = [
+            _get_table_categories(table_categories, table_name)
+            for table_name in sheet[COLUMN_TEMP_TABLE]
+        ]
+
         result.drop_superfluous_columns()
 
         return result
@@ -278,3 +287,13 @@ def _generate_options(options: str) -> List[str] | None:
     return (
         options.replace(";", "\n").replace("\n\n", "\n").splitlines() if pd.notna(options) else None
     )
+
+
+def _get_table_categories(
+    table_categories: Dict[str, List[str]], table_name: str
+) -> List[str] | None:
+    if table_categories is None:
+        logger.warning("no table categories available")
+        return []
+    else:
+        return table_categories.get(table_name, [])
