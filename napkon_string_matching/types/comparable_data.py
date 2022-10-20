@@ -46,6 +46,9 @@ class ComparableData(Data):
     def get_category(self, category: str) -> __category_type__:
         return self.__category_type__(self._data, category)
 
+    def get_without_category(self) -> __category_type__:
+        return self.__category_type__(self._data, None)
+
     def _hash_compare_args(self, other, *args, **kwargs) -> str:
         hashes = [self.hash(), other.hash()]
 

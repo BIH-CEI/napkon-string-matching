@@ -18,7 +18,18 @@ class Category:
 
     @property
     def is_category(self) -> List[bool]:
-        return [self.category in entry for entry in self._data[self.__category_column__]]
+        return [
+            self.entry_matches_category(entry) for entry in self._data[self.__category_column__]
+        ]
+
+    def entry_matches_category(self, entry):
+        if self.category is None:
+            return not bool(entry)
+        else:
+            if isinstance(entry, list):
+                return self.category in entry
+            else:
+                return self.category == entry
 
     @property
     def dataframe(self):
