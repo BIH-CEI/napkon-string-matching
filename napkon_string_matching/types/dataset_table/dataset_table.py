@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 class DatasetTable(Questionnaire):
     @staticmethod
     def read_original_format(
-        file_name: str | Path, table_categories: Dict[str, List[str]], *args, **kwargs
+        file_name: str | Path, table_categories: Dict[str, List[str]] = None, *args, **kwargs
     ):
         """
         Read a xlsx file
@@ -165,7 +165,7 @@ class SheetParser:
         self,
         sheet: pd.DataFrame,
         sheet_name: str,
-        table_categories: Dict[str, List[str]],
+        table_categories: Dict[str, List[str]] = None,
         main_table: str | None = None,
         dataset_definitions: DatasetDefinition | None = None,
         *args,
