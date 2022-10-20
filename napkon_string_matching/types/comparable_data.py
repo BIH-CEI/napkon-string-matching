@@ -118,9 +118,11 @@ class ComparableData(Data):
         right_existing_mappings: List[str],
         score_func: str,
         compare_column: str,
+        category_column: str = "Category",
         score_threshold: float = 0.1,
         left_name: str = None,
         right_name: str = None,
+        filter_categories: bool = False,
         *args,
         **kwargs,
     ) -> Comparable:
@@ -142,6 +144,15 @@ class ComparableData(Data):
         left = left.add_prefix(left_prefix)
         right = right.add_prefix(right_prefix)
         compare_df = left.merge(right, how="cross")
+
+        if filter_categories:
+            previous_length = len(compare_df)
+            compare_df = categories_matching(
+                compare_df, left_prefix + category_column, right_prefix + category_column
+            )
+            logger.info(
+                "filtered %i entries not matching categories", previous_length - len(compare_df)
+            )
 
         logger.info("calculate score")
         comparable = Comparable(data=compare_df, left_name=left_prefix, right_name=right_prefix)
@@ -345,3 +356,28 @@ class ComparableData(Data):
             inplace=True,
         )
         logger.debug("filtered %i entries", before_len - len(self))
+
+
+def categories_matching(df: pd.DataFrame, column_left: str, column_right: str) -> pd.DataFrame:
+    first_row = df.iloc[0]
+    categories_left, categories_right = first_row[column_left], first_row[column_right]
+    if isinstance(categories_left, list):
+        if isinstance(categories_right, list):
+            matching_func = lambda x, y: (not set(x).isdisjoint(set(y))) or (not x and not y)
+        else:
+            matching_func = lambda x, y: x in set(y)
+    else:
+        if isinstance(categories_right, list):
+            matching_func = lambda x, y: x in set(y)
+        else:
+            matching_func = lambda x, y: x == y
+
+    return df[
+        [
+            matching_func(*categories)
+            for categories in zip(
+                df[column_left],
+                df[column_right],
+            )
+        ]
+    ]

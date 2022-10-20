@@ -113,11 +113,13 @@ class Matcher:
             if Path(file).exists():
                 self.table_categories = TableCategories.read_json(file)
             else:
-                self.table_categories = TableCategories.read_excel(
-                    excel_path=self.config[CONFIG_TABLE_CATEGORIES_EXCEL],
-                    tables_definitions=self.table_definitions,
-                )
-                self.table_categories.write_json(file)
+                excel_file = self.config.get(CONFIG_TABLE_CATEGORIES_EXCEL)
+                if excel_file and Path(excel_file).exists():
+                    self.table_categories = TableCategories.read_excel(
+                        excel_path=excel_file,
+                        tables_definitions=self.table_definitions,
+                    )
+                    self.table_categories.write_json(file)
 
     def _init_mappings(self) -> None:
         self.mappings = Mapping()

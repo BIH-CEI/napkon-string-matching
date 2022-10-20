@@ -20,6 +20,7 @@ matching:
     timeout: 30
     score_threshold: 0.85
   variable_score_threshold: 0.9
+  filter_categories: False
 
 steps:
   - variables
