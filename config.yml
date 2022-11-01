@@ -28,20 +28,20 @@ steps:
   - questionnaires
 
 gecco_definition:
-  gecco83: input/FINAL_GECCO83_DS.xlsx
-  geccoplus: input/20211118_GECCOplus_final.xlsx
-  json: input/input__gecco_definition.json
+  gecco83: ../napkon-string-matching-data/input/FINAL_GECCO83_DS.xlsx
+  geccoplus: ../napkon-string-matching-data/input/20211118_GECCOplus_final.xlsx
+  json: ../napkon-string-matching-data/input/input__gecco_definition.json
 
-dataset_definition: input/dataset_definitions.json
+dataset_definition: ../napkon-string-matching-data/input/dataset_definitions.json
 
-categories_file: input/categories.json
-categories_excel_file: input/categories.xlsx
+categories_file: ../napkon-string-matching-data/input/categories.json
+categories_excel_file: ../napkon-string-matching-data/input/categories.xlsx
 
 files:
-  hap: input/hap_test.xlsx
-  pop: input/pop_test.xlsx
-  suep: input/suep_test.xlsx
+  hap: ../napkon-string-matching-data/input/hap_test.xlsx
+  pop: ../napkon-string-matching-data/input/pop_test.xlsx
+  suep: ../napkon-string-matching-data/input/suep_test.xlsx
 
-table_definitions: input/table_definitions.json
+table_definitions: ../napkon-string-matching-data/input/table_definitions.json
 
-mappings: input/mappings/
+mappings: ../napkon-string-matching-data/input/mappings/
