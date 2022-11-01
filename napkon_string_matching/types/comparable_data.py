@@ -18,7 +18,7 @@ nltk.download("stopwords")
 
 
 PREPARE_REMOVE_SYMBOLS = "!?,.()[]:;*"
-CACHE_FILE_PATTERN = "cache/compared__score_{}.json"
+CACHE_FILE_PATTERN = "compared__score_{}.json"
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +66,7 @@ class ComparableData(Data):
         score_threshold: float = 0.1,
         cached: bool = True,
         cache_threshold: float = None,
+        cache_dir: str | Path | None = None,
         *args,
         **kwargs,
     ) -> Comparable:
@@ -75,7 +76,8 @@ class ComparableData(Data):
         df_hash = self._hash_compare_args(
             other, left_existing_mappings, right_existing_mappings, compare_column, cache_threshold
         )
-        cache_score_file = Path(CACHE_FILE_PATTERN.format(df_hash))
+        cache_dir = Path(cache_dir if cache_dir else "cache")
+        cache_score_file = cache_dir / CACHE_FILE_PATTERN.format(df_hash)
         logger.debug("cache hash %s", df_hash)
 
         if cache_score_file.exists() and cached:
@@ -222,6 +224,7 @@ class ComparableData(Data):
         filter_prefix: str = None,
         table_categories: Dict[str, List[str]] | None = None,
         use_cache=True,
+        cache_dir: str | None = None,
         *args,
         **kwargs,
     ):
@@ -235,7 +238,7 @@ class ComparableData(Data):
         file = Path(file_name)
         logger.info(f"prepare file {file.name}")
 
-        output_dir = Path("cache")
+        output_dir = Path(cache_dir if cache_dir else "cache")
 
         # Build output file pattern
         file_pattern = ["prepared_", file.stem]

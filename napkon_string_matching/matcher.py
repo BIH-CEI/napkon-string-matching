@@ -30,6 +30,7 @@ CONFIG_TABLE_DEFINITIONS = "table_definitions"
 CONFIG_TABLE_CATEGORIES = "categories_file"
 CONFIG_TABLE_CATEGORIES_EXCEL = "categories_excel_file"
 CONFIG_OUTPUT_DIR = "output_dir"
+CONFIG_CACHE_DIR = "cache_dir"
 
 RESULTS_FILE_PATTERN = "result_{score_threshold}_{compare_column}_{score_func}.xlsx"
 
@@ -49,6 +50,7 @@ class Matcher:
         self.table_categories: TableCategories | None = None
         self.use_cache = use_cache
         self.dataset_def: DatasetDefinitions = None
+        self.cache_dir = config.get(CONFIG_CACHE_DIR)
 
         self._init_gecco_definition()
         self._init_dataset_definition()
@@ -67,6 +69,7 @@ class Matcher:
             gecco83_file=files.get(CONFIG_GECCO83),
             geccoplus_file=files.get(CONFIG_GECCO_PLUS),
             use_cache=self.use_cache,
+            cache_dir=self.cache_dir,
         )
 
         if self.gecco is None:
@@ -88,6 +91,7 @@ class Matcher:
                 if self.table_categories is not None
                 else None,
                 use_cache=self.use_cache,
+                cache_dir=self.cache_dir,
             )
 
             if dataset is None:
@@ -146,6 +150,7 @@ class Matcher:
                 right_existing_mappings=mappings,
                 left_name="gecco",
                 right_name=name,
+                cache_dir=self.cache_dir,
                 **self.config[CONFIG_FIELD_MATCHING],
             )
             self.results[f"gecco vs {name}"] = matches
@@ -185,6 +190,7 @@ class Matcher:
                     mappings_second,
                     left_name=name_first,
                     right_name=name_second,
+                    cache_dir=self.cache_dir,
                     **{**self.config[CONFIG_FIELD_MATCHING], **kwargs},
                 )
                 self.results[f"{prefix if prefix else ''}{name_first} vs {name_second}"] = matches
