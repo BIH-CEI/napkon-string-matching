@@ -45,3 +45,5 @@ files:
 table_definitions: ../napkon-string-matching-data/input/table_definitions.json
 
 mappings: ../napkon-string-matching-data/input/mappings/
+
+output_dir: ../napkon-string-matching-data/output

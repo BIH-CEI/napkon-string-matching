@@ -29,8 +29,9 @@ CONFIG_VARIABLE_THRESHOLD = "variable_score_threshold"
 CONFIG_TABLE_DEFINITIONS = "table_definitions"
 CONFIG_TABLE_CATEGORIES = "categories_file"
 CONFIG_TABLE_CATEGORIES_EXCEL = "categories_excel_file"
+CONFIG_OUTPUT_DIR = "output_dir"
 
-RESULTS_FILE_PATTERN = "output/result_{score_threshold}_{compare_column}_{score_func}.xlsx"
+RESULTS_FILE_PATTERN = "result_{score_threshold}_{compare_column}_{score_func}.xlsx"
 
 
 logger = logging.getLogger(__name__)
@@ -47,11 +48,12 @@ class Matcher:
         self.table_definitions: DatasetTablesDefinitions = None
         self.table_categories: TableCategories | None = None
         self.use_cache = use_cache
+        self.dataset_def: DatasetDefinitions = None
 
         self._init_gecco_definition()
+        self._init_dataset_definition()
         self._init_dataset_table_definitions()
         self._init_table_categories()
-        self._init_dataset_definition()
         self._init_questionnaires()
         self._init_mappings()
         self.clear_results()
@@ -235,4 +237,8 @@ class Matcher:
             **self.config[CONFIG_FIELD_MATCHING],
             "score_func": self.config[CONFIG_FIELD_MATCHING]["score_func"].replace("_", "-"),
         }
-        self.results.write_excel(RESULTS_FILE_PATTERN.format(**format_args))
+        output_file = RESULTS_FILE_PATTERN.format(**format_args)
+        if output_dir := self.config.get(CONFIG_OUTPUT_DIR):
+            output_file = f"{output_dir}/{output_file}"
+
+        self.results.write_excel(output_file)
