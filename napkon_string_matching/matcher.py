@@ -1,7 +1,8 @@
 import logging
 from itertools import product
 from pathlib import Path
-from typing import Dict
+from string import Template
+from typing import Any, Dict
 
 from napkon_string_matching.constants import COHORTS
 from napkon_string_matching.prepare.match_preparator import MatchPreparator
@@ -29,8 +30,12 @@ CONFIG_VARIABLE_THRESHOLD = "variable_score_threshold"
 CONFIG_TABLE_DEFINITIONS = "table_definitions"
 CONFIG_TABLE_CATEGORIES = "categories_file"
 CONFIG_TABLE_CATEGORIES_EXCEL = "categories_excel_file"
+CONFIG_INPUT = "input"
+CONFIG_INPUT_BASE_DIR = "base_dir"
+CONFIG_OUTPUT_DIR = "output_dir"
+CONFIG_CACHE_DIR = "cache_dir"
 
-RESULTS_FILE_PATTERN = "output/result_{score_threshold}_{compare_column}_{score_func}.xlsx"
+RESULTS_FILE_PATTERN = "result_{score_threshold}_{compare_column}_{score_func}.xlsx"
 
 
 logger = logging.getLogger(__name__)
@@ -47,38 +52,44 @@ class Matcher:
         self.table_definitions: DatasetTablesDefinitions = None
         self.table_categories: TableCategories | None = None
         self.use_cache = use_cache
+        self.dataset_def: DatasetDefinitions = None
+        self.input_config: Dict | None = config.get(CONFIG_INPUT)
+        self.input_dir = self._input_config(CONFIG_INPUT_BASE_DIR)
+        self.cache_dir = config.get(CONFIG_CACHE_DIR)
 
         self._init_gecco_definition()
-        self._init_dataset_table_definitions()
         self._init_table_categories()
         self._init_dataset_definition()
+        self._init_dataset_table_definitions()
         self._init_questionnaires()
         self._init_mappings()
         self.clear_results()
 
     def _init_gecco_definition(self) -> None:
-        files: Dict[str, str] = self.config[CONFIG_GECCO_FILES]
+        files: Dict[str, str] = self._input_config(CONFIG_GECCO_FILES)
+        file_name = self.__expand_path(files[CONFIG_GECCO_JSON])
         self.gecco = GeccoDefinition.prepare(
-            file_name=files.get(CONFIG_GECCO_JSON),
+            file_name=file_name,
             preparator=self.preparator,
             **self.config[CONFIG_FIELD_MATCHING],
             gecco83_file=files.get(CONFIG_GECCO83),
             geccoplus_file=files.get(CONFIG_GECCO_PLUS),
             use_cache=self.use_cache,
+            cache_dir=self.cache_dir,
         )
 
         if self.gecco is None:
             logger.warning("didn't get any data")
 
     def _init_dataset_definition(self) -> None:
-        file = self.config[CONFIG_DATASET_DEFINITION]
+        file = self.__expand_path(self._input_config(CONFIG_DATASET_DEFINITION))
         self.dataset_def = DatasetDefinitions.read_json(file)
 
     def _init_questionnaires(self) -> None:
         self.questionnaires = {}
-        for name, file in self.config[CONFIG_FIELD_FILES].items():
+        for name, file in self._input_config(CONFIG_FIELD_FILES).items():
             dataset = DatasetTable.prepare(
-                file_name=file,
+                file_name=self.__expand_path(file),
                 preparator=self.preparator,
                 **self.config[CONFIG_FIELD_MATCHING],
                 dataset_definitions=self.dataset_def[name],
@@ -86,6 +97,7 @@ class Matcher:
                 if self.table_categories is not None
                 else None,
                 use_cache=self.use_cache,
+                cache_dir=self.cache_dir,
             )
 
             if dataset is None:
@@ -95,35 +107,42 @@ class Matcher:
                 self.questionnaires[name] = dataset
 
     def _init_dataset_table_definitions(self):
-        definitions_file = Path(self.config[CONFIG_TABLE_DEFINITIONS])
+        file_name = self.__expand_path(self._input_config(CONFIG_TABLE_DEFINITIONS))
+        definitions_file = Path(file_name)
         if definitions_file.exists():
             self.table_definitions = DatasetTablesExcelDefinitions.read_json(definitions_file)
         else:
             self.table_definitions = DatasetTablesExcelDefinitions()
             for cohort in COHORTS:
-                if file := self.config[CONFIG_FIELD_FILES][cohort]:
+                if file := self._input_config(CONFIG_FIELD_FILES)[cohort]:
                     self.table_definitions.add_from_file(
-                        cohort, file, dataset_definitions=self.dataset_def[cohort]
+                        cohort,
+                        self.__expand_path(file),
+                        dataset_definitions=self.dataset_def[cohort],
                     )
             self.table_definitions.write_json(definitions_file)
 
     def _init_table_categories(self) -> None:
-        file = self.config.get(CONFIG_TABLE_CATEGORIES)
+        file = self._input_config(CONFIG_TABLE_CATEGORIES)
         if file is not None:
+            file = self.__expand_path(file)
             if Path(file).exists():
                 self.table_categories = TableCategories.read_json(file)
             else:
-                excel_file = self.config.get(CONFIG_TABLE_CATEGORIES_EXCEL)
-                if excel_file and Path(excel_file).exists():
-                    self.table_categories = TableCategories.read_excel(
-                        excel_path=excel_file,
-                        tables_definitions=self.table_definitions,
-                    )
-                    self.table_categories.write_json(file)
+                file_name = self._input_config(CONFIG_TABLE_CATEGORIES_EXCEL)
+                if file_name:
+                    excel_file = self.__expand_path(file_name)
+                    if Path(excel_file).exists():
+                        self.table_categories = TableCategories.read_excel(
+                            excel_path=excel_file,
+                            tables_definitions=self.table_definitions,
+                        )
+                        self.table_categories.write_json(file)
 
     def _init_mappings(self) -> None:
         self.mappings = Mapping()
-        mapping_folder = Path(self.config[CONFIG_FIELD_MAPPINGS])
+        dir = self.__expand_path(self._input_config(CONFIG_FIELD_MAPPINGS))
+        mapping_folder = Path(dir)
         for file in mapping_folder.glob("*.json"):
             mapping = Mapping.read_json(file)
             self.mappings.update(mapping)
@@ -144,6 +163,7 @@ class Matcher:
                 right_existing_mappings=mappings,
                 left_name="gecco",
                 right_name=name,
+                cache_dir=self.cache_dir,
                 **self.config[CONFIG_FIELD_MATCHING],
             )
             self.results[f"gecco vs {name}"] = matches
@@ -183,6 +203,7 @@ class Matcher:
                     mappings_second,
                     left_name=name_first,
                     right_name=name_second,
+                    cache_dir=self.cache_dir,
                     **{**self.config[CONFIG_FIELD_MATCHING], **kwargs},
                 )
                 self.results[f"{prefix if prefix else ''}{name_first} vs {name_second}"] = matches
@@ -235,4 +256,14 @@ class Matcher:
             **self.config[CONFIG_FIELD_MATCHING],
             "score_func": self.config[CONFIG_FIELD_MATCHING]["score_func"].replace("_", "-"),
         }
-        self.results.write_excel(RESULTS_FILE_PATTERN.format(**format_args))
+        output_file = RESULTS_FILE_PATTERN.format(**format_args)
+        if output_dir := self.config.get(CONFIG_OUTPUT_DIR):
+            output_file = f"{output_dir}/{output_file}"
+
+        self.results.write_excel(output_file)
+
+    def _input_config(self, field_name: str) -> Any:
+        return self.input_config.get(field_name) if self.input_config else None
+
+    def __expand_path(self, path: str) -> str:
+        return Template(path).substitute(input_base_dir=self.input_dir)

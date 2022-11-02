@@ -7,7 +7,6 @@ prepare:
         db: mesh
         user: postgres
         passwd: meshterms
-
 matching:
   score_threshold: 0.7
   cache_threshold: 0.5
@@ -21,27 +20,24 @@ matching:
     score_threshold: 0.85
   variable_score_threshold: 0.9
   filter_categories: False
-
 steps:
   - variables
   - gecco
   - questionnaires
-
-gecco_definition:
-  gecco83: input/FINAL_GECCO83_DS.xlsx
-  geccoplus: input/20211118_GECCOplus_final.xlsx
-  json: input/input__gecco_definition.json
-
-dataset_definition: input/dataset_definitions.json
-
-categories_file: input/categories.json
-categories_excel_file: input/categories.xlsx
-
-files:
-  hap: input/hap_test.xlsx
-  pop: input/pop_test.xlsx
-  suep: input/suep_test.xlsx
-
-table_definitions: input/table_definitions.json
-
-mappings: input/mappings/
+input:
+  base_dir: ../napkon-string-matching-data/input
+  gecco_definition:
+    gecco83: $input_base_dir/FINAL_GECCO83_DS.xlsx
+    geccoplus: $input_base_dir/20211118_GECCOplus_final.xlsx
+    json: $input_base_dir/input__gecco_definition.json
+  dataset_definition: $input_base_dir/dataset_definitions.json
+  categories_file: $input_base_dir/categories.json
+  categories_excel_file: $input_base_dir/categories.xlsx
+  files:
+    hap: $input_base_dir/hap_test.xlsx
+    pop: $input_base_dir/pop_test.xlsx
+    suep: $input_base_dir/suep_test.xlsx
+  table_definitions: $input_base_dir/table_definitions.json
+  mappings: $input_base_dir/mappings/
+output_dir: ../napkon-string-matching-data/output
+cache_dir: ../napkon-string-matching-data/cache
