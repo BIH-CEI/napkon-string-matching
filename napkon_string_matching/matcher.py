@@ -2,7 +2,7 @@ import logging
 from itertools import product
 from pathlib import Path
 from string import Template
-from typing import Dict
+from typing import Any, Dict
 
 from napkon_string_matching.constants import COHORTS
 from napkon_string_matching.prepare.match_preparator import MatchPreparator
@@ -54,7 +54,7 @@ class Matcher:
         self.use_cache = use_cache
         self.dataset_def: DatasetDefinitions = None
         self.input_config: Dict | None = config.get(CONFIG_INPUT)
-        self.input_dir = self.input_config.get(CONFIG_INPUT_BASE_DIR) if self.input_config else None
+        self.input_dir = self._input_config(CONFIG_INPUT_BASE_DIR)
         self.cache_dir = config.get(CONFIG_CACHE_DIR)
 
         self._init_gecco_definition()
@@ -66,7 +66,7 @@ class Matcher:
         self.clear_results()
 
     def _init_gecco_definition(self) -> None:
-        files: Dict[str, str] = self.config[CONFIG_GECCO_FILES]
+        files: Dict[str, str] = self._input_config(CONFIG_GECCO_FILES)
         file_name = self.__expand_path(files[CONFIG_GECCO_JSON])
         self.gecco = GeccoDefinition.prepare(
             file_name=file_name,
@@ -82,12 +82,12 @@ class Matcher:
             logger.warning("didn't get any data")
 
     def _init_dataset_definition(self) -> None:
-        file = self.__expand_path(self.config[CONFIG_DATASET_DEFINITION])
+        file = self.__expand_path(self._input_config(CONFIG_DATASET_DEFINITION))
         self.dataset_def = DatasetDefinitions.read_json(file)
 
     def _init_questionnaires(self) -> None:
         self.questionnaires = {}
-        for name, file in self.config[CONFIG_FIELD_FILES].items():
+        for name, file in self._input_config(CONFIG_FIELD_FILES).items():
             dataset = DatasetTable.prepare(
                 file_name=self.__expand_path(file),
                 preparator=self.preparator,
@@ -107,14 +107,14 @@ class Matcher:
                 self.questionnaires[name] = dataset
 
     def _init_dataset_table_definitions(self):
-        file_name = self.__expand_path(self.config[CONFIG_TABLE_DEFINITIONS])
+        file_name = self.__expand_path(self._input_config(CONFIG_TABLE_DEFINITIONS))
         definitions_file = Path(file_name)
         if definitions_file.exists():
             self.table_definitions = DatasetTablesExcelDefinitions.read_json(definitions_file)
         else:
             self.table_definitions = DatasetTablesExcelDefinitions()
             for cohort in COHORTS:
-                if file := self.config[CONFIG_FIELD_FILES][cohort]:
+                if file := self._input_config(CONFIG_FIELD_FILES)[cohort]:
                     self.table_definitions.add_from_file(
                         cohort,
                         self.__expand_path(file),
@@ -123,13 +123,13 @@ class Matcher:
             self.table_definitions.write_json(definitions_file)
 
     def _init_table_categories(self) -> None:
-        file = self.config.get(CONFIG_TABLE_CATEGORIES)
+        file = self._input_config(CONFIG_TABLE_CATEGORIES)
         if file is not None:
             file = self.__expand_path(file)
             if Path(file).exists():
                 self.table_categories = TableCategories.read_json(file)
             else:
-                file_name = self.config.get(CONFIG_TABLE_CATEGORIES_EXCEL)
+                file_name = self._input_config(CONFIG_TABLE_CATEGORIES_EXCEL)
                 if file_name:
                     excel_file = self.__expand_path(file_name)
                     if Path(excel_file).exists():
@@ -141,7 +141,7 @@ class Matcher:
 
     def _init_mappings(self) -> None:
         self.mappings = Mapping()
-        dir = self.__expand_path(self.config[CONFIG_FIELD_MAPPINGS])
+        dir = self.__expand_path(self._input_config(CONFIG_FIELD_MAPPINGS))
         mapping_folder = Path(dir)
         for file in mapping_folder.glob("*.json"):
             mapping = Mapping.read_json(file)
@@ -261,6 +261,9 @@ class Matcher:
             output_file = f"{output_dir}/{output_file}"
 
         self.results.write_excel(output_file)
+
+    def _input_config(self, field_name: str) -> Any:
+        return self.input_config.get(field_name) if self.input_config else None
 
     def __expand_path(self, path: str) -> str:
         return Template(path).substitute(input_base_dir=self.input_dir)
