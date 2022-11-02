@@ -26,25 +26,26 @@ steps:
   - variables
   - gecco
   - questionnaires
-
+input:
+  base_dir: ../napkon-string-matching-data/input
 gecco_definition:
-  gecco83: ../napkon-string-matching-data/input/FINAL_GECCO83_DS.xlsx
-  geccoplus: ../napkon-string-matching-data/input/20211118_GECCOplus_final.xlsx
-  json: ../napkon-string-matching-data/input/input__gecco_definition.json
+  gecco83: $input_base_dir/FINAL_GECCO83_DS.xlsx
+  geccoplus: $input_base_dir/20211118_GECCOplus_final.xlsx
+  json: $input_base_dir/input__gecco_definition.json
 
-dataset_definition: ../napkon-string-matching-data/input/dataset_definitions.json
+dataset_definition: $input_base_dir/dataset_definitions.json
 
-categories_file: ../napkon-string-matching-data/input/categories.json
-categories_excel_file: ../napkon-string-matching-data/input/categories.xlsx
+categories_file: $input_base_dir/categories.json
+categories_excel_file: $input_base_dir/categories.xlsx
 
 files:
-  hap: ../napkon-string-matching-data/input/hap_test.xlsx
-  pop: ../napkon-string-matching-data/input/pop_test.xlsx
-  suep: ../napkon-string-matching-data/input/suep_test.xlsx
+  hap: $input_base_dir/hap_test.xlsx
+  pop: $input_base_dir/pop_test.xlsx
+  suep: $input_base_dir/suep_test.xlsx
 
-table_definitions: ../napkon-string-matching-data/input/table_definitions.json
+table_definitions: $input_base_dir/table_definitions.json
 
-mappings: ../napkon-string-matching-data/input/mappings/
+mappings: $input_base_dir/mappings/
 
 output_dir: ../napkon-string-matching-data/output
 cache_dir: ../napkon-string-matching-data/cache

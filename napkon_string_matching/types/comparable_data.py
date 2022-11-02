@@ -375,12 +375,16 @@ def categories_matching(df: pd.DataFrame, column_left: str, column_right: str) -
         else:
             matching_func = lambda x, y: x == y
 
+    logger.info("filtering categories...")
     return df[
         [
             matching_func(*categories)
-            for categories in zip(
-                df[column_left],
-                df[column_right],
+            for categories in tqdm(
+                zip(
+                    df[column_left],
+                    df[column_right],
+                ),
+                total=len(df),
             )
         ]
     ]
