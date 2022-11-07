@@ -30,6 +30,16 @@ input:
     gecco83: $input_base_dir/FINAL_GECCO83_DS.xlsx
     geccoplus: $input_base_dir/20211118_GECCOplus_final.xlsx
     json: $input_base_dir/input__gecco_definition.json
+  kds_definition:
+    json: $input_base_dir/input__kds_definition.json
+    simplifier:
+      modules:
+        - https://fhir.simplifier.net/MedizininformatikInitiative-ModulPerson
+        - https://fhir.simplifier.net/MedizininformatikInitiative-ModulFall
+        - https://fhir.simplifier.net/MedizininformatikInitiative-ModulDiagnosen
+        - https://fhir.simplifier.net/MedizininformatikInitiative-ModulProzeduren
+        - https://fhir.simplifier.net/MedizininformatikInitiative-ModulMedikation
+        - https://fhir.simplifier.net/MedizininformatikInitiative-modullabor
   dataset_definition: $input_base_dir/dataset_definitions.json
   categories_file: $input_base_dir/categories.json
   categories_excel_file: $input_base_dir/categories.xlsx
