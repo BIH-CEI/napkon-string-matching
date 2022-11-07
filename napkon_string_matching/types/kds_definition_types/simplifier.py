@@ -1,5 +1,6 @@
 import json
 import logging
+from pathlib import Path
 from typing import List
 
 import requests
@@ -12,7 +13,10 @@ logger = logging.getLogger(__name__)
 
 class SimplifierKdsDefinition(KdsDefinition):
     @classmethod
-    def read_original_format(cls, modules: List[str], *args, **kwargs):
+    def read_original_format(cls, file_name: str | Path, modules: List[str], *args, **kwargs):
+        if Path(file_name).exists():
+            return super().read_original_format(file_name=file_name, *args, **kwargs)
+
         result = cls()
         with requests.Session() as session:
             for module in modules:

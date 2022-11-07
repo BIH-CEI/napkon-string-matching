@@ -91,24 +91,15 @@ class Matcher:
     def _init_kds_definition(self) -> None:
         files: Dict[str, Any] = self._input_config(CONFIG_KDS_FILES)
         file_name = self.__expand_path(files[CONFIG_KDS_JSON])
-        if Path(file_name).exists():
-            self.kds = KdsDefinition.prepare(
-                file_name=file_name,
-                preparator=self.preparator,
-                **self.config[CONFIG_FIELD_MATCHING],
-                use_cache=self.use_cache,
-                cache_dir=self.cache_dir,
-            )
-        else:
-            simplfier_config: Dict[str, Any] = files[CONFIG_KDS_SIMPLIFIER]
-            self.kds = SimplifierKdsDefinition.prepare(
-                file_name=file_name,
-                preparator=self.preparator,
-                **self.config[CONFIG_FIELD_MATCHING],
-                **simplfier_config,
-                use_cache=self.use_cache,
-                cache_dir=self.cache_dir,
-            )
+        simplfier_config: Dict[str, Any] = files[CONFIG_KDS_SIMPLIFIER]
+        self.kds = SimplifierKdsDefinition.prepare(
+            file_name=file_name,
+            preparator=self.preparator,
+            **self.config[CONFIG_FIELD_MATCHING],
+            **simplfier_config,
+            use_cache=self.use_cache,
+            cache_dir=self.cache_dir,
+        )
 
         if self.kds is None:
             logger.warning("didn't get any data")
