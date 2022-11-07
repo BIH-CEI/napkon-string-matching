@@ -36,4 +36,6 @@ class SimplifierKdsDefinition(KdsDefinition):
                         elements=resource["differential"]["element"]
                     )
                     result = result.concat(definition)
+        result.write_json(file_name=file_name)
+
         return result
