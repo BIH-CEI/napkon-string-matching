@@ -4,14 +4,15 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, List
 
-import napkon_string_matching.compare.score_functions
 import nltk
 import pandas as pd
-from napkon_string_matching.types.comparable import COLUMN_NAMES, Columns, Comparable
-from napkon_string_matching.types.data import Data, gen_hash
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from tqdm import tqdm
+
+import napkon_string_matching.compare.score_functions
+from napkon_string_matching.types.comparable import COLUMN_NAMES, Columns, Comparable
+from napkon_string_matching.types.data import Data, gen_hash
 
 nltk.download("punkt")
 nltk.download("stopwords")
@@ -198,6 +199,7 @@ class ComparableData(Data):
 
     @staticmethod
     def gen_term(parts: List[str], language: str = "german") -> str:
+        parts = [part for part in parts if part]
         tokens = word_tokenize(" ".join(parts))
 
         stop_words = set(stopwords.words(language))

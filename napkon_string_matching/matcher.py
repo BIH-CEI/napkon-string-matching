@@ -14,6 +14,8 @@ from napkon_string_matching.types.dataset_table.definitions_types.excel_definiti
     DatasetTablesExcelDefinitions,
 )
 from napkon_string_matching.types.gecco_definition import GeccoDefinition
+from napkon_string_matching.types.kds_definition import KdsDefinition
+from napkon_string_matching.types.kds_definition_types.simplifier import SimplifierKdsDefinition
 from napkon_string_matching.types.mapping import Mapping
 from napkon_string_matching.types.questionnaire import Questionnaire
 from napkon_string_matching.types.table_categories import TableCategories
@@ -22,6 +24,9 @@ CONFIG_GECCO_FILES = "gecco_definition"
 CONFIG_GECCO83 = "gecco83"
 CONFIG_GECCO_PLUS = "geccoplus"
 CONFIG_GECCO_JSON = "json"
+CONFIG_KDS_FILES = "kds_definition"
+CONFIG_KDS_JSON = "json"
+CONFIG_KDS_SIMPLIFIER = "simplifier"
 CONFIG_DATASET_DEFINITION = "dataset_definition"
 CONFIG_FIELD_FILES = "files"
 CONFIG_FIELD_MAPPINGS = "mappings"
@@ -46,6 +51,7 @@ class Matcher:
         self.preparator = preparator
         self.config = config
         self.gecco: GeccoDefinition = None
+        self.kds: KdsDefinition | None = None
         self.questionnaires: Dict[str, Questionnaire] = None
         self.results: ComparisonResults = None
         self.mappings: Mapping = None
@@ -58,6 +64,7 @@ class Matcher:
         self.cache_dir = config.get(CONFIG_CACHE_DIR)
 
         self._init_gecco_definition()
+        self._init_kds_definition()
         self._init_table_categories()
         self._init_dataset_definition()
         self._init_dataset_table_definitions()
@@ -79,6 +86,22 @@ class Matcher:
         )
 
         if self.gecco is None:
+            logger.warning("didn't get any data")
+
+    def _init_kds_definition(self) -> None:
+        files: Dict[str, Any] = self._input_config(CONFIG_KDS_FILES)
+        file_name = self.__expand_path(files[CONFIG_KDS_JSON])
+        simplfier_config: Dict[str, Any] = files[CONFIG_KDS_SIMPLIFIER]
+        self.kds = SimplifierKdsDefinition.prepare(
+            file_name=file_name,
+            preparator=self.preparator,
+            **self.config[CONFIG_FIELD_MATCHING],
+            **simplfier_config,
+            use_cache=self.use_cache,
+            cache_dir=self.cache_dir,
+        )
+
+        if self.kds is None:
             logger.warning("didn't get any data")
 
     def _init_dataset_definition(self) -> None:
