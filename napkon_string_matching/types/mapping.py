@@ -1,8 +1,11 @@
 import json
+import logging
 from typing import Dict, List
 
 from napkon_string_matching.types.base.readable_json import ReadableJson
 from napkon_string_matching.types.base.writable_json import WritableJson
+
+logger = logging.getLogger(__name__)
 
 
 class MappingTarget:
@@ -131,6 +134,26 @@ class Mapping(ReadableJson, WritableJson):
     def update(self, other) -> None:
         for item in self.__items__:
             self[item].update(other[item])
+
+    @classmethod
+    def read_json(cls, *args, **kwargs):
+        result = super().read_json(*args, **kwargs)
+        logger.info(
+            "mappings for HAP: %i, POP: %i, SÜP: %i",
+            len(result.hap),
+            len(result.pop),
+            len(result.suep),
+        )
+        return result
+
+    def write_json(self, *args, **kwargs) -> None:
+        logger.info(
+            "write mappings for HAP: %i, POP: %i, SÜP: %i",
+            len(self.hap),
+            len(self.pop),
+            len(self.suep),
+        )
+        super().write_json(*args, **kwargs)
 
     def to_json(self, indent: int | None = None, *args, **kwargs):
         return json.dumps(self.dict(), indent=indent)
