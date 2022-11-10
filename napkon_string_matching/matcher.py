@@ -63,14 +63,17 @@ class Matcher:
         self.input_dir = self._input_config(CONFIG_INPUT_BASE_DIR)
         self.cache_dir = config.get(CONFIG_CACHE_DIR)
 
+        # initialization without dependencies
         self._init_gecco_definition()
         self._init_kds_definition()
-        self._init_dataset_table_definitions()
-        self._init_table_categories()
         self._init_dataset_definition()
-        self._init_questionnaires()
         self._init_mappings()
         self.clear_results()
+
+        # initialization that depend on other initializations
+        self._init_dataset_table_definitions()
+        self._init_table_categories()
+        self._init_questionnaires()
 
     def _init_gecco_definition(self) -> None:
         files: Dict[str, str] = self._input_config(CONFIG_GECCO_FILES)
@@ -109,6 +112,11 @@ class Matcher:
         self.dataset_def = DatasetDefinitions.read_json(file)
 
     def _init_questionnaires(self) -> None:
+        if self.dataset_def is None:
+            raise Exception("`dataset_def` is not initialized")
+        if self.table_categories is None:
+            logger.warning("`table_categories` is empty")
+
         self.questionnaires = {}
         for name, file in self._input_config(CONFIG_FIELD_FILES).items():
             dataset = DatasetTable.prepare(
@@ -132,6 +140,10 @@ class Matcher:
     def _init_dataset_table_definitions(self):
         file_name = self.__expand_path(self._input_config(CONFIG_TABLE_DEFINITIONS))
         definitions_file = Path(file_name)
+
+        if self.dataset_def is None:
+            raise Exception("`dataset_def` not initialized")
+
         if definitions_file.exists():
             logger.info("read table definitions from JSON file")
             self.table_definitions = DatasetTablesExcelDefinitions.read_json(definitions_file)
@@ -150,6 +162,9 @@ class Matcher:
             self.table_definitions.write_json(definitions_file)
 
     def _init_table_categories(self) -> None:
+        if self.table_definitions is None:
+            raise Exception("`table_definitions` not initialized")
+
         file = self._input_config(CONFIG_TABLE_CATEGORIES)
         if file is not None:
             file = self.__expand_path(file)
