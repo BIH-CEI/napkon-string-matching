@@ -24,11 +24,10 @@ def get_all_table_subgroup_name_combinations(dataset_tables: Dict[str, DatasetTa
     return result
 
 
-def get_match_result_table(matcher: Matcher, mappings_file: str | Path):
+def get_match_result_table(
+    matcher: Matcher, mappings_file: str | Path, left_name: str, right_name: str
+):
     mapping = Mapping.read_json(mappings_file)
-
-    left_name = "pop"
-    right_name = "suep"
 
     # generate the combinations
     combined: List[Tuple[str, str]] = list(mapping[left_name][right_name]._data.items())
