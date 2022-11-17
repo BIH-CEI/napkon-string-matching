@@ -35,11 +35,12 @@ def get_match_result_table(
 def _generate_combinations(mapping: Mapping, left_name: str, right_name: str):
     combined: List[Tuple[str, str]] = list(mapping[left_name][right_name]._data.items())
     combined2: List[Tuple[str, str]] = [
-        (value, key)
-        for key, value in mapping[right_name][left_name]._data.items()
-        if (value, key) not in combined
+        (left, right) for right, left in mapping[right_name][left_name]._data.items()
     ]
-    return pd.DataFrame(list(combined) + combined2)
+    result = pd.DataFrame(combined + combined2)
+    return result.drop_duplicates()
+
+
 
 
     return generate_result_table(matcher, combined, left_name, right_name)
