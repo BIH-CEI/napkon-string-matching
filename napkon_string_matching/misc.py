@@ -28,22 +28,24 @@ def get_match_result_table(
     matcher: Matcher, mappings_file: str | Path, left_name: str, right_name: str
 ):
     mapping = Mapping.read_json(mappings_file)
+    combined = _generate_combinations(mapping, left_name, right_name)
+    return generate_result_table(matcher, combined, left_name, right_name)
 
-    # generate the combinations
+
+def _generate_combinations(mapping: Mapping, left_name: str, right_name: str):
     combined: List[Tuple[str, str]] = list(mapping[left_name][right_name]._data.items())
     combined2: List[Tuple[str, str]] = [
         (value, key)
         for key, value in mapping[right_name][left_name]._data.items()
         if (value, key) not in combined
     ]
-    combined = list(combined) + combined2
+    return pd.DataFrame(list(combined) + combined2)
+
 
     return generate_result_table(matcher, combined, left_name, right_name)
 
 
-def generate_result_table(
-    matcher: Matcher, matches: List[Tuple[str, str]], left_name: str, right_name: str
-):
+def generate_result_table(matcher: Matcher, matches: pd.DataFrame, left_name: str, right_name: str):
     left = matcher.questionnaires[left_name]
     right = matcher.questionnaires[right_name]
 
@@ -56,16 +58,15 @@ def generate_result_table(
     left_id = left_name.title() + Columns.IDENTIFIER.value
     right_id = right_name.title() + Columns.IDENTIFIER.value
 
-    combined_df = pd.DataFrame(matches)
-    combined_df = combined_df.merge(
+    matches = matches.merge(
         left,
         left_on=0,
         right_on=left_id,
     )
-    combined_df = combined_df.merge(
+    matches = matches.merge(
         right,
         left_on=1,
         right_on=right_id,
     )
 
-    return combined_df.drop([0, 1], axis="columns")
+    return matches.drop([0, 1], axis="columns")
