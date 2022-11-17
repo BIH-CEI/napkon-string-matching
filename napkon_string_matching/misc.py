@@ -41,7 +41,15 @@ def _generate_combinations(mapping: Mapping, left_name: str, right_name: str):
     return result.drop_duplicates()
 
 
+def get_oneunique_match_result_table(
+    matcher: Matcher, mappings_file: str | Path, left_name: str, right_name: str
+):
+    mapping = Mapping.read_json(mappings_file)
+    combined = _generate_combinations(mapping, left_name, right_name)
 
+    result1 = combined.drop_duplicates(subset=0, keep=False)
+    result2 = combined.drop_duplicates(subset=1, keep=False)
+    combined = result1.merge(result2, on=[0, 1])
 
     return generate_result_table(matcher, combined, left_name, right_name)
 
