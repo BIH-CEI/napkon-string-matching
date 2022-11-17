@@ -39,6 +39,12 @@ def get_match_result_table(matcher: Matcher, mappings_file: str | Path):
     ]
     combined = list(combined) + combined2
 
+    return generate_result_table(matcher, combined, left_name, right_name)
+
+
+def generate_result_table(
+    matcher: Matcher, matches: List[Tuple[str, str]], left_name: str, right_name: str
+):
     left = matcher.questionnaires[left_name]
     right = matcher.questionnaires[right_name]
 
@@ -51,7 +57,7 @@ def get_match_result_table(matcher: Matcher, mappings_file: str | Path):
     left_id = left_name.title() + Columns.IDENTIFIER.value
     right_id = right_name.title() + Columns.IDENTIFIER.value
 
-    combined_df = pd.DataFrame(combined)
+    combined_df = pd.DataFrame(matches)
     combined_df = combined_df.merge(
         left,
         left_on=0,
