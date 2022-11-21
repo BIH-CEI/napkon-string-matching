@@ -162,6 +162,16 @@ class Mapping(ReadableJson, WritableJson):
     def __len__(self) -> int:
         return len(self.hap) + len(self.pop) + len(self.suep)
 
+    def to_new(self):
+        result = MappingList()
+        for first_group, value in self.dict().items():
+            for second_group, value in value.items():
+                for first_identifier, second_identifier in value.items():
+                    result.add_mapping(
+                        first_group, first_identifier, second_group, second_identifier
+                    )
+        return result
+
 
 class MappingEntry:
     def __init__(self, data: Dict[str, List[str]] | None = None) -> None:
