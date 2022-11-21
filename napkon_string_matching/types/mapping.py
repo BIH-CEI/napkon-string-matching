@@ -123,7 +123,7 @@ class Mapping(ReadableJson, WritableJson):
             raise ValueError(f"item not found: {item}")
         setattr(self, item, value)
 
-    def dict(self) -> Dict[str, Dict[str, str]]:
+    def dict(self) -> Dict[str, Dict[str, Dict[str, str]]]:
         return {item: self[item].dict() for item in Mapping.__items__}
 
     def __repr__(self) -> str:
@@ -190,10 +190,14 @@ class MappingEntry:
         if (group := self[group_name]) is None:
             self[group_name] = [identifier]
         else:
-            group.append(identifier)
+            if identifier not in group:
+                group.append(identifier)
 
     def dict(self) -> Dict[str, List[str]]:
         return self._mappings
+
+    def num_entries_groups(self) -> Dict[str, int]:
+        return {group: len(mappings) for group, mappings in self._mappings.items()}
 
 
 class MappingList(ReadableJson, WritableJson):
@@ -234,3 +238,31 @@ class MappingList(ReadableJson, WritableJson):
 
     def to_json(self, indent: int | None = None, *args, **kwargs):
         return json.dumps(self.dict(), indent=indent)
+
+    def __len__(self) -> int:
+        return len(self._mappings)
+
+    def num_entries_groups(self) -> Dict[str, int]:
+        result = {}
+        for entry in self._mappings.values():
+            n_entries = entry.num_entries_groups()
+            for group, number in n_entries.items():
+                if group in result:
+                    result[group] += number
+                else:
+                    result[group] = number
+        return result
+
+    def num_entries_groups_str(self) -> str:
+        result = [f"{group.upper()}: {count}" for group, count in self.num_entries_groups().items()]
+        return ", ".join(result)
+
+    @classmethod
+    def read_json(cls, *args, **kwargs):
+        result = super().read_json(*args, **kwargs)
+        logger.info("read %i mappings (%s)", len(result), result.num_entries_groups_str())
+        return result
+
+    def write_json(self, *args, **kwargs) -> None:
+        logger.info("write %i mappings (%s)", len(self), self.num_entries_groups_str())
+        super().write_json(*args, **kwargs)
