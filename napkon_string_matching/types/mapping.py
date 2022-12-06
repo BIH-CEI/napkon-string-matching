@@ -13,14 +13,27 @@ class MappingEntry:
     def __init__(self, data: Dict[str, List[str]] | None = None) -> None:
         self._mappings: Dict[str, List[str]] = data if data is not None else {}
 
-    def __getitem__(self, group_name: str) -> List[str] | None:
-        return self._mappings.get(group_name)
+    def __getitem__(self, group_name: str) -> List[str]:
+        return self._mappings[group_name]
 
     def __setitem__(self, group_name: str, value: List[str]) -> None:
         self._mappings[group_name] = value
 
-    def has(self, group_name: str, identifier: str) -> bool:
-        return identifier in group if (group := self[group_name]) is not None else False
+    def has(
+        self,
+        group_name: str,
+        identifier: str,
+        second_group_name: str | None = None,
+        second_identifier: str | None = None,
+    ) -> bool:
+        if second_group_name is not None and second_identifier is not None:
+            return (
+                identifier in group and second_identifier in group2
+                if (group := self[group_name]) is not None and (group2 := self[second_group_name])
+                else False
+            )
+        else:
+            return identifier in group if (group := self[group_name]) is not None else False
 
     def add(self, group_name: str, identifier: str) -> None:
         if (group := self[group_name]) is None:
@@ -73,6 +86,46 @@ class Mapping(ReadableJson, WritableJson):
                     data={first_group: [first_identifier], second_group: [second_identifier]}
                 ),
             )
+
+    def has_mapping(
+        self,
+        first_group_name: str,
+        first_identifier: str,
+        second_group_name: str,
+        second_identifier: str,
+    ) -> bool:
+        for mappings in self._mappings.values():
+            if mappings.has(
+                first_group_name, first_identifier, second_group_name, second_identifier
+            ):
+                return True
+        return False
+
+    def filter_by_group(self, group_name: str) -> Dict[str, List[str]]:
+        return {
+            key: value[group_name] for key, value in self._mappings.items() if value[group_name]
+        }
+
+    def get_ids(self, group: str, identifier: str) -> List[str]:
+        return [
+            id
+            for id, mappings in self._mappings.items()
+            if (mapping := mappings[group]) and identifier in mapping
+        ]
+
+    def __iter__(self):
+        return iter(self.items())
+
+    def items(self):
+        return self._mappings.items()
+
+    def values(self):
+        return self._mappings.values()
+
+    def get_filtered(self, ids: List[str]):
+        result = Mapping()
+        result._mappings = {id: value for id, value in self if id in ids}
+        return result
 
     def update(self, other) -> None:
         for id, mapping in other._mappings.items():

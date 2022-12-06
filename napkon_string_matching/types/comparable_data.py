@@ -13,6 +13,7 @@ from tqdm import tqdm
 import napkon_string_matching.compare.score_functions
 from napkon_string_matching.types.comparable import COLUMN_NAMES, Columns, Comparable
 from napkon_string_matching.types.data import Data, gen_hash
+from napkon_string_matching.types.mapping import Mapping
 
 nltk.download("punkt")
 nltk.download("stopwords")
@@ -51,18 +52,17 @@ class ComparableData(Data):
         return self.__category_type__(self._data, None)
 
     def _hash_compare_args(self, other, *args, **kwargs) -> str:
-        hashes = [self.hash(), other.hash()]
+        strings = [self.to_csv(), other.to_csv()]
 
-        hashes += [gen_hash(str(arg)) for arg in args]
-        hashes += [gen_hash(str(kwargs)) for kwargs in kwargs.items()]
+        strings += [str(arg) for arg in args]
+        strings += [str(kwargs) for kwargs in kwargs.items()]
 
-        return "".join(hashes)
+        return gen_hash("".join(strings))
 
     def compare(
         self,
         other,
-        left_existing_mappings: List[str],
-        right_existing_mappings: List[str],
+        existing_mappings: Mapping,
         compare_column: str,
         score_threshold: float = 0.1,
         cached: bool = True,
@@ -75,7 +75,10 @@ class ComparableData(Data):
         # Get the compare dataframe that holds the score to match all entries from
         # the left with each from right dataset
         df_hash = self._hash_compare_args(
-            other, left_existing_mappings, right_existing_mappings, compare_column, cache_threshold
+            other=other,
+            existing_mappings=existing_mappings,
+            compare_column=compare_column,
+            cache_threshold=cache_threshold,
         )
         cache_dir = Path(cache_dir if cache_dir else "cache")
         cache_score_file = cache_dir / CACHE_FILE_PATTERN.format(df_hash)
@@ -89,8 +92,7 @@ class ComparableData(Data):
                 cache_threshold = score_threshold
             result = self.gen_comparable(
                 other,
-                left_existing_mappings,
-                right_existing_mappings,
+                existing_mappings=existing_mappings,
                 score_threshold=cache_threshold,
                 compare_column=compare_column,
                 *args,
@@ -117,8 +119,7 @@ class ComparableData(Data):
     def gen_comparable(
         self,
         right,
-        left_existing_mappings: List[str],
-        right_existing_mappings: List[str],
+        existing_mappings: Mapping,
         score_func: str,
         compare_column: str,
         category_column: str = "Category",
@@ -135,8 +136,7 @@ class ComparableData(Data):
         right = right.dropna(subset=[compare_column])
 
         # Remove existing mappings
-        left.remove_existing_mappings(left_existing_mappings)
-        right.remove_existing_mappings(right_existing_mappings)
+        remove_existing_mappings(left, right, left_name, right_name, existing_mappings)
 
         left.map_for_comparable()
         right.map_for_comparable()
@@ -362,6 +362,17 @@ class ComparableData(Data):
         )
         logger.debug("filtered %i entries", before_len - len(self))
 
+    def get_existing_mapping_ids(self, group_name: str, mappings: Mapping):
+        mappings_for_group = mappings.filter_by_group(group_name)
+        identifiers = self[Columns.IDENTIFIER.value]
+        ids = [
+            id
+            for id, mapping_identifiers in mappings_for_group.items()
+            for identifier in identifiers
+            if identifier in mapping_identifiers
+        ]
+        return list(set(ids))
+
 
 def categories_matching(df: pd.DataFrame, column_left: str, column_right: str) -> pd.DataFrame:
     first_row = df.iloc[0]
@@ -390,3 +401,33 @@ def categories_matching(df: pd.DataFrame, column_left: str, column_right: str) -
             )
         ]
     ]
+
+
+def remove_existing_mappings(
+    left: ComparableData,
+    right: ComparableData,
+    left_name: str,
+    right_name: str,
+    existing_mappings: Mapping,
+):
+    try:
+        left_ids = left.get_existing_mapping_ids(left_name, existing_mappings)
+        right_ids = right.get_existing_mapping_ids(right_name, existing_mappings)
+    except KeyError:
+        return
+
+    used_ids = list(set(left_ids).intersection(right_ids))
+    filtered_mappings = existing_mappings.get_filtered(used_ids)
+
+    remove_identifiers = get_identifiers_from_mapping(filtered_mappings, left_name)
+    left.remove_existing_mappings(remove_identifiers)
+
+    remove_identifiers = get_identifiers_from_mapping(filtered_mappings, right_name)
+    right.remove_existing_mappings(remove_identifiers)
+
+
+def get_identifiers_from_mapping(mappings: Mapping, group: str) -> List[str]:
+    result = []
+    for groups in mappings.values():
+        result += groups[group]
+    return result

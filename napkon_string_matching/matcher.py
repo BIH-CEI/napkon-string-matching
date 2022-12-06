@@ -207,13 +207,9 @@ class Matcher:
         for name, questionnaire in self.questionnaires.items():
             logger.info("compare gecco and %s", name)
 
-            # Get existing mappings for first and second
-            mappings = self.mappings[name]["gecco"].sources()
-
             matches = self.gecco.compare(
                 questionnaire,
-                left_existing_mappings=[],
-                right_existing_mappings=mappings,
+                existing_mappings=self.mappings,
                 left_name="gecco",
                 right_name=name,
                 cache_dir=self.cache_dir,
@@ -246,14 +242,9 @@ class Matcher:
                     "compare %s %s and %s", prefix if prefix else "", name_first, name_second
                 )
 
-                # Get existing mappings for first and second
-                mappings_first = self.mappings[name_first][name_second].sources()
-                mappings_second = self.mappings[name_second][name_first].sources()
-
                 matches = dataset_first.compare(
                     dataset_second,
-                    mappings_first,
-                    mappings_second,
+                    existing_mappings=self.mappings,
                     left_name=name_first,
                     right_name=name_second,
                     cache_dir=self.cache_dir,
