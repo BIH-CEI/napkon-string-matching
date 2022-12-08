@@ -3,11 +3,14 @@ import unittest
 from pathlib import Path
 
 import pandas as pd
+
 from napkon_string_matching.prepare.match_preparator import MatchPreparator
 from napkon_string_matching.tests import DISABLE_DB_TESTS, DISABLE_LOCAL_FILE_TESTS
 from napkon_string_matching.types.comparable_data import ComparableColumns
 from napkon_string_matching.types.dataset_table.dataset_table import DatasetTable
 from napkon_string_matching.types.questionnaire import Columns, Questionnaire
+
+TEST_DATA_DIR = "../napkon-string-matching-data/test/"
 
 
 class TestMatchPreparator(unittest.TestCase):
@@ -99,7 +102,7 @@ class TestMatchPreparator(unittest.TestCase):
         "takes long time and requires active db contianer and local test file",
     )
     def test_add_terms_and_tokens_live(self):
-        data = DatasetTable.read_original_format("input/pop_test.xlsx")
+        data = DatasetTable.read_original_format(TEST_DATA_DIR + "pop_test.xlsx")
 
         data = data[:100]
 
