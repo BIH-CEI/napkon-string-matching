@@ -2,8 +2,9 @@ import logging
 from enum import Enum
 from pathlib import Path
 
-import napkon_string_matching.types.comparable as comp
 import pandas as pd
+
+import napkon_string_matching.types.comparable as comp
 from napkon_string_matching.types.base.writable_excel import WritableExcel
 from napkon_string_matching.types.category import Category
 from napkon_string_matching.types.comparable_data import ComparableColumns, ComparableData
@@ -55,7 +56,7 @@ class GeccoDefinition(GeccoBase, ComparableData, WritableExcel):
         return cls.read_json(file_name, *args, **kwargs)
 
     def to_csv(self) -> str:
-        return self.stringify_list_columns()
+        return super(ComparableData, self.stringify_list_columns()).to_csv()
 
     def get_items(self):
         return [("Sheet1", self.stringify_list_columns())]

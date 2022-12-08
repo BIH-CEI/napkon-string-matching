@@ -2,6 +2,7 @@ import unittest
 from pathlib import Path
 
 import pandas as pd
+
 from napkon_string_matching.tests import DISABLE_DB_TESTS, DISABLE_LOCAL_FILE_TESTS
 from napkon_string_matching.types.comparable_data import ComparableColumns
 from napkon_string_matching.types.dataset_table.dataset_table import (
@@ -18,11 +19,13 @@ from napkon_string_matching.types.dataset_table.dataset_table import (
 )
 from napkon_string_matching.types.questionnaire import Columns
 
+TEST_DATA_DIR = "../napkon-string-matching-data/test/"
+
 
 class TestDatasetTable(unittest.TestCase):
     @unittest.skipIf(DISABLE_LOCAL_FILE_TESTS, "local test file needs to be available")
     def test_read(self):
-        file = Path("input/suep_test.xlsx")
+        file = Path(TEST_DATA_DIR + "suep_test.xlsx")
         result = DatasetTable.read_original_format(file)
         self.assertIsNotNone(result)
 
@@ -31,7 +34,7 @@ class TestDatasetTable(unittest.TestCase):
         "requires active db contianer and local test file",
     )
     def test_add_terms_live(self):
-        data = DatasetTable.read_original_format("input/pop_test.xlsx")
+        data = DatasetTable.read_original_format(TEST_DATA_DIR + "pop_test.xlsx")
 
         data.add_terms()
         self.assertIsNotNone(data.term)
