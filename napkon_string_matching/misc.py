@@ -1,5 +1,6 @@
+import logging
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict
 
 import pandas as pd
 
@@ -7,6 +8,11 @@ from napkon_string_matching.matcher import Matcher
 from napkon_string_matching.types.comparable_data import Columns
 from napkon_string_matching.types.dataset_table.dataset_table import DatasetTable
 from napkon_string_matching.types.mapping import Mapping
+
+LABEL_ID = "Id"
+LABEL_COHORT = "Kohorte"
+
+logger = logging.getLogger(__name__)
 
 
 def get_all_table_subgroup_name_combinations(dataset_tables: Dict[str, DatasetTable]):
@@ -28,54 +34,40 @@ def get_match_result_table(
     matcher: Matcher, mappings_file: str | Path, left_name: str, right_name: str
 ):
     mapping = Mapping.read_json(mappings_file)
-    combined = _generate_combinations(mapping, left_name, right_name)
-    return generate_result_table(matcher, combined, left_name, right_name)
+    return _expand_matches(mapping, matcher, left_name, right_name)
 
 
-def _generate_combinations(mapping: Mapping, left_name: str, right_name: str):
-    combined: List[Tuple[str, str]] = list(mapping[left_name][right_name]._data.items())
-    combined2: List[Tuple[str, str]] = [
-        (left, right) for right, left in mapping[right_name][left_name]._data.items()
-    ]
-    result = pd.DataFrame(combined + combined2)
-    return result.drop_duplicates()
+def _expand_matches(mapping: Mapping, matcher: Matcher, left_name: str, right_name: str):
+    rows_left = _fill_from_questionnaire(left_name, mapping, matcher)
+    rows_right = _fill_from_questionnaire(right_name, mapping, matcher)
+
+    result = pd.concat([rows_left, rows_right], ignore_index=True)
+    result = result.sort_values(by=[LABEL_ID, LABEL_COHORT])
+
+    return result
 
 
-def get_oneunique_match_result_table(
-    matcher: Matcher, mappings_file: str | Path, left_name: str, right_name: str
-):
-    mapping = Mapping.read_json(mappings_file)
-    combined = _generate_combinations(mapping, left_name, right_name)
+def _fill_from_questionnaire(name: str, mapping: Mapping, matcher: Matcher) -> pd.DataFrame:
+    df = _generate_mapping_id_df(mapping, name)
 
-    result1 = combined.drop_duplicates(subset=0, keep=False)
-    result2 = combined.drop_duplicates(subset=1, keep=False)
-    combined = result1.merge(result2, on=[0, 1])
-
-    return generate_result_table(matcher, combined, left_name, right_name)
-
-
-def generate_result_table(matcher: Matcher, matches: pd.DataFrame, left_name: str, right_name: str):
-    left = matcher.questionnaires[left_name]
-    right = matcher.questionnaires[right_name]
-
+    questionnaire = matcher.questionnaires[name]
     columns = [Columns.IDENTIFIER.value, Columns.SHEET.value, Columns.PARAMETER.value]
-    left = left[columns]
-    right = right[columns]
+    questionnaire = questionnaire[columns]
 
-    left = left.add_prefix(left_name.title())
-    right = right.add_prefix(right_name.title())
-    left_id = left_name.title() + Columns.IDENTIFIER.value
-    right_id = right_name.title() + Columns.IDENTIFIER.value
-
-    matches = matches.merge(
-        left,
-        left_on=0,
-        right_on=left_id,
-    )
-    matches = matches.merge(
-        right,
-        left_on=1,
-        right_on=right_id,
+    return df.merge(
+        questionnaire, left_on=Columns.IDENTIFIER.value, right_on=Columns.IDENTIFIER.value
     )
 
-    return matches.drop([0, 1], axis="columns")
+
+def _generate_mapping_id_df(mapping: Mapping, name: str) -> pd.DataFrame:
+    id_mappings = []
+    for id, group in mapping:
+        try:
+            for entry in group[name]:
+                id_mappings.append(
+                    {LABEL_ID: id, LABEL_COHORT: name.upper(), Columns.IDENTIFIER.value: entry}
+                )
+        except KeyError:
+            logger.warning("could not find group '%s' for id '%s'", name, id)
+            continue
+    return pd.DataFrame(id_mappings)
