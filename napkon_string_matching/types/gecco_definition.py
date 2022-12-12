@@ -53,7 +53,15 @@ class GeccoDefinition(GeccoBase, ComparableData, WritableExcel):
 
     @classmethod
     def read_original_format(cls, file_name: str | Path, *args, **kwargs):
-        return cls.read_json(file_name, *args, **kwargs)
+        result: GeccoDefinition = cls.read_json(file_name, *args, **kwargs)
+        result._extend_parameters()
+        return result
+
+    def _extend_parameters(self):
+        parameter_extension = pd.Series(
+            [":" + entry if isinstance(entry, str) else "" for entry in self[Columns.CHOICES.value]]
+        )
+        self[Columns.PARAMETER.value] += parameter_extension
 
     def to_csv(self) -> str:
         return super(ComparableData, self.stringify_list_columns()).to_csv()

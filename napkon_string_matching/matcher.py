@@ -13,7 +13,9 @@ from napkon_string_matching.types.dataset_table.definitions import DatasetTables
 from napkon_string_matching.types.dataset_table.definitions_types.excel_definitions import (
     DatasetTablesExcelDefinitions,
 )
-from napkon_string_matching.types.gecco_definition import GeccoDefinition
+from napkon_string_matching.types.gecco_definition_types.gecco_combined import (
+    GeccoCombinedDefinition,
+)
 from napkon_string_matching.types.kds_definition import KdsDefinition
 from napkon_string_matching.types.kds_definition_types.simplifier import SimplifierKdsDefinition
 from napkon_string_matching.types.mapping import Mapping
@@ -78,12 +80,21 @@ class Matcher:
     def _init_gecco_definition(self) -> None:
         files: Dict[str, str] = self._input_config(CONFIG_GECCO_FILES)
         file_name = self.__expand_path(files[CONFIG_GECCO_JSON])
-        self.gecco = GeccoDefinition.prepare(
+
+        gecco83_file = files.get(CONFIG_GECCO83)
+        if gecco83_file is not None:
+            gecco83_file = self.__expand_path(gecco83_file)
+
+        geccoplus_file = files.get(CONFIG_GECCO_PLUS)
+        if geccoplus_file is not None:
+            geccoplus_file = self.__expand_path(geccoplus_file)
+
+        self.gecco = GeccoCombinedDefinition.prepare(
             file_name=file_name,
             preparator=self.preparator,
             **self.config[CONFIG_FIELD_MATCHING],
-            gecco83_file=files.get(CONFIG_GECCO83),
-            geccoplus_file=files.get(CONFIG_GECCO_PLUS),
+            gecco83_file=gecco83_file,
+            geccoplus_file=geccoplus_file,
             use_cache=self.use_cache,
             cache_dir=self.cache_dir,
         )
