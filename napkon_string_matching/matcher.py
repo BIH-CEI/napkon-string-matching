@@ -13,6 +13,7 @@ from napkon_string_matching.types.dataset_table.definitions import DatasetTables
 from napkon_string_matching.types.dataset_table.definitions_types.excel_definitions import (
     DatasetTablesExcelDefinitions,
 )
+from napkon_string_matching.types.gecco_definition import GeccoDefinition
 from napkon_string_matching.types.gecco_definition_types.gecco_combined import (
     GeccoCombinedDefinition,
 )
