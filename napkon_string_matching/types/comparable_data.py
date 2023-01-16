@@ -138,9 +138,19 @@ class ComparableData(Data):
 
         left = self.dropna(subset=[compare_column])
         right = right.dropna(subset=[compare_column])
+        logger.info("comparing number of items %i left, %i right", len(left), len(right))
 
-        # Remove existing mappings
-        remove_existing_mappings(left, right, left_name, right_name, existing_mappings)
+        # Remove existing whitelisted mappings
+        remove_existing_mappings(
+            left,
+            right,
+            left_name,
+            right_name,
+            existing_mappings_whitelist,
+        )
+        logger.info(
+            "after removing existing whitelisted mappings: %i left, %i right", len(left), len(right)
+        )
 
         left.map_for_comparable()
         right.map_for_comparable()
