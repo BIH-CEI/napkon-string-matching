@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from uuid import uuid4
 
 from napkon_string_matching.types.base.readable_json import ReadableJson
@@ -76,30 +76,48 @@ class Mapping(ReadableJson, WritableJson):
 
     def add_mapping(
         self, first_group: str, first_identifier: str, second_group: str, second_identifier: str
-    ) -> None:
-        if (mapping := self.mapping_for_identifier(first_group, first_identifier)) is not None:
-            mapping.add(second_group, second_identifier)
-        else:
+    ) -> MappingEntry:
+        if (
+            mapping := self.get_mapping(
+                first_group, first_identifier, second_group, second_identifier
+            )
+        ) is None:
+            id = uuid4().hex
             self.set_group(
-                uuid4().hex,
+                id,
                 MappingEntry(
                     data={first_group: [first_identifier], second_group: [second_identifier]}
                 ),
             )
+            return self.get_group(id)
+        else:
+            return mapping
 
-    def has_mapping(
+    def update_mapping(
+        self, first_group: str, first_identifier: str, second_group: str, second_identifier: str
+    ) -> MappingEntry:
+        if (mapping := self.mapping_for_identifier(first_group, first_identifier)) is not None:
+            mapping.add(second_group, second_identifier)
+            return mapping
+        elif (mapping := self.mapping_for_identifier(second_group, second_identifier)) is not None:
+            mapping.add(first_group, first_identifier)
+            return mapping
+        else:
+            return self.add_mapping(first_group, first_identifier, second_group, second_identifier)
+
+    def get_mapping(
         self,
         first_group_name: str,
         first_identifier: str,
         second_group_name: str,
         second_identifier: str,
-    ) -> bool:
+    ) -> MappingEntry | None:
         for mappings in self._mappings.values():
             if mappings.has(
                 first_group_name, first_identifier, second_group_name, second_identifier
             ):
-                return True
-        return False
+                return mappings
+        return None
 
     def filter_by_group(self, group_name: str) -> Dict[str, List[str]]:
         return {
@@ -128,11 +146,53 @@ class Mapping(ReadableJson, WritableJson):
         return result
 
     def update(self, other) -> None:
-        for id, mapping in other._mappings.items():
+        for id, mapping in other.items():
             if id in self._mappings:
                 self.get_group(id).update(mapping)
             else:
                 self.set_group(id, mapping)
+
+    def update_values(self, other) -> None:
+        for id, mapping in other.items():
+
+            # Find out if any of the entries is already present
+            existing_mapping = None
+            for group, identifiers in mapping._mappings.items():
+                for identifier in identifiers:
+                    if map := self.mapping_for_identifier(group, identifier):
+                        existing_mapping = map
+                        break
+
+            if existing_mapping:
+                for group, identifiers in mapping._mappings.items():
+                    for identifier in identifiers:
+                        existing_mapping.add(group, identifier)
+            else:
+                self.update(Mapping(data={id: mapping.dict()}))
+
+    def add_values(self, other) -> None:
+        for id, mapping in other.items():
+            self._recursive_add(list(mapping._mappings.items()))
+
+    def _recursive_add(self, mappings: List[Tuple[str, List[str]]]):
+        if len(mappings) > 2:
+            mapping = mappings.pop()
+            values_right = self._recursive_add(mappings)
+
+            group_left, mappings_left = mapping
+            values_left = [(group_left, entry) for entry in mappings_left]
+        else:
+            group_left, mappings_left = mappings[0]
+            group_right, mappings_right = mappings[1]
+
+            values_left = [(group_left, entry) for entry in mappings_left]
+            values_right = [(group_right, entry) for entry in mappings_right]
+
+        for gl, ml in values_left:
+            for gr, mr in values_right:
+                self.add_mapping(gl, ml, gr, mr)
+
+        return values_left + values_right
 
     def dict(self) -> Dict[str, Dict[str, List[str]]]:
         return {key: mapping.dict() for key, mapping in self._mappings.items()}
