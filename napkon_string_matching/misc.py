@@ -89,6 +89,7 @@ def convert_validated_mapping_to_json(
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
 
+    # Read validated mapping from file
     blacklist = MatchedMapping.read_excel(validated_mapping, match_value=0)
     whitelist = MatchedMapping.read_excel(validated_mapping)
 
@@ -100,5 +101,18 @@ def convert_validated_mapping_to_json(
     if not outputdir_white.exists():
         outputdir_white.mkdir()
 
-    blacklist.write_json(outputdir_black / (name + ".json"))
-    whitelist.write_json(outputdir_white / (name + ".json"))
+    outputfile_black = outputdir_black / (name + ".json")
+    outputfile_white = outputdir_white / (name + ".json")
+
+    # Update the existing mapping if exists
+    if outputfile_black.exists():
+        mapping = Mapping.read_json(outputfile_black)
+        mapping.update_values(blacklist)
+        blacklist = mapping
+    if outputfile_white.exists():
+        mapping = Mapping.read_json(outputfile_white)
+        mapping.update_values(whitelist)
+        whitelist = mapping
+
+    blacklist.write_json(outputfile_black)
+    whitelist.write_json(outputfile_white)
