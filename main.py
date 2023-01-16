@@ -35,8 +35,10 @@ if __name__ == "__main__":
     config = yaml.safe_load(Path(args.config).read_text())
 
     if args.convert_validated_mapping:
+        logger.info("convert validated matching to JSON")
         convert_validated_mapping_to_json(
             args.convert_validated_mapping, args.output_dir, args.output_name
         )
     else:
+        logger.info("generate matching")
         matching.match(config, use_cache=not args.no_cache)
