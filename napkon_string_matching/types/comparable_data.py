@@ -62,7 +62,8 @@ class ComparableData(Data):
     def compare(
         self,
         other,
-        existing_mappings: Mapping,
+        existing_mappings_whitelist: Mapping,
+        existing_mappings_blacklist: Mapping,
         compare_column: str,
         score_threshold: float = 0.1,
         cached: bool = True,
@@ -76,7 +77,8 @@ class ComparableData(Data):
         # the left with each from right dataset
         df_hash = self._hash_compare_args(
             other=other,
-            existing_mappings=existing_mappings,
+            existing_mappings_whitelist=existing_mappings_whitelist,
+            existing_mappings_blacklist=existing_mappings_blacklist,
             compare_column=compare_column,
             cache_threshold=cache_threshold,
         )
@@ -92,7 +94,8 @@ class ComparableData(Data):
                 cache_threshold = score_threshold
             result = self.gen_comparable(
                 other,
-                existing_mappings=existing_mappings,
+                existing_mappings_whitelist=existing_mappings_whitelist,
+                existing_mappings_blacklist=existing_mappings_blacklist,
                 score_threshold=cache_threshold,
                 compare_column=compare_column,
                 *args,
@@ -119,7 +122,8 @@ class ComparableData(Data):
     def gen_comparable(
         self,
         right,
-        existing_mappings: Mapping,
+        existing_mappings_whitelist: Mapping,
+        existing_mappings_blacklist: Mapping,
         score_func: str,
         compare_column: str,
         category_column: str = "Category",
