@@ -23,6 +23,7 @@ def get_args():
 
     parser.add_argument("--convert-validated-mapping", help="XLSX file to be converted")
     parser.add_argument("--output-dir")
+    parser.add_argument("--output-name")
 
     args = parser.parse_args()
     return args
@@ -34,6 +35,8 @@ if __name__ == "__main__":
     config = yaml.safe_load(Path(args.config).read_text())
 
     if args.convert_validated_mapping:
-        convert_validated_mapping_to_json(args.convert_validated_mapping, args.output_dir)
+        convert_validated_mapping_to_json(
+            args.convert_validated_mapping, args.output_dir, args.output_name
+        )
     else:
         matching.match(config, use_cache=not args.no_cache)
