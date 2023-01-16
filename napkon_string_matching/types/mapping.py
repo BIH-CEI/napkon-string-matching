@@ -76,16 +76,19 @@ class Mapping(ReadableJson, WritableJson):
 
     def add_mapping(
         self, first_group: str, first_identifier: str, second_group: str, second_identifier: str
-    ) -> None:
+    ) -> MappingEntry:
         if (mapping := self.mapping_for_identifier(first_group, first_identifier)) is not None:
             mapping.add(second_group, second_identifier)
+            return mapping
         else:
+            id = uuid4().hex
             self.set_group(
-                uuid4().hex,
+                id,
                 MappingEntry(
                     data={first_group: [first_identifier], second_group: [second_identifier]}
                 ),
             )
+            return self.get_group(id)
 
     def has_mapping(
         self,
@@ -128,11 +131,29 @@ class Mapping(ReadableJson, WritableJson):
         return result
 
     def update(self, other) -> None:
-        for id, mapping in other._mappings.items():
+        for id, mapping in other.items():
             if id in self._mappings:
                 self.get_group(id).update(mapping)
             else:
                 self.set_group(id, mapping)
+
+    def update_values(self, other) -> None:
+        for id, mapping in other.items():
+
+            # Find out if any of the entries is already present
+            existing_mapping = None
+            for group, identifiers in mapping._mappings.items():
+                for identifier in identifiers:
+                    if map := self.mapping_for_identifier(group, identifier):
+                        existing_mapping = map
+                        break
+
+            if existing_mapping:
+                for group, identifiers in mapping._mappings.items():
+                    for identifier in identifiers:
+                        existing_mapping.add(group, identifier)
+            else:
+                self.update(Mapping(data={id: mapping.dict()}))
 
     def dict(self) -> Dict[str, Dict[str, List[str]]]:
         return {key: mapping.dict() for key, mapping in self._mappings.items()}
