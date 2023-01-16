@@ -70,3 +70,13 @@ docker run --rm \
   ghcr.io/bih-cei/napkon-string-matching:main \
   --config /configs/config.yml
 ```
+
+Generate the mapping by adding these arguments
+
+```bash
+--convert-validated-mapping XLSX_FILE
+[--output-dir OUTPUT_DIR]
+[--output-name OUTPUT_NAME]
+```
+
+`XLSX_FILE` defines the file to be read. If set `OUTPUT_DIR` determines where the output files will be placed, otherwise it will default to the current directory. `OUTPUT_NAME` allows to set a name for the files.
