@@ -8,6 +8,7 @@ from napkon_string_matching.matcher import Matcher
 from napkon_string_matching.types.comparable_data import Columns
 from napkon_string_matching.types.dataset_table.dataset_table import DatasetTable
 from napkon_string_matching.types.mapping import Mapping
+from napkon_string_matching.types.mapping_types.matched_mapping import MatchedMapping
 
 LABEL_ID = "Id"
 LABEL_COHORT = "Kohorte"
@@ -73,11 +74,31 @@ def _generate_mapping_id_df(mapping: Mapping, name: str) -> pd.DataFrame:
     return pd.DataFrame(id_mappings)
 
 
-def convert_validated_mapping_to_json(validated_mapping: str | Path, output_dir: str | Path):
+def convert_validated_mapping_to_json(
+    validated_mapping: str, output_dir: str | Path | None, name: str = "mapping"
+):
     """
     Convert a validated mapping from a XLSX file and produce the JSON version. The validated
     mapping has columns for each potential mapping that states if this is a valid mapping (=1)
     or not (=0). The JSON output consits of a `whitelist` and a `blacklist` that contains valid
     mappings resp. invalid mappings.
     """
-    pass
+
+    output_dir = Path(output_dir) if output_dir else Path()
+
+    if not output_dir.exists():
+        output_dir.mkdir(parents=True)
+
+    blacklist = MatchedMapping.read_excel(validated_mapping, match_value=0)
+    whitelist = MatchedMapping.read_excel(validated_mapping)
+
+    outputdir_black = output_dir / "blacklist"
+    outputdir_white = output_dir / "whitelist"
+
+    if not outputdir_black.exists():
+        outputdir_black.mkdir()
+    if not outputdir_white.exists():
+        outputdir_white.mkdir()
+
+    blacklist.write_json(outputdir_black / (name + ".json"))
+    whitelist.write_json(outputdir_white / (name + ".json"))
