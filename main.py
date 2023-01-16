@@ -9,6 +9,7 @@ import yaml
 
 from napkon_string_matching import matching
 from napkon_string_matching.constants import LOG_FORMAT
+from napkon_string_matching.misc import convert_validated_mapping_to_json
 
 logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
@@ -20,6 +21,9 @@ def get_args():
     parser.add_argument("--config", default="config.yml")
     parser.add_argument("--no-cache", action="store_true", default=False)
 
+    parser.add_argument("--convert-validated-mapping", help="XLSX file to be converted")
+    parser.add_argument("--output-dir")
+
     args = parser.parse_args()
     return args
 
@@ -29,4 +33,7 @@ if __name__ == "__main__":
 
     config = yaml.safe_load(Path(args.config).read_text())
 
-    matching.match(config, use_cache=not args.no_cache)
+    if args.convert_validated_mapping:
+        convert_validated_mapping_to_json(args.convert_validated_mapping, args.output_dir)
+    else:
+        matching.match(config, use_cache=not args.no_cache)

@@ -71,3 +71,13 @@ def _generate_mapping_id_df(mapping: Mapping, name: str) -> pd.DataFrame:
             logger.warning("could not find group '%s' for id '%s'", name, id)
             continue
     return pd.DataFrame(id_mappings)
+
+
+def convert_validated_mapping_to_json(validated_mapping: str | Path, output_dir: str | Path):
+    """
+    Convert a validated mapping from a XLSX file and produce the JSON version. The validated
+    mapping has columns for each potential mapping that states if this is a valid mapping (=1)
+    or not (=0). The JSON output consits of a `whitelist` and a `blacklist` that contains valid
+    mappings resp. invalid mappings.
+    """
+    pass
