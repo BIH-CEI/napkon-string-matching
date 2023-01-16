@@ -90,7 +90,7 @@ def convert_validated_mapping_to_json(
         output_dir.mkdir(parents=True)
 
     # Read validated mapping from file
-    blacklist = MatchedMapping.read_excel(validated_mapping, match_value=0)
+    blacklist = MatchedMapping.read_excel(validated_mapping, match_value=0, combine_entries=False)
     whitelist = MatchedMapping.read_excel(validated_mapping)
 
     outputdir_black = output_dir / "blacklist"
