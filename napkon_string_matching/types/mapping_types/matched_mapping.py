@@ -3,12 +3,13 @@ import warnings
 from typing import Dict, List
 
 import pandas as pd
+
 from napkon_string_matching.types.mapping import Mapping
 
 
 class MatchedMapping(Mapping):
     @classmethod
-    def read_excel(cls, file_path: str):
+    def read_excel(cls, file_path: str, match_value: int = 1):
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("always")
             excel_file = pd.ExcelFile(file_path, engine="openpyxl")
@@ -34,7 +35,9 @@ class MatchedMapping(Mapping):
                     sheet[identifier_colum_left],
                     sheet[identifier_colum_right],
                 )
-                if dl == 1 and dr == 1
+                if not (dl is None or dr is None)
+                and (dl == match_value or pd.isna(dl))
+                and (dr == match_value or pd.isna(dr))
             ]
 
             if name_left not in result:
