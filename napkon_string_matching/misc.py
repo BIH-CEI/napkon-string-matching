@@ -107,7 +107,7 @@ def convert_validated_mapping_to_json(
     # Update the existing mapping if exists
     if outputfile_black.exists():
         mapping = Mapping.read_json(outputfile_black)
-        mapping.update_values(blacklist)
+        mapping.add_values(blacklist)
         blacklist = mapping
     if outputfile_white.exists():
         mapping = Mapping.read_json(outputfile_white)
