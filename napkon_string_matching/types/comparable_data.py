@@ -2,7 +2,7 @@ import logging
 from abc import abstractmethod
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import nltk
 import pandas as pd
@@ -62,7 +62,8 @@ class ComparableData(Data):
     def compare(
         self,
         other,
-        existing_mappings: Mapping,
+        existing_mappings_whitelist: Mapping,
+        existing_mappings_blacklist: Mapping,
         compare_column: str,
         score_threshold: float = 0.1,
         cached: bool = True,
@@ -76,7 +77,8 @@ class ComparableData(Data):
         # the left with each from right dataset
         df_hash = self._hash_compare_args(
             other=other,
-            existing_mappings=existing_mappings,
+            existing_mappings_whitelist=existing_mappings_whitelist,
+            existing_mappings_blacklist=existing_mappings_blacklist,
             compare_column=compare_column,
             cache_threshold=cache_threshold,
         )
@@ -92,7 +94,8 @@ class ComparableData(Data):
                 cache_threshold = score_threshold
             result = self.gen_comparable(
                 other,
-                existing_mappings=existing_mappings,
+                existing_mappings_whitelist=existing_mappings_whitelist,
+                existing_mappings_blacklist=existing_mappings_blacklist,
                 score_threshold=cache_threshold,
                 compare_column=compare_column,
                 *args,
@@ -119,7 +122,8 @@ class ComparableData(Data):
     def gen_comparable(
         self,
         right,
-        existing_mappings: Mapping,
+        existing_mappings_whitelist: Mapping,
+        existing_mappings_blacklist: Mapping,
         score_func: str,
         compare_column: str,
         category_column: str = "Category",
@@ -134,9 +138,24 @@ class ComparableData(Data):
 
         left = self.dropna(subset=[compare_column])
         right = right.dropna(subset=[compare_column])
+        logger.info(
+            "comparing number of items %i left, %i right, potential %s comparisons",
+            len(left),
+            len(right),
+            "{:,}".format(len(left) * len(right)),
+        )
 
-        # Remove existing mappings
-        remove_existing_mappings(left, right, left_name, right_name, existing_mappings)
+        # Remove existing whitelisted mappings
+        remove_existing_mappings(
+            left,
+            right,
+            left_name,
+            right_name,
+            existing_mappings_whitelist,
+        )
+        logger.info(
+            "after removing existing whitelisted mappings: %i left, %i right", len(left), len(right)
+        )
 
         left.map_for_comparable()
         right.map_for_comparable()
@@ -147,6 +166,20 @@ class ComparableData(Data):
         left = left.add_prefix(left_prefix)
         right = right.add_prefix(right_prefix)
         compare_df = left.merge(right, how="cross")
+        logger.info("generated %s combination for comparision", "{:,}".format(len(compare_df)))
+
+        # Remove blacklisted comparisions
+        compare_df = remove_existing_mapping_from_df(
+            compare_df,
+            left_name,
+            right_name,
+            left_prefix,
+            right_prefix,
+            existing_mappings_blacklist,
+        )
+        logger.info(
+            "remaining %s entries after removing blacklisted ones", "{:,}".format(len(compare_df))
+        )
 
         if filter_categories:
             previous_length = len(compare_df)
@@ -154,7 +187,9 @@ class ComparableData(Data):
                 compare_df, left_prefix + category_column, right_prefix + category_column
             )
             logger.info(
-                "filtered %i entries not matching categories", previous_length - len(compare_df)
+                "filtered %i entries not matching categories, now %s",
+                previous_length - len(compare_df),
+                "{:,}".format(len(compare_df)),
             )
 
         logger.info("calculate score")
@@ -431,3 +466,40 @@ def get_identifiers_from_mapping(mappings: Mapping, group: str) -> List[str]:
     for groups in mappings.values():
         result += groups[group]
     return result
+
+
+def remove_existing_mapping_from_df(
+    df: pd.DataFrame,
+    left_name: str,
+    right_name: str,
+    left_prefix: str,
+    right_prefix: str,
+    existing_mappings: Mapping,
+):
+    logger.info("remove black-listed entries...")
+    group_mappings_flat = flatten_mapping(left_name, right_name, existing_mappings)
+
+    # Calculate entries to return
+    maintain_rows = [
+        (left, right) not in group_mappings_flat
+        for left, right in tqdm(
+            zip(
+                df[left_prefix + Columns.IDENTIFIER.value],
+                df[right_prefix + Columns.IDENTIFIER.value],
+            ),
+            total=len(df),
+        )
+    ]
+    return df[maintain_rows]
+
+
+def flatten_mapping(left_group: str, right_group: str, mapping: Mapping) -> List[Tuple[str, str]]:
+    group_mappings = mapping.get_all_mapping_for_groups(left_group, right_group)
+
+    group_mappings_flat = []
+    for left_list, right_list in group_mappings:
+        for left_entry in left_list:
+            for right_entry in right_list:
+                group_mappings_flat.append((left_entry, right_entry))
+
+    return group_mappings_flat

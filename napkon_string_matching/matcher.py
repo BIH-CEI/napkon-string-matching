@@ -57,7 +57,8 @@ class Matcher:
         self.kds: KdsDefinition | None = None
         self.questionnaires: Dict[str, Questionnaire] = None
         self.results: ComparisonResults = None
-        self.mappings: Mapping = None
+        self.mappings_whitelist: Mapping = None
+        self.mappings_blacklist: Mapping = None
         self.table_definitions: DatasetTablesDefinitions = None
         self.table_categories: TableCategories | None = None
         self.use_cache = use_cache
@@ -205,12 +206,20 @@ class Matcher:
                     )
 
     def _init_mappings(self) -> None:
-        self.mappings = Mapping()
+        self.mappings_whitelist = Mapping()
+        self.mappings_blacklist = Mapping()
         dir = self.__expand_path(self._input_config(CONFIG_FIELD_MAPPINGS))
         mapping_folder = Path(dir)
-        for file in mapping_folder.glob("*.json"):
+
+        logger.info("read whitelists...")
+        for file in mapping_folder.glob("whitelist/*.json"):
             mapping = Mapping.read_json(file)
-            self.mappings.update(mapping)
+            self.mappings_whitelist.update(mapping)
+
+        logger.info("read blacklists...")
+        for file in mapping_folder.glob("blacklist/*.json"):
+            mapping = Mapping.read_json(file)
+            self.mappings_blacklist.update(mapping)
 
     def clear_results(self) -> None:
         self.results = ComparisonResults()
@@ -221,7 +230,8 @@ class Matcher:
 
             matches = self.gecco.compare(
                 questionnaire,
-                existing_mappings=self.mappings,
+                existing_mappings_whitelist=self.mappings_whitelist,
+                existing_mappings_blacklist=self.mappings_blacklist,
                 left_name="gecco",
                 right_name=name,
                 cache_dir=self.cache_dir,
@@ -256,7 +266,8 @@ class Matcher:
 
                 matches = dataset_first.compare(
                     dataset_second,
-                    existing_mappings=self.mappings,
+                    existing_mappings_whitelist=self.mappings_whitelist,
+                    existing_mappings_blacklist=self.mappings_blacklist,
                     left_name=name_first,
                     right_name=name_second,
                     cache_dir=self.cache_dir,
