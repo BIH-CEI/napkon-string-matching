@@ -38,32 +38,29 @@ def generate_mapping_result_table(
     """
     Generate a XLSX file containing a tabular version of the mapping of `mappings_file`.
     """
-    left_name = "pop"
-    right_name = "suep"
     matcher = create_matcher(config, use_cache=True)
     output_file = Path(output_dir) / (output_name + ".xlsx")
     with pd.ExcelWriter(output_file) as writer:
         result = get_match_result_table(
             matcher,
             mappings_file,
-            left_name,
-            right_name,
         )
         result.to_excel(writer, sheet_name=output_name, index=False)
 
 
-def get_match_result_table(
-    matcher: Matcher, mappings_file: str | Path, left_name: str, right_name: str
-):
+def get_match_result_table(matcher: Matcher, mappings_file: str | Path):
     mapping = Mapping.read_json(mappings_file)
-    return _expand_matches(mapping, matcher, left_name, right_name)
+    return _expand_matches(mapping, matcher)
 
 
-def _expand_matches(mapping: Mapping, matcher: Matcher, left_name: str, right_name: str):
-    rows_left = _fill_from_questionnaire(left_name, mapping, matcher)
-    rows_right = _fill_from_questionnaire(right_name, mapping, matcher)
+def _expand_matches(mapping: Mapping, matcher: Matcher):
+    group_names = ["pop", "suep"]
 
-    result = pd.concat([rows_left, rows_right], ignore_index=True)
+    rows = []
+    for group_name in group_names:
+        rows.append(_fill_from_questionnaire(group_name, mapping, matcher))
+
+    result = pd.concat(rows, ignore_index=True)
     result = result.sort_values(by=[LABEL_ID, LABEL_COHORT])
 
     return result
