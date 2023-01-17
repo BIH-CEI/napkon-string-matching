@@ -45,6 +45,7 @@ def generate_mapping_result_table(
             matcher,
             mappings_file,
         )
+        logger.info("write mappings to file %s", str(output_file))
         result.to_excel(writer, sheet_name=output_name, index=False)
 
 
