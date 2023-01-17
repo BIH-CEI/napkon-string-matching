@@ -54,7 +54,7 @@ def get_match_result_table(matcher: Matcher, mappings_file: str | Path):
 
 
 def _expand_matches(mapping: Mapping, matcher: Matcher):
-    group_names = ["pop", "suep"]
+    group_names = mapping.get_group_names()
 
     rows = []
     for group_name in group_names:
