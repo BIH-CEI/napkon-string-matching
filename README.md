@@ -79,22 +79,33 @@ steps:
   - gecco
   - questionnaires
 
-gecco_definition:
-  gecco83: gecco83_definition.xlsx
-  geccoplus: geccoplus_definition.xlsx
-  json: gecco_definition.json
+input:
+  base_dir: /base/dir
 
-dataset_definition: dataset_definition.json
+  gecco_definition:
+    gecco83: $input_base_dir/gecco83_definition.xlsx
+    geccoplus: $input_base_dir/geccoplus_definition.xlsx
+    json: $input_base_dir/gecco_definition.json
 
-categories_file: input/categories.json
-categories_excel_file: input/categories.xlsx
+  kds_definition:
+    json: $input_base_dir/kds_definition.json
+    simplifier:
+      modules:
+        - canonical_URL_moduleA
+        - canonical_URL_moduleB
 
-files:
-  hap: file1.xlsx
-  pop: file2.xlsx
-  suep: file3.xlsx
+  dataset_definition: $input_base_dir/dataset_definition.json
+  categories_file: $input_base_dir/categories.json
+  categories_excel_file: $input_base_dir/categories.xlsx
 
-table_definitions: input/table_definitions.json
+  files:
+    hap: $input_base_dir/file1.xlsx
+    pop: $input_base_dir/file2.xlsx
+    suep: $input_base_dir/file3.xlsx
 
-mappings: <folder to existing mappings>
+  table_definitions: $input_base_dir/table_definitions.json
+  mappings: <folder to existing mappings>
+
+output_dir: output
+cache_dir: cache
 ```
