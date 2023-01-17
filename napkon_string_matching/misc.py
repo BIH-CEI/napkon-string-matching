@@ -5,6 +5,7 @@ from typing import Dict
 import pandas as pd
 
 from napkon_string_matching.matcher import Matcher
+from napkon_string_matching.matching import create_matcher
 from napkon_string_matching.types.comparable_data import Columns
 from napkon_string_matching.types.dataset_table.dataset_table import DatasetTable
 from napkon_string_matching.types.mapping import Mapping
@@ -32,12 +33,23 @@ def get_all_table_subgroup_name_combinations(dataset_tables: Dict[str, DatasetTa
 
 
 def generate_mapping_result_table(
-    mappings_file: str, output_dir: str, output_name: str = "mapping"
+    mappings_file: str, config: Dict, output_dir: str, output_name: str = "mapping"
 ):
     """
     Generate a XLSX file containing a tabular version of the mapping of `mappings_file`.
     """
-    pass
+    left_name = "pop"
+    right_name = "suep"
+    matcher = create_matcher(config, use_cache=True)
+    output_file = Path(output_dir) / (output_name + ".xlsx")
+    with pd.ExcelWriter(output_file) as writer:
+        result = get_match_result_table(
+            matcher,
+            mappings_file,
+            left_name,
+            right_name,
+        )
+        result.to_excel(writer, sheet_name=output_name, index=False)
 
 
 def get_match_result_table(

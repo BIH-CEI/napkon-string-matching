@@ -46,7 +46,7 @@ if __name__ == "__main__":
     elif args.generate_mapping_result_table:
         logger.info("generate mapping result table")
         generate_mapping_result_table(
-            args.generate_mapping_result_table, args.output_dir, args.output_name
+            args.generate_mapping_result_table, config, args.output_dir, args.output_name
         )
     else:
         logger.info("generate matching")
