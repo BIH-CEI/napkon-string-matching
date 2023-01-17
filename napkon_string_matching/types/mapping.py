@@ -53,6 +53,9 @@ class MappingEntry:
     def num_entries_groups(self) -> Dict[str, int]:
         return {group: len(mappings) for group, mappings in self._mappings.items()}
 
+    def get_group_names(self) -> List[str]:
+        return list(self._mappings.keys())
+
     def get_group_combination(
         self, group_left: str, group_right: str
     ) -> Tuple[List[str], List[str]] | None:
@@ -69,6 +72,13 @@ class Mapping(ReadableJson, WritableJson):
             if data is not None
             else {}
         )
+
+    def get_group_names(self) -> List[str]:
+        result = set()
+        for id_group in self._mappings.values():
+            group_names = id_group.get_group_names()
+            result.update(group_names)
+        return list(result)
 
     def get_group(self, id: str) -> MappingEntry | None:
         return self._mappings.get(id)

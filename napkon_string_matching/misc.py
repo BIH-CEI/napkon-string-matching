@@ -5,6 +5,7 @@ from typing import Dict
 import pandas as pd
 
 from napkon_string_matching.matcher import Matcher
+from napkon_string_matching.matching import create_matcher
 from napkon_string_matching.types.comparable_data import Columns
 from napkon_string_matching.types.dataset_table.dataset_table import DatasetTable
 from napkon_string_matching.types.mapping import Mapping
@@ -31,18 +32,36 @@ def get_all_table_subgroup_name_combinations(dataset_tables: Dict[str, DatasetTa
     return result
 
 
-def get_match_result_table(
-    matcher: Matcher, mappings_file: str | Path, left_name: str, right_name: str
+def generate_mapping_result_table(
+    mappings_file: str, config: Dict, output_dir: str, output_name: str = "mapping"
 ):
+    """
+    Generate a XLSX file containing a tabular version of the mapping of `mappings_file`.
+    """
+    matcher = create_matcher(config, use_cache=True)
+    output_file = Path(output_dir) / (output_name + ".xlsx")
+    with pd.ExcelWriter(output_file) as writer:
+        result = get_match_result_table(
+            matcher,
+            mappings_file,
+        )
+        logger.info("write mappings to file %s", str(output_file))
+        result.to_excel(writer, sheet_name=output_name, index=False)
+
+
+def get_match_result_table(matcher: Matcher, mappings_file: str | Path):
     mapping = Mapping.read_json(mappings_file)
-    return _expand_matches(mapping, matcher, left_name, right_name)
+    return _expand_matches(mapping, matcher)
 
 
-def _expand_matches(mapping: Mapping, matcher: Matcher, left_name: str, right_name: str):
-    rows_left = _fill_from_questionnaire(left_name, mapping, matcher)
-    rows_right = _fill_from_questionnaire(right_name, mapping, matcher)
+def _expand_matches(mapping: Mapping, matcher: Matcher):
+    group_names = mapping.get_group_names()
 
-    result = pd.concat([rows_left, rows_right], ignore_index=True)
+    rows = []
+    for group_name in group_names:
+        rows.append(_fill_from_questionnaire(group_name, mapping, matcher))
+
+    result = pd.concat(rows, ignore_index=True)
     result = result.sort_values(by=[LABEL_ID, LABEL_COHORT])
 
     return result
