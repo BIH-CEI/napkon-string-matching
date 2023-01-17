@@ -138,7 +138,12 @@ class ComparableData(Data):
 
         left = self.dropna(subset=[compare_column])
         right = right.dropna(subset=[compare_column])
-        logger.info("comparing number of items %i left, %i right", len(left), len(right))
+        logger.info(
+            "comparing number of items %i left, %i right, potential %s comparisons",
+            len(left),
+            len(right),
+            "{:,}".format(len(left) * len(right)),
+        )
 
         # Remove existing whitelisted mappings
         remove_existing_mappings(
@@ -168,7 +173,9 @@ class ComparableData(Data):
                 compare_df, left_prefix + category_column, right_prefix + category_column
             )
             logger.info(
-                "filtered %i entries not matching categories", previous_length - len(compare_df)
+                "filtered %i entries not matching categories, now %s",
+                previous_length - len(compare_df),
+                "{:,}".format(len(compare_df)),
             )
 
         logger.info("calculate score")

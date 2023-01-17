@@ -210,9 +210,13 @@ class Matcher:
         self.mappings_blacklist = Mapping()
         dir = self.__expand_path(self._input_config(CONFIG_FIELD_MAPPINGS))
         mapping_folder = Path(dir)
+
+        logger.info("read whitelists...")
         for file in mapping_folder.glob("whitelist/*.json"):
             mapping = Mapping.read_json(file)
             self.mappings_whitelist.update(mapping)
+
+        logger.info("read blacklists...")
         for file in mapping_folder.glob("blacklist/*.json"):
             mapping = Mapping.read_json(file)
             self.mappings_blacklist.update(mapping)
