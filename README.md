@@ -3,6 +3,48 @@
 [![Python application](https://github.com/BIH-CEI/napkon-string-matching/actions/workflows/python-app.yml/badge.svg)](https://github.com/BIH-CEI/napkon-string-matching/actions/workflows/python-app.yml)
 [![Docker](https://github.com/BIH-CEI/napkon-string-matching/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/BIH-CEI/napkon-string-matching/actions/workflows/docker-publish.yml)
 
+## Usage
+
+The script can be started from the command line like
+
+```bash
+python main.py [MODE] [OPTS..]
+```
+
+### Mode
+
+The `MODE` argument allows to run the script in different modes. The default mode (if left out) is to generate matches between the cohorts specified in the configuration file (see below).
+
+`--convert-validated-mapping XLSX_FILE` generates a mapping file from a validated mapping in `XLSX_FILE`. This generates a whitelist and blacklist file. The whitelist file contains all mappings marked valid with `1`. The blacklist respective contains all invalid mappings marked with `0`.
+
+`--generate-mapping-result-table JSON_FILE` generates a tabular version of a mapping. The mapping is read from `JSON_FILE` and written as an XLSX file.
+
+### Options
+
+Options (`OPTS`) can change the default behavoir.
+
+`--config CONFIG_FILE` sets the file to be used as configuration file (see below). If not specified `config.yml` is used.
+
+`--output-dir OUTPUT_DIR` sets the output directory to `OUTPUT_DIR`. This defaults to the current directory. Depending on the mode this can generate additional sub-direcories.
+
+`--output-name OUTPUT_NAME` configures the name of the output. Modes may use this to determine the file name of the output file.
+
+## Docker
+
+The script may be executed as a Docker container like:
+
+```bash
+docker run --rm \
+  -v $(pwd):/configs \
+  -v $(pwd)/input:/app/input \
+  -v $(pwd)/output:/app/output \
+  -v $(pwd)/cache:/app/cache \
+  ghcr.io/bih-cei/napkon-string-matching:main \
+  [MODE] \
+  --config /configs/config.yml \
+  [OPTS..]
+```
+
 ## Configuration
 
 File format:
@@ -56,27 +98,3 @@ table_definitions: input/table_definitions.json
 
 mappings: <folder to existing mappings>
 ```
-
-## Docker
-
-Run with
-
-```bash
-docker run --rm \
-  -v $(pwd):/configs \
-  -v $(pwd)/input:/app/input \
-  -v $(pwd)/output:/app/output \
-  -v $(pwd)/cache:/app/cache \
-  ghcr.io/bih-cei/napkon-string-matching:main \
-  --config /configs/config.yml
-```
-
-Generate the mapping by adding these arguments
-
-```bash
---convert-validated-mapping XLSX_FILE
-[--output-dir OUTPUT_DIR]
-[--output-name OUTPUT_NAME]
-```
-
-`XLSX_FILE` defines the file to be read. If set `OUTPUT_DIR` determines where the output files will be placed, otherwise it will default to the current directory. `OUTPUT_NAME` allows to set a name for the files.
