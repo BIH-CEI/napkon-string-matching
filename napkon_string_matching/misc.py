@@ -31,6 +31,15 @@ def get_all_table_subgroup_name_combinations(dataset_tables: Dict[str, DatasetTa
     return result
 
 
+def generate_mapping_result_table(
+    mappings_file: str, output_dir: str, output_name: str = "mapping"
+):
+    """
+    Generate a XLSX file containing a tabular version of the mapping of `mappings_file`.
+    """
+    pass
+
+
 def get_match_result_table(
     matcher: Matcher, mappings_file: str | Path, left_name: str, right_name: str
 ):
