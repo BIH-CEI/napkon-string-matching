@@ -53,6 +53,14 @@ class MappingEntry:
     def num_entries_groups(self) -> Dict[str, int]:
         return {group: len(mappings) for group, mappings in self._mappings.items()}
 
+    def get_group_combination(
+        self, group_left: str, group_right: str
+    ) -> Tuple[List[str], List[str]] | None:
+        try:
+            return self[group_left], self[group_right]
+        except KeyError:
+            return None
+
 
 class Mapping(ReadableJson, WritableJson):
     def __init__(self, data: Dict[str, Dict[str, List[str]]] | None = None) -> None:
@@ -217,6 +225,16 @@ class Mapping(ReadableJson, WritableJson):
     def num_entries_groups_str(self) -> str:
         result = [f"{group.upper()}: {count}" for group, count in self.num_entries_groups().items()]
         return ", ".join(result)
+
+    def get_all_mapping_for_groups(
+        self, group_left: str, group_right: str
+    ) -> List[Tuple[List[str], List[str]]]:
+        result = []
+        for entry in self.values():
+            combinations = entry.get_group_combination(group_left, group_right)
+            if combinations is not None:
+                result.append(combinations)
+        return result
 
     @classmethod
     def read_json(cls, *args, **kwargs):

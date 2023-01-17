@@ -2,7 +2,7 @@ import logging
 from abc import abstractmethod
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import nltk
 import pandas as pd
@@ -166,6 +166,20 @@ class ComparableData(Data):
         left = left.add_prefix(left_prefix)
         right = right.add_prefix(right_prefix)
         compare_df = left.merge(right, how="cross")
+        logger.info("generated %s combination for comparision", "{:,}".format(len(compare_df)))
+
+        # Remove blacklisted comparisions
+        compare_df = remove_existing_mapping_from_df(
+            compare_df,
+            left_name,
+            right_name,
+            left_prefix,
+            right_prefix,
+            existing_mappings_blacklist,
+        )
+        logger.info(
+            "remaining %s entries after removing blacklisted ones", "{:,}".format(len(compare_df))
+        )
 
         if filter_categories:
             previous_length = len(compare_df)
@@ -452,3 +466,40 @@ def get_identifiers_from_mapping(mappings: Mapping, group: str) -> List[str]:
     for groups in mappings.values():
         result += groups[group]
     return result
+
+
+def remove_existing_mapping_from_df(
+    df: pd.DataFrame,
+    left_name: str,
+    right_name: str,
+    left_prefix: str,
+    right_prefix: str,
+    existing_mappings: Mapping,
+):
+    logger.info("remove black-listed entries...")
+    group_mappings_flat = flatten_mapping(left_name, right_name, existing_mappings)
+
+    # Calculate entries to return
+    maintain_rows = [
+        (left, right) not in group_mappings_flat
+        for left, right in tqdm(
+            zip(
+                df[left_prefix + Columns.IDENTIFIER.value],
+                df[right_prefix + Columns.IDENTIFIER.value],
+            ),
+            total=len(df),
+        )
+    ]
+    return df[maintain_rows]
+
+
+def flatten_mapping(left_group: str, right_group: str, mapping: Mapping) -> List[Tuple[str, str]]:
+    group_mappings = mapping.get_all_mapping_for_groups(left_group, right_group)
+
+    group_mappings_flat = []
+    for left_list, right_list in group_mappings:
+        for left_entry in left_list:
+            for right_entry in right_list:
+                group_mappings_flat.append((left_entry, right_entry))
+
+    return group_mappings_flat
