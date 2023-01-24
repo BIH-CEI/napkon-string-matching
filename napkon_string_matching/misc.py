@@ -106,7 +106,10 @@ def _generate_mapping_id_df(mapping: Mapping, name: str) -> pd.DataFrame:
 
 
 def convert_validated_mapping_to_json(
-    validated_mapping: str, output_dir: str | Path | None, name: str = "mapping"
+    validated_mapping: str,
+    id_reference_file: str | Path | None,
+    output_dir: str | Path | None,
+    name: str = "mapping",
 ):
     """
     Convert a validated mapping from a XLSX file and produce the JSON version. The validated
@@ -115,6 +118,10 @@ def convert_validated_mapping_to_json(
     mappings resp. invalid mappings.
     """
 
+    id_reference = Mapping()
+    if id_reference_file:
+        id_reference = Mapping.read_json(id_reference_file)
+
     output_dir = Path(output_dir) if output_dir else Path()
 
     if not output_dir.exists():
@@ -122,7 +129,7 @@ def convert_validated_mapping_to_json(
 
     # Read validated mapping from file
     blacklist = MatchedMapping.read_excel(validated_mapping, match_value=0, combine_entries=False)
-    whitelist = MatchedMapping.read_excel(validated_mapping)
+    whitelist = MatchedMapping.read_excel(validated_mapping, id_reference=id_reference)
 
     outputdir_black = output_dir / "blacklist"
     outputdir_white = output_dir / "whitelist"
