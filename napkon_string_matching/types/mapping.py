@@ -265,6 +265,9 @@ class Mapping(ReadableJson, WritableJson):
         result = [f"{group.upper()}: {count}" for group, count in self.num_entries_groups().items()]
         return ", ".join(result)
 
+    def num_entries_repr(self) -> str:
+        return f"{len(self)} mappings ({self.num_entries_groups_str()})"
+
     def get_all_mapping_for_groups(
         self, group_left: str, group_right: str
     ) -> List[Tuple[List[str], List[str]]]:
@@ -278,9 +281,9 @@ class Mapping(ReadableJson, WritableJson):
     @classmethod
     def read_json(cls, *args, **kwargs):
         result = super().read_json(*args, **kwargs)
-        logger.info("read %i mappings (%s)", len(result), result.num_entries_groups_str())
+        logger.info("read %s", result.num_entries_repr())
         return result
 
     def write_json(self, *args, **kwargs) -> None:
-        logger.info("write %i mappings (%s)", len(self), self.num_entries_groups_str())
+        logger.info("write %s", self.num_entries_repr())
         super().write_json(*args, **kwargs)
