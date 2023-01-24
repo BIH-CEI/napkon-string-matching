@@ -154,3 +154,57 @@ def convert_validated_mapping_to_json(
 
     blacklist.write_json(outputfile_black)
     whitelist.write_json(outputfile_white)
+
+
+def print_statistics(config: Dict):
+    matcher = create_matcher(config)
+
+    cohorts = {name: len(questionnaire) for name, questionnaire in matcher.questionnaires.items()}
+    num_per_cohort_str = ", ".join(
+        [f"{name.upper()}: {length}" for name, length in cohorts.items()]
+    )
+
+    # Calcualte the total by getting all combinations excluding combinations
+    # with it own and duplicates related to order, e.g. (A,B) and (B,A).
+    total_number_cohorts = []
+    list_ = cohorts.copy()
+    while len(list_) > 1:
+        # Avoid comparison against the same item multiple times by popping
+        # it from the list
+        cur_name, cur_length = list_.popitem()
+        total_number_cohorts += [cur_length * length for length in list_.values()]
+    total_number_cohorts = sum(total_number_cohorts)
+
+    verified_mappings = matcher.mappings_whitelist.num_entries_repr()
+    excluded_mappings = matcher.mappings_blacklist.num_entries_repr()
+    num_verified_mappings = matcher.mappings_whitelist.num_entries_groups()
+
+    # Calcualte the number of comparisons after mappings have been excluded
+    comps_reduced = []
+    while len(cohorts) > 1:
+        cur_name, cur_length = cohorts.popitem()
+        for name, length in cohorts.items():
+            # The number of reduced entries is calculated by multiplying the
+            # number of reduced entries for one questionnaire with the total
+            # number of entries in the other questionnaire. This is done in
+            # both directions
+            reduced = (
+                cur_length * num_verified_mappings.get(name, 0)
+                + num_verified_mappings.get(cur_name, 0) * length
+            )
+            comps_reduced.append(reduced)
+    comps_reduced = sum(comps_reduced)
+
+    longest_entry = f"entries in Datensatztabelle: {num_per_cohort_str}"
+    devider = len(longest_entry) * "-"
+
+    print(devider)
+    print(longest_entry)
+    print(f"potential number of comparisons: {total_number_cohorts:,}")
+    print(devider)
+    print(f"verified {verified_mappings}")
+    print(f"excluded {excluded_mappings}")
+    print(devider)
+    print(f"reduced no. of comparisons about {comps_reduced:,}")
+    print(f"no. of potential comparisons: {total_number_cohorts-comps_reduced:,}")
+    print(devider)

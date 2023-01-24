@@ -13,6 +13,7 @@ from napkon_string_matching.misc import (
     convert_validated_mapping_to_json,
     generate_combined_mapping,
     generate_mapping_result_table,
+    print_statistics,
 )
 
 logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
@@ -33,6 +34,8 @@ def get_args():
     parser.add_argument("--generate-mapping-result-table", help="mapping file used to generation")
     parser.add_argument("--output-dir", default=".")
     parser.add_argument("--output-name")
+
+    parser.add_argument("--print-statistics", action="store_true")
 
     args = parser.parse_args()
     return args
@@ -56,6 +59,8 @@ if __name__ == "__main__":
         generate_mapping_result_table(
             args.generate_mapping_result_table, config, args.output_dir, args.output_name
         )
+    elif args.print_statistics:
+        print_statistics(config)
     else:
         logger.info("generate matching")
         matching.match(config, use_cache=not args.no_cache)
