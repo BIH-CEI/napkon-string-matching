@@ -11,6 +11,7 @@ from napkon_string_matching import matching
 from napkon_string_matching.constants import LOG_FORMAT
 from napkon_string_matching.misc import (
     convert_validated_mapping_to_json,
+    generate_combined_mapping,
     generate_mapping_result_table,
 )
 
@@ -25,6 +26,10 @@ def get_args():
     parser.add_argument("--no-cache", action="store_true", default=False)
 
     parser.add_argument("--convert-validated-mapping", help="XLSX file to be converted")
+    parser.add_argument("--id-reference", help="file to look up ids for mappings")
+    parser.add_argument(
+        "--generate-combined-mapping", help="generate a combination of all mappings"
+    )
     parser.add_argument("--generate-mapping-result-table", help="mapping file used to generation")
     parser.add_argument("--output-dir", default=".")
     parser.add_argument("--output-name")
@@ -41,8 +46,11 @@ if __name__ == "__main__":
     if args.convert_validated_mapping:
         logger.info("convert validated matching to JSON")
         convert_validated_mapping_to_json(
-            args.convert_validated_mapping, args.output_dir, args.output_name
+            args.convert_validated_mapping, args.id_reference, args.output_dir, args.output_name
         )
+    elif args.generate_combined_mapping:
+        logger.info("generate combined mapping")
+        generate_combined_mapping(args.generate_combined_mapping, args.output_dir)
     elif args.generate_mapping_result_table:
         logger.info("generate mapping result table")
         generate_mapping_result_table(

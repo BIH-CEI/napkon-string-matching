@@ -32,6 +32,18 @@ def get_all_table_subgroup_name_combinations(dataset_tables: Dict[str, DatasetTa
     return result
 
 
+def generate_combined_mapping(mapping_dir: str | Path, output_dir: str | Path):
+    mapping_dir = Path(mapping_dir)
+    output_file = Path(output_dir) / "mapping_combined.json"
+
+    mappings = Mapping()
+    for file in mapping_dir.glob("*.json"):
+        mapping = Mapping.read_json(file)
+        mappings.update(mapping)
+
+    mappings.write_json(output_file)
+
+
 def generate_mapping_result_table(
     mappings_file: str, config: Dict, output_dir: str, output_name: str = "mapping"
 ):
@@ -94,7 +106,10 @@ def _generate_mapping_id_df(mapping: Mapping, name: str) -> pd.DataFrame:
 
 
 def convert_validated_mapping_to_json(
-    validated_mapping: str, output_dir: str | Path | None, name: str = "mapping"
+    validated_mapping: str,
+    id_reference_file: str | Path | None,
+    output_dir: str | Path | None,
+    name: str = "mapping",
 ):
     """
     Convert a validated mapping from a XLSX file and produce the JSON version. The validated
@@ -103,6 +118,10 @@ def convert_validated_mapping_to_json(
     mappings resp. invalid mappings.
     """
 
+    id_reference = Mapping()
+    if id_reference_file:
+        id_reference = Mapping.read_json(id_reference_file)
+
     output_dir = Path(output_dir) if output_dir else Path()
 
     if not output_dir.exists():
@@ -110,7 +129,7 @@ def convert_validated_mapping_to_json(
 
     # Read validated mapping from file
     blacklist = MatchedMapping.read_excel(validated_mapping, match_value=0, combine_entries=False)
-    whitelist = MatchedMapping.read_excel(validated_mapping)
+    whitelist = MatchedMapping.read_excel(validated_mapping, id_reference=id_reference)
 
     outputdir_black = output_dir / "blacklist"
     outputdir_white = output_dir / "whitelist"

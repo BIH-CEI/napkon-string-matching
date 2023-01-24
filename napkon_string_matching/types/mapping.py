@@ -93,7 +93,12 @@ class Mapping(ReadableJson, WritableJson):
         return None
 
     def add_mapping(
-        self, first_group: str, first_identifier: str, second_group: str, second_identifier: str
+        self,
+        first_group: str,
+        first_identifier: str,
+        second_group: str,
+        second_identifier: str,
+        id_reference=None,
     ) -> MappingEntry:
         if (
             mapping := self.get_mapping(
@@ -101,6 +106,13 @@ class Mapping(ReadableJson, WritableJson):
             )
         ) is None:
             id = uuid4().hex
+
+            if id_reference:
+                if id_tmp := id_reference.get_first_id(first_group, first_identifier):
+                    id = id_tmp
+                elif id_tmp := id_reference.get_first_id(second_group, second_identifier):
+                    id = id_tmp
+
             self.set_group(
                 id,
                 MappingEntry(
@@ -112,7 +124,12 @@ class Mapping(ReadableJson, WritableJson):
             return mapping
 
     def update_mapping(
-        self, first_group: str, first_identifier: str, second_group: str, second_identifier: str
+        self,
+        first_group: str,
+        first_identifier: str,
+        second_group: str,
+        second_identifier: str,
+        id_reference=None,
     ) -> MappingEntry:
         if (mapping := self.mapping_for_identifier(first_group, first_identifier)) is not None:
             mapping.add(second_group, second_identifier)
@@ -121,7 +138,13 @@ class Mapping(ReadableJson, WritableJson):
             mapping.add(first_group, first_identifier)
             return mapping
         else:
-            return self.add_mapping(first_group, first_identifier, second_group, second_identifier)
+            return self.add_mapping(
+                first_group,
+                first_identifier,
+                second_group,
+                second_identifier,
+                id_reference=id_reference,
+            )
 
     def get_mapping(
         self,
@@ -148,6 +171,12 @@ class Mapping(ReadableJson, WritableJson):
             for id, mappings in self._mappings.items()
             if (mapping := mappings[group]) and identifier in mapping
         ]
+
+    def get_first_id(self, group: str, identifier: str) -> str | None:
+        for id, mappings in self._mappings.items():
+            if (mapping := mappings[group]) and identifier in mapping:
+                return id
+        return None
 
     def __iter__(self):
         return iter(self.items())
