@@ -1,3 +1,4 @@
+import logging
 import re
 import warnings
 from typing import List
@@ -6,10 +7,18 @@ import pandas as pd
 
 from napkon_string_matching.types.mapping import Mapping
 
+logger = logging.getLogger(__name__)
+
 
 class MatchedMapping(Mapping):
     @classmethod
-    def read_excel(cls, file_path: str, match_value: int = 1, combine_entries: bool = True):
+    def read_excel(
+        cls,
+        file_path: str,
+        match_value: int = 1,
+        combine_entries: bool = True,
+        id_reference: Mapping | None = None,
+    ):
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("always")
             excel_file = pd.ExcelFile(file_path, engine="openpyxl")
@@ -42,9 +51,13 @@ class MatchedMapping(Mapping):
 
             if combine_entries:
                 for left, right in matches:
-                    result.update_mapping(name_left, left, name_right, right)
+                    result.update_mapping(
+                        name_left, left, name_right, right, id_reference=id_reference
+                    )
             else:
                 for left, right in matches:
                     result.add_mapping(name_left, left, name_right, right)
+
+        logger.info("read %i mappings (%s)", len(result), result.num_entries_groups_str())
 
         return result
