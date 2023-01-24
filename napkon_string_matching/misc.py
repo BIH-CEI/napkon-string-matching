@@ -32,6 +32,18 @@ def get_all_table_subgroup_name_combinations(dataset_tables: Dict[str, DatasetTa
     return result
 
 
+def generate_combined_mapping(mapping_dir: str | Path, output_dir: str | Path):
+    mapping_dir = Path(mapping_dir)
+    output_file = Path(output_dir) / "mapping_combined.json"
+
+    mappings = Mapping()
+    for file in mapping_dir.glob("*.json"):
+        mapping = Mapping.read_json(file)
+        mappings.update(mapping)
+
+    mappings.write_json(output_file)
+
+
 def generate_mapping_result_table(
     mappings_file: str, config: Dict, output_dir: str, output_name: str = "mapping"
 ):
