@@ -7,6 +7,7 @@ from typing import Any, Dict
 from napkon_string_matching.constants import COHORTS
 from napkon_string_matching.prepare.match_preparator import MatchPreparator
 from napkon_string_matching.types.comparable import ComparisonResults
+from napkon_string_matching.types.comparable_data import Columns
 from napkon_string_matching.types.dataset_definition import DatasetDefinitions
 from napkon_string_matching.types.dataset_table.dataset_table import DatasetTable
 from napkon_string_matching.types.dataset_table.definitions import DatasetTablesDefinitions
@@ -235,6 +236,7 @@ class Matcher:
                 left_name="gecco",
                 right_name=name,
                 cache_dir=self.cache_dir,
+                identifier_column_left=Columns.VARIABLE.value,
                 **self.config[CONFIG_FIELD_MATCHING],
             )
             self.results[f"gecco vs {name}"] = matches

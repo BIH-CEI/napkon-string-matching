@@ -69,6 +69,8 @@ class ComparableData(Data):
         cached: bool = True,
         cache_threshold: float = None,
         cache_dir: str | Path | None = None,
+        identifier_column_left: str | None = None,
+        identifier_column_right: str | None = None,
         *args,
         **kwargs,
     ) -> Comparable:
@@ -98,6 +100,8 @@ class ComparableData(Data):
                 existing_mappings_blacklist=existing_mappings_blacklist,
                 score_threshold=cache_threshold,
                 compare_column=compare_column,
+                identifier_column_left=identifier_column_left,
+                identifier_column_right=identifier_column_right,
                 *args,
                 **kwargs,
             )
@@ -131,6 +135,8 @@ class ComparableData(Data):
         left_name: str = None,
         right_name: str = None,
         filter_categories: bool = False,
+        identifier_column_left: str | None = None,
+        identifier_column_right: str | None = None,
         *args,
         **kwargs,
     ) -> Comparable:
@@ -176,6 +182,8 @@ class ComparableData(Data):
             left_prefix,
             right_prefix,
             existing_mappings_blacklist,
+            identifier_column_right=identifier_column_right,
+            identifier_column_left=identifier_column_left,
         )
         logger.info(
             "remaining %s entries after removing blacklisted ones", "{:,}".format(len(compare_df))
@@ -475,17 +483,24 @@ def remove_existing_mapping_from_df(
     left_prefix: str,
     right_prefix: str,
     existing_mappings: Mapping,
+    identifier_column_left: str | None = None,
+    identifier_column_right: str | None = None,
 ):
     logger.info("remove black-listed entries...")
     group_mappings_flat = flatten_mapping(left_name, right_name, existing_mappings)
+
+    if not identifier_column_left:
+        identifier_column_left = Columns.IDENTIFIER.value
+    if not identifier_column_right:
+        identifier_column_right = Columns.IDENTIFIER.value
 
     # Calculate entries to return
     maintain_rows = [
         (left, right) not in group_mappings_flat
         for left, right in tqdm(
             zip(
-                df[left_prefix + Columns.IDENTIFIER.value],
-                df[right_prefix + Columns.IDENTIFIER.value],
+                df[left_prefix + identifier_column_left],
+                df[right_prefix + identifier_column_right],
             ),
             total=len(df),
         )
