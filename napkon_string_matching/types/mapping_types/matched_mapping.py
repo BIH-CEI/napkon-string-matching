@@ -58,6 +58,6 @@ class MatchedMapping(Mapping):
                 for left, right in matches:
                     result.add_mapping(name_left, left, name_right, right)
 
-        logger.info("read %i mappings (%s)", len(result), result.num_entries_groups_str())
+        logger.info("read %s", result.num_entries_repr())
 
         return result
