@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Dict, List
 
 import pandas as pd
+
 from napkon_string_matching.types.base.readable_json import ReadableJson
 from napkon_string_matching.types.base.writable_excel import WritableExcel
 from napkon_string_matching.types.base.writable_json import WritableJson

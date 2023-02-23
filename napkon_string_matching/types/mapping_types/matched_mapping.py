@@ -36,18 +36,36 @@ class MatchedMapping(Mapping):
             identifier_colum_left = f"{name_left.title()}Identifier"
             identifier_colum_right = f"{name_right.title()}Identifier"
 
-            matches = [
-                (il, ir)
-                for dl, dr, il, ir in zip(
-                    sheet[decision_colum_left],
-                    sheet[decision_colum_right],
-                    sheet[identifier_colum_left],
-                    sheet[identifier_colum_right],
-                )
-                if not (dl is None or dr is None)
-                and (dl == match_value or pd.isna(dl))
-                and (dr == match_value or pd.isna(dr))
-            ]
+            if decision_colum_left in sheet and decision_colum_right in sheet:
+                matches = [
+                    (il, ir)
+                    for dl, dr, il, ir in zip(
+                        sheet[decision_colum_left],
+                        sheet[decision_colum_right],
+                        sheet[identifier_colum_left],
+                        sheet[identifier_colum_right],
+                    )
+                    if not (dl is None or dr is None)
+                    and (dl == match_value or pd.isna(dl))
+                    and (dr == match_value or pd.isna(dr))
+                ]
+            else:
+                if decision_colum_left in sheet:
+                    decision_column = decision_colum_left
+                elif decision_colum_right in sheet:
+                    decision_column = decision_colum_right
+                else:
+                    raise Exception("No decision column present")
+
+                matches = [
+                    (il, ir)
+                    for d, il, ir in zip(
+                        sheet[decision_column],
+                        sheet[identifier_colum_left],
+                        sheet[identifier_colum_right],
+                    )
+                    if (d == match_value or pd.isna(d))
+                ]
 
             if combine_entries:
                 for left, right in matches:

@@ -29,8 +29,13 @@ class GeccoCategory(GeccoBase, Category):
 
 
 class GeccoDefinition(GeccoBase, ComparableData, WritableExcel):
-    __column_mapping__ = {ComparableColumns.IDENTIFIER.value: comp.Columns.VARIABLE.value}
+    __column_mapping__ = {}
     __category_type__ = GeccoCategory
+
+    def map_for_comparable(self):
+        result = super().map_for_comparable()
+        result[comp.Columns.VARIABLE.value] = result[comp.Columns.IDENTIFIER.value]
+        return result
 
     def concat(self, other):
         if not isinstance(other, GeccoDefinition):
