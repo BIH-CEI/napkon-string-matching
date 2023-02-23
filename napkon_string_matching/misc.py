@@ -71,7 +71,10 @@ def _expand_matches(mapping: Mapping, matcher: Matcher):
 
     rows = []
     for group_name in group_names:
-        rows.append(_fill_from_questionnaire(group_name, mapping, matcher))
+        try:
+            rows.append(_fill_from_questionnaire(group_name, mapping, matcher))
+        except KeyError as e:
+            logger.warning("could not get entries for group '%s': %s", group_name, e)
 
     result = pd.concat(rows, ignore_index=True)
     result = result.sort_values(by=[LABEL_ID, LABEL_COHORT])
@@ -82,13 +85,15 @@ def _expand_matches(mapping: Mapping, matcher: Matcher):
 def _fill_from_questionnaire(name: str, mapping: Mapping, matcher: Matcher) -> pd.DataFrame:
     df = _generate_mapping_id_df(mapping, name)
 
-    questionnaire = matcher.questionnaires[name]
-    columns = [Columns.IDENTIFIER.value, Columns.SHEET.value, Columns.PARAMETER.value]
-    questionnaire = questionnaire[columns]
+    if name == "gecco":
+        comparable = matcher.gecco
+        columns = [Columns.IDENTIFIER.value, Columns.PARAMETER.value]
+    else:
+        comparable = matcher.questionnaires[name]
+        columns = [Columns.IDENTIFIER.value, Columns.SHEET.value, Columns.PARAMETER.value]
+    comparable = comparable[columns]
 
-    return df.merge(
-        questionnaire, left_on=Columns.IDENTIFIER.value, right_on=Columns.IDENTIFIER.value
-    )
+    return df.merge(comparable, left_on=Columns.IDENTIFIER.value, right_on=Columns.IDENTIFIER.value)
 
 
 def _generate_mapping_id_df(mapping: Mapping, name: str) -> pd.DataFrame:
@@ -100,7 +105,7 @@ def _generate_mapping_id_df(mapping: Mapping, name: str) -> pd.DataFrame:
                     {LABEL_ID: id, LABEL_COHORT: name.upper(), Columns.IDENTIFIER.value: entry}
                 )
         except KeyError:
-            logger.warning("could not find group '%s' for id '%s'", name, id)
+            logger.debug("could not find group '%s' for id '%s'", name, id)
             continue
     return pd.DataFrame(id_mappings)
 
