@@ -19,6 +19,9 @@ class MappingEntry:
     def __setitem__(self, group_name: str, value: List[str]) -> None:
         self._mappings[group_name] = value
 
+    def get(self, group_name: str, default=None):
+        return self._mappings.get(group_name, default)
+
     def has(
         self,
         group_name: str,
@@ -29,21 +32,24 @@ class MappingEntry:
         if second_group_name is not None and second_identifier is not None:
             return (
                 identifier in group and second_identifier in group2
-                if (group := self[group_name]) is not None and (group2 := self[second_group_name])
+                if (group := self.get(group_name)) is not None
+                and (group2 := self.get(second_group_name))
                 else False
             )
         else:
-            return identifier in group if (group := self[group_name]) is not None else False
+            return identifier in group if (group := self.get(group_name)) is not None else False
 
     def add(self, group_name: str, identifier: str) -> None:
-        if (group := self[group_name]) is None:
-            self[group_name] = [identifier]
+        try:
+            group = self[group_name]
+            group.append(identifier)
+        except:
+            pass
         else:
-            if identifier not in group:
-                group.append(identifier)
+            self[group_name] = [identifier]
 
     def update(self, other) -> None:
-        for group, identifiers in other.items():
+        for group, identifiers in other.dict().items():
             for identifier in identifiers:
                 self.add(group, identifier)
 
@@ -174,7 +180,7 @@ class Mapping(ReadableJson, WritableJson):
 
     def get_first_id(self, group: str, identifier: str) -> str | None:
         for id, mappings in self._mappings.items():
-            if (mapping := mappings[group]) and identifier in mapping:
+            if (mapping := mappings.get(group)) and identifier in mapping:
                 return id
         return None
 
