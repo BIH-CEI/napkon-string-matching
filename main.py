@@ -16,7 +16,7 @@ from napkon_string_matching.misc import (
     print_statistics,
 )
 
-logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
+logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
 
 

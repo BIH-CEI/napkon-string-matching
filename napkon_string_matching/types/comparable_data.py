@@ -120,8 +120,8 @@ class ComparableData(Data):
 
         return result
 
-    def map_for_comparable(self) -> None:
-        self.rename(columns=self.__column_mapping__, inplace=True)
+    def map_for_comparable(self) -> pd.DataFrame:
+        return self.rename(columns=self.__column_mapping__)
 
     def gen_comparable(
         self,
@@ -163,8 +163,8 @@ class ComparableData(Data):
             "after removing existing whitelisted mappings: %i left, %i right", len(left), len(right)
         )
 
-        left.map_for_comparable()
-        right.map_for_comparable()
+        left = left.map_for_comparable()
+        right = right.map_for_comparable()
 
         left_prefix = left_name.title()
         right_prefix = right_name.title()

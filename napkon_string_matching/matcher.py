@@ -236,7 +236,6 @@ class Matcher:
                 left_name="gecco",
                 right_name=name,
                 cache_dir=self.cache_dir,
-                identifier_column_left=Columns.VARIABLE.value,
                 **self.config[CONFIG_FIELD_MATCHING],
             )
             self.results[f"gecco vs {name}"] = matches
