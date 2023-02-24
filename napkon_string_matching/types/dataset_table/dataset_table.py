@@ -273,10 +273,6 @@ def generate_header(*args) -> List[str] | None:
     return result if result else None
 
 
-def generate_parameter(*args) -> List[str]:
-    return list(dict.fromkeys(get_term_parts(*args)))
-
-
 def _generate_options(options: str) -> List[str] | None:
     return (
         options.replace(";", "\n").replace("\n\n", "\n").splitlines() if pd.notna(options) else None

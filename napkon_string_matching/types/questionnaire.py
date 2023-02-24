@@ -10,7 +10,6 @@ from napkon_string_matching.types.comparable_data import ComparableColumns, Comp
 
 
 class Columns(Enum):
-    # ITEM = "Item"
     SHEET = "Sheet"
     FILE = "File"
     HEADER = "Header"
