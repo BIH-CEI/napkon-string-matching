@@ -44,7 +44,7 @@ class KdsDefinition(KdsBase, ComparableData, WritableExcel):
     def add_terms(self, language: str = "german"):
         logger.info("add terms...")
         result = [
-            ComparableData.gen_term([category, parameter], language=language)
+            self.gen_term(category, parameter)
             for category, parameter in zip(self.category, self.parameter)
         ]
         self.term = result

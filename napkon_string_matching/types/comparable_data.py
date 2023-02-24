@@ -11,7 +11,12 @@ from nltk.tokenize import word_tokenize
 from tqdm import tqdm
 
 import napkon_string_matching.compare.score_functions
-from napkon_string_matching.types.comparable import COLUMN_NAMES, Columns, Comparable
+from napkon_string_matching.types.comparable import (
+    COLUMN_NAMES,
+    QUESTION_OUTPUT,
+    Columns,
+    Comparable,
+)
 from napkon_string_matching.types.data import Data, gen_hash
 from napkon_string_matching.types.mapping import Mapping
 
@@ -21,6 +26,8 @@ nltk.download("stopwords")
 
 PREPARE_REMOVE_SYMBOLS = "!?,.()[]:;*"
 CACHE_FILE_PATTERN = "compared__score_{}.json"
+
+COMP_COLUMN = "Compare"
 
 logger = logging.getLogger(__name__)
 
@@ -114,7 +121,7 @@ class ComparableData(Data):
 
         # Filter outside of the caching to reuse same cache with different thresholds
         result = result[result.match_score >= score_threshold]
-        logger.debug("got %i filtered entries", len(result))
+        logger.info("got %i filtered entries", len(result))
 
         result.sort_by_score()
 
@@ -166,6 +173,16 @@ class ComparableData(Data):
         left = left.map_for_comparable()
         right = right.map_for_comparable()
 
+        left[COMP_COLUMN] = [self.gen_comp_value(item) for item in left[compare_column]]
+        right[COMP_COLUMN] = [self.gen_comp_value(item) for item in right[compare_column]]
+
+        left[QUESTION_OUTPUT] = [
+            ":".join(flatten_list(item)) for item in left[ComparableColumns.TERM.value]
+        ]
+        right[QUESTION_OUTPUT] = [
+            ":".join(flatten_list(item)) for item in right[ComparableColumns.TERM.value]
+        ]
+
         left_prefix = left_name.title()
         right_prefix = right_name.title()
 
@@ -195,8 +212,8 @@ class ComparableData(Data):
                 compare_df, left_prefix + category_column, right_prefix + category_column
             )
             logger.info(
-                "filtered %i entries not matching categories, now %s",
-                previous_length - len(compare_df),
+                "filtered %s entries not matching categories, now %s",
+                "{:,}".format(previous_length - len(compare_df)),
                 "{:,}".format(len(compare_df)),
             )
 
@@ -204,11 +221,11 @@ class ComparableData(Data):
         comparable = Comparable(data=compare_df, left_name=left_prefix, right_name=right_prefix)
 
         comparable.match_score = [
-            score_func(param, match_param)
+            self.compare_terms(param, match_param, score_func)
             for param, match_param in tqdm(
                 zip(
-                    comparable[left_prefix + compare_column],
-                    comparable[right_prefix + compare_column],
+                    comparable[left_prefix + COMP_COLUMN],
+                    comparable[right_prefix + COMP_COLUMN],
                 ),
                 total=len(comparable),
             )
@@ -222,11 +239,30 @@ class ComparableData(Data):
         columns.append(Columns.MATCH_SCORE.value)
         comparable.drop_superfluous_columns(columns)
 
-        logger.debug("apply score threshold")
+        logger.info("apply score threshold")
         comparable = comparable[comparable.match_score >= score_threshold]
-        logger.debug("got %i entries", len(comparable))
+        logger.info("got %s entries", "{:,}".format(len(comparable)))
 
         return comparable
+
+    @classmethod
+    def compare_terms(cls, left: List[str], right: List[str], score_func) -> float:
+        """
+        Calculate the score in an iterative way. The total score is calculated from the sum of sub-parts
+        weightened from most to least specific. Means the most specific score is weightened with 0.5 and
+        weight halfens from there on.
+        """
+        score = 0
+        len_left = len(left)
+        len_right = len(right)
+        left_max = len_left - 1
+        right_max = len_right - 1
+        factor = 1
+        for i in range(1, max(len_left, len_right) + 1):
+            score_ = score_func(left[min(i, left_max)], right[min(i, right_max)])
+            factor /= 2
+            score += score_ * factor
+        return score
 
     def remove_existing_mappings(self, existing_mappings) -> None:
         self._data = self._data[
@@ -241,9 +277,17 @@ class ComparableData(Data):
         raise NotImplementedError()
 
     @staticmethod
-    def gen_term(parts: List[str], language: str = "german") -> str:
-        parts = [part for part in parts if part]
-        tokens = word_tokenize(" ".join(parts))
+    def gen_term(*items: str) -> List[str]:
+        return [item for item in items if item]
+
+    @classmethod
+    def gen_comp_value(cls, items: List[str]) -> List[str]:
+        return [cls.tokenize(items[-i:]) for i in range(1, len(items) + 1)]
+
+    @staticmethod
+    def tokenize(parts: List[str], language: str = "german") -> str:
+        token_string = flatten_list(parts)
+        tokens = word_tokenize(" ".join(token_string))
 
         stop_words = set(stopwords.words(language))
         tokens = {
@@ -518,3 +562,13 @@ def flatten_mapping(left_group: str, right_group: str, mapping: Mapping) -> List
                 group_mappings_flat.append((left_entry, right_entry))
 
     return group_mappings_flat
+
+
+def flatten_list(list_) -> List[str]:
+    result = []
+    for part in list_:
+        if isinstance(part, List):
+            result += part
+        else:
+            result.append(part)
+    return result

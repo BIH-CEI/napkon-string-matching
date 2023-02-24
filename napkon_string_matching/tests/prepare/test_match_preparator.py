@@ -70,7 +70,7 @@ class TestMatchPreparator(unittest.TestCase):
         data = Questionnaire(
             [
                 {
-                    Columns.ITEM.value: "Hatte Sie Dialyse oder sonstiges?",
+                    Columns.PARAMETER.value: "Hatte Sie Dialyse oder sonstiges?",
                     Columns.SHEET.value: "Test Sheet",
                     Columns.FILE.value: "Testfile",
                     Columns.HEADER.value: None,

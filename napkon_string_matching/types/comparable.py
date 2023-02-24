@@ -21,9 +21,11 @@ class Columns(Enum):
     MATCH_SCORE = "MatchScore"
 
 
+QUESTION_OUTPUT = "Argument"
+
 COLUMN_NAMES = [
     Columns.IDENTIFIER.value,
-    Columns.PARAMETER.value,
+    QUESTION_OUTPUT,
     Columns.VARIABLE.value,
     Columns.SHEET.value,
 ]

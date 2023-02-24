@@ -2,14 +2,14 @@ import logging
 from enum import Enum
 from typing import List
 
-import napkon_string_matching.types.comparable as comp
 import pandas as pd
+
+import napkon_string_matching.types.comparable as comp
 from napkon_string_matching.types.category import Category
 from napkon_string_matching.types.comparable_data import ComparableColumns, ComparableData
 
 
 class Columns(Enum):
-    ITEM = "Item"
     SHEET = "Sheet"
     FILE = "File"
     HEADER = "Header"
@@ -52,29 +52,13 @@ class Questionnaire(QuestionnaireBase, ComparableData):
             data=pd.concat([self._data, *[other._data for other in others]], ignore_index=True)
         )
 
-    def add_terms(self, language: str = "german"):
+    def add_terms(self):
         logger.info("add terms...")
         result = [
-            Questionnaire.gen_term(header, question, item, language=language)
-            for header, question, item in zip(self.header, self.question, self.item)
+            self.gen_term(*header, question, parameter)
+            if header
+            else self.gen_term(question, parameter)
+            for header, question, parameter in zip(self.header, self.question, self.parameter)
         ]
         self.term = result
         logger.info("...done")
-
-    @staticmethod
-    def gen_term(categories: List[str], question: str, item: str, language: str = "german") -> str:
-        term_parts = get_term_parts(categories, question, item)
-        return ComparableData.gen_term(term_parts, language)
-
-
-def get_term_parts(categories: List[str], question: str, item: str) -> List[str]:
-    term_parts = []
-
-    if categories:
-        term_parts += categories
-    if question:
-        term_parts.append(question)
-    if item:
-        term_parts.append(item)
-
-    return term_parts

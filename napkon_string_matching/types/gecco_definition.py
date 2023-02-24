@@ -50,23 +50,15 @@ class GeccoDefinition(GeccoBase, ComparableData, WritableExcel):
     def add_terms(self, language: str = "german"):
         logger.info("add terms...")
         result = [
-            ComparableData.gen_term([category, parameter], language=language)
-            for category, parameter in zip(self.category, self.parameter)
+            self.gen_term(category, parameter, choice)
+            for category, parameter, choice in zip(self.category, self.parameter, self.choices)
         ]
         self.term = result
         logger.info("...done")
 
     @classmethod
     def read_original_format(cls, file_name: str | Path, *args, **kwargs):
-        result: GeccoDefinition = cls.read_json(file_name, *args, **kwargs)
-        result._extend_parameters()
-        return result
-
-    def _extend_parameters(self):
-        parameter_extension = pd.Series(
-            [":" + entry if isinstance(entry, str) else "" for entry in self[Columns.CHOICES.value]]
-        )
-        self[Columns.PARAMETER.value] += parameter_extension
+        return cls.read_json(file_name, *args, **kwargs)
 
     def to_csv(self) -> str:
         return super(ComparableData, self.stringify_list_columns()).to_csv()

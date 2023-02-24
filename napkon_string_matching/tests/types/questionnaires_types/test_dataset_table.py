@@ -76,29 +76,25 @@ class TestSheetParser(unittest.TestCase):
             {
                 ComparableColumns.IDENTIFIER.value: "emnpother#foo-column",
                 Columns.UID.value: "Testfile#emnpother#foo-column#2",
-                Columns.ITEM.value: "This is an item with options",
+                Columns.PARAMETER.value: "This is an item with options",
                 Columns.SHEET.value: "Test_Sheet",
                 Columns.FILE.value: "Testfile",
                 Columns.HEADER.value: ["Header", "Subheader"],
                 Columns.QUESTION.value: "This is a question",
                 Columns.OPTIONS.value: ["Option A", "Option B"],
                 Columns.VARIABLE.value: "foo column",
-                Columns.PARAMETER.value: "Header:Subheader:This is a question:"
-                + "This is an item with options",
                 Columns.CATEGORY.value: [],
             },
             {
                 ComparableColumns.IDENTIFIER.value: "emnpother#bar-column",
                 Columns.UID.value: "Testfile#emnpother#bar-column#3",
-                Columns.ITEM.value: "Another item for same question",
+                Columns.PARAMETER.value: "Another item for same question",
                 Columns.SHEET.value: "Test_Sheet",
                 Columns.FILE.value: "Testfile",
                 Columns.HEADER.value: ["Header", "Subheader"],
                 Columns.QUESTION.value: "This is a question",
                 Columns.OPTIONS.value: None,
                 Columns.VARIABLE.value: "bar column",
-                Columns.PARAMETER.value: "Header:Subheader:This is a question:"
-                + "Another item for same question",
                 Columns.CATEGORY.value: [],
             },
         ]
