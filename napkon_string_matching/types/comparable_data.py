@@ -247,7 +247,22 @@ class ComparableData(Data):
 
     @classmethod
     def compare_terms(cls, left: List[str], right: List[str], score_func) -> float:
-        return score_func(left, right)
+        """
+        Calculate the score in an iterative way. The total score is calculated from the sum of sub-parts
+        weightened from most to least specific. Means the most specific score is weightened with 0.5 and
+        weight halfens from there on.
+        """
+        score = 0
+        len_left = len(left)
+        len_right = len(right)
+        left_max = len_left - 1
+        right_max = len_right - 1
+        factor = 1
+        for i in range(1, max(len_left, len_right) + 1):
+            score_ = score_func(left[min(i, left_max)], right[min(i, right_max)])
+            factor /= 2
+            score += score_ * factor
+        return score
 
     def remove_existing_mappings(self, existing_mappings) -> None:
         self._data = self._data[
@@ -267,9 +282,7 @@ class ComparableData(Data):
 
     @classmethod
     def gen_comp_value(cls, items: List[str]) -> List[str]:
-        # result = [items[-i:] for i in range(1, len(items) + 1)]
-        # result2 = [cls.tokenize(items[-i:]) for i in range(1, len(items) + 1)]
-        return cls.tokenize(items)
+        return [cls.tokenize(items[-i:]) for i in range(1, len(items) + 1)]
 
     @staticmethod
     def tokenize(parts: List[str], language: str = "german") -> str:
