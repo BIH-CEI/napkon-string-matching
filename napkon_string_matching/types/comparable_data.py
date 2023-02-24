@@ -11,7 +11,12 @@ from nltk.tokenize import word_tokenize
 from tqdm import tqdm
 
 import napkon_string_matching.compare.score_functions
-from napkon_string_matching.types.comparable import COLUMN_NAMES, Columns, Comparable
+from napkon_string_matching.types.comparable import (
+    COLUMN_NAMES,
+    QUESTION_OUTPUT,
+    Columns,
+    Comparable,
+)
 from napkon_string_matching.types.data import Data, gen_hash
 from napkon_string_matching.types.mapping import Mapping
 
@@ -21,6 +26,8 @@ nltk.download("stopwords")
 
 PREPARE_REMOVE_SYMBOLS = "!?,.()[]:;*"
 CACHE_FILE_PATTERN = "compared__score_{}.json"
+
+COMP_COLUMN = "Compare"
 
 logger = logging.getLogger(__name__)
 
@@ -166,6 +173,16 @@ class ComparableData(Data):
         left = left.map_for_comparable()
         right = right.map_for_comparable()
 
+        left[COMP_COLUMN] = [self.gen_comp_value(item) for item in left[compare_column]]
+        right[COMP_COLUMN] = [self.gen_comp_value(item) for item in right[compare_column]]
+
+        left[QUESTION_OUTPUT] = [
+            ":".join(flatten_list(item)) for item in left[ComparableColumns.TERM.value]
+        ]
+        right[QUESTION_OUTPUT] = [
+            ":".join(flatten_list(item)) for item in right[ComparableColumns.TERM.value]
+        ]
+
         left_prefix = left_name.title()
         right_prefix = right_name.title()
 
@@ -207,8 +224,8 @@ class ComparableData(Data):
             self.compare_terms(param, match_param, score_func)
             for param, match_param in tqdm(
                 zip(
-                    comparable[left_prefix + compare_column],
-                    comparable[right_prefix + compare_column],
+                    comparable[left_prefix + COMP_COLUMN],
+                    comparable[right_prefix + COMP_COLUMN],
                 ),
                 total=len(comparable),
             )
@@ -230,9 +247,7 @@ class ComparableData(Data):
 
     @classmethod
     def compare_terms(cls, left: List[str], right: List[str], score_func) -> float:
-        left_tokens = cls.tokenize(left)
-        right_tokens = cls.tokenize(right)
-        return score_func(left_tokens, right_tokens)
+        return score_func(left, right)
 
     def remove_existing_mappings(self, existing_mappings) -> None:
         self._data = self._data[
@@ -250,14 +265,15 @@ class ComparableData(Data):
     def gen_term(*items: str) -> List[str]:
         return [item for item in items if item]
 
+    @classmethod
+    def gen_comp_value(cls, items: List[str]) -> List[str]:
+        # result = [items[-i:] for i in range(1, len(items) + 1)]
+        # result2 = [cls.tokenize(items[-i:]) for i in range(1, len(items) + 1)]
+        return cls.tokenize(items)
+
     @staticmethod
     def tokenize(parts: List[str], language: str = "german") -> str:
-        token_string = []
-        for part in parts:
-            if isinstance(part, List):
-                token_string += part
-            else:
-                token_string.append(part)
+        token_string = flatten_list(parts)
         tokens = word_tokenize(" ".join(token_string))
 
         stop_words = set(stopwords.words(language))
@@ -533,3 +549,13 @@ def flatten_mapping(left_group: str, right_group: str, mapping: Mapping) -> List
                 group_mappings_flat.append((left_entry, right_entry))
 
     return group_mappings_flat
+
+
+def flatten_list(list_) -> List[str]:
+    result = []
+    for part in list_:
+        if isinstance(part, List):
+            result += part
+        else:
+            result.append(part)
+    return result
