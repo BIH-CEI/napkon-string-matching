@@ -6,9 +6,10 @@ from typing import Dict, List
 
 import numpy as np
 import pandas as pd
+
 from napkon_string_matching.types.dataset_definition import DatasetDefinition
 from napkon_string_matching.types.identifier import generate_id
-from napkon_string_matching.types.questionnaire import Columns, Questionnaire, get_term_parts
+from napkon_string_matching.types.questionnaire import Columns, Questionnaire
 
 DATASETTABLE_COLUMN_DB_COLUMN = "Datenbankspalte"
 DATASETTABLE_COLUMN_FILE = "FileName"
@@ -227,7 +228,7 @@ class SheetParser:
 
         # Rename columns
         mappings = {
-            DATASETTABLE_COLUMN_ITEM: Columns.ITEM.value,
+            DATASETTABLE_COLUMN_ITEM: Columns.PARAMETER.value,
             DATASETTABLE_COLUMN_SHEET_NAME: Columns.SHEET.value,
             DATASETTABLE_COLUMN_FILE: Columns.FILE.value,
             DATASETTABLE_COLUMN_QUESTION: Columns.QUESTION.value,
@@ -252,12 +253,6 @@ class SheetParser:
             [_generate_options(options_) for options_ in options] if options is not None else None
         )
 
-        # Generate parameter
-        result.parameter = [
-            generate_parameter(header, question, item)
-            for header, question, item in zip(result.header, result.question, result.item)
-        ]
-
         result.category = [
             _get_table_categories(table_categories, table_name)
             for table_name in sheet[COLUMN_TEMP_TABLE]
@@ -278,9 +273,8 @@ def generate_header(*args) -> List[str] | None:
     return result if result else None
 
 
-def generate_parameter(*args) -> str:
-    cleaned_args = list(dict.fromkeys(get_term_parts(*args)))
-    return ":".join(cleaned_args)
+def generate_parameter(*args) -> List[str]:
+    return list(dict.fromkeys(get_term_parts(*args)))
 
 
 def _generate_options(options: str) -> List[str] | None:

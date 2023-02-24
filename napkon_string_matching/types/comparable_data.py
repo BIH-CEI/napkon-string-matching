@@ -114,7 +114,7 @@ class ComparableData(Data):
 
         # Filter outside of the caching to reuse same cache with different thresholds
         result = result[result.match_score >= score_threshold]
-        logger.debug("got %i filtered entries", len(result))
+        logger.info("got %i filtered entries", len(result))
 
         result.sort_by_score()
 
@@ -195,8 +195,8 @@ class ComparableData(Data):
                 compare_df, left_prefix + category_column, right_prefix + category_column
             )
             logger.info(
-                "filtered %i entries not matching categories, now %s",
-                previous_length - len(compare_df),
+                "filtered %s entries not matching categories, now %s",
+                "{:,}".format(previous_length - len(compare_df)),
                 "{:,}".format(len(compare_df)),
             )
 
@@ -204,7 +204,7 @@ class ComparableData(Data):
         comparable = Comparable(data=compare_df, left_name=left_prefix, right_name=right_prefix)
 
         comparable.match_score = [
-            score_func(param, match_param)
+            self.compare_terms(param, match_param, score_func)
             for param, match_param in tqdm(
                 zip(
                     comparable[left_prefix + compare_column],
@@ -222,11 +222,17 @@ class ComparableData(Data):
         columns.append(Columns.MATCH_SCORE.value)
         comparable.drop_superfluous_columns(columns)
 
-        logger.debug("apply score threshold")
+        logger.info("apply score threshold")
         comparable = comparable[comparable.match_score >= score_threshold]
-        logger.debug("got %i entries", len(comparable))
+        logger.info("got %s entries", "{:,}".format(len(comparable)))
 
         return comparable
+
+    @classmethod
+    def compare_terms(cls, left: List[str], right: List[str], score_func) -> float:
+        left_tokens = cls.tokenize(left)
+        right_tokens = cls.tokenize(right)
+        return score_func(left_tokens, right_tokens)
 
     def remove_existing_mappings(self, existing_mappings) -> None:
         self._data = self._data[
@@ -241,9 +247,18 @@ class ComparableData(Data):
         raise NotImplementedError()
 
     @staticmethod
-    def gen_term(parts: List[str], language: str = "german") -> str:
-        parts = [part for part in parts if part]
-        tokens = word_tokenize(" ".join(parts))
+    def gen_term(*items: str) -> List[str]:
+        return [item for item in items if item]
+
+    @staticmethod
+    def tokenize(parts: List[str], language: str = "german") -> str:
+        token_string = []
+        for part in parts:
+            if isinstance(part, List):
+                token_string += part
+            else:
+                token_string.append(part)
+        tokens = word_tokenize(" ".join(token_string))
 
         stop_words = set(stopwords.words(language))
         tokens = {
