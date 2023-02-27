@@ -6,7 +6,7 @@ import pandas as pd
 
 from napkon_string_matching.matcher import Matcher
 from napkon_string_matching.matching import create_matcher
-from napkon_string_matching.types.comparable_data import Columns
+from napkon_string_matching.types.comparable_data import Columns, ComparableColumns
 from napkon_string_matching.types.dataset_table.dataset_table import DatasetTable
 from napkon_string_matching.types.mapping import Mapping
 from napkon_string_matching.types.mapping_types.matched_mapping import MatchedMapping
@@ -87,10 +87,10 @@ def _fill_from_questionnaire(name: str, mapping: Mapping, matcher: Matcher) -> p
 
     if name == "gecco":
         comparable = matcher.gecco
-        columns = [Columns.IDENTIFIER.value, Columns.PARAMETER.value]
+        columns = [Columns.IDENTIFIER.value, ComparableColumns.TERM.value]
     else:
         comparable = matcher.questionnaires[name]
-        columns = [Columns.IDENTIFIER.value, Columns.SHEET.value, Columns.PARAMETER.value]
+        columns = [Columns.IDENTIFIER.value, Columns.SHEET.value, ComparableColumns.TERM.value]
     comparable = comparable[columns]
 
     return df.merge(comparable, left_on=Columns.IDENTIFIER.value, right_on=Columns.IDENTIFIER.value)
