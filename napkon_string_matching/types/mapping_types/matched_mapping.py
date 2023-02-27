@@ -46,8 +46,8 @@ class MatchedMapping(Mapping):
                         sheet[identifier_colum_right],
                     )
                     if not (dl is None or dr is None)
-                    and (dl == match_value or pd.isna(dl))
-                    and (dr == match_value or pd.isna(dr))
+                    and (pd.isna(dl) or int(dl) == match_value)
+                    and (pd.isna(dr) or int(dr) == match_value)
                 ]
             else:
                 if decision_colum_left in sheet:
@@ -64,7 +64,7 @@ class MatchedMapping(Mapping):
                         sheet[identifier_colum_left],
                         sheet[identifier_colum_right],
                     )
-                    if (d == match_value or pd.isna(d))
+                    if not pd.isna(d) and int(d) == match_value
                 ]
 
             if combine_entries:
