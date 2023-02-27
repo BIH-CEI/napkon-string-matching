@@ -44,8 +44,6 @@ class MappingEntry:
             group = self[group_name]
             group.append(identifier)
         except:
-            pass
-        else:
             self[group_name] = [identifier]
 
     def update(self, other) -> None:
