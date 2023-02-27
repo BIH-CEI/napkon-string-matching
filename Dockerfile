@@ -12,7 +12,7 @@ RUN pip install --upgrade build
 RUN python -m build
 
 
-FROM ghcr.io/bih-cei/napkon-string-matching-base:main
+FROM ghcr.io/bih-cei/pandas:1.5.3-alpine
 
 LABEL org.opencontainers.image.description Finds matches betwen questionnaires used to update the GECCO plus FHIR profile
 
