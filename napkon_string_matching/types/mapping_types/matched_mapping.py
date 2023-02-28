@@ -1,6 +1,7 @@
 import logging
 import re
 import warnings
+from numbers import Number
 from typing import List
 
 import pandas as pd
@@ -45,9 +46,9 @@ class MatchedMapping(Mapping):
                         sheet[identifier_colum_left],
                         sheet[identifier_colum_right],
                     )
-                    if not (dl is None or dr is None)
-                    and (pd.isna(dl) or int(dl) == match_value)
-                    and (pd.isna(dr) or int(dr) == match_value)
+                    if (is_valid_number(dl) or is_valid_number(dr))
+                    and (not is_valid_number(dl) or int(dl) == match_value)
+                    and (not is_valid_number(dr) or int(dr) == match_value)
                 ]
             else:
                 if decision_colum_left in sheet:
@@ -64,7 +65,7 @@ class MatchedMapping(Mapping):
                         sheet[identifier_colum_left],
                         sheet[identifier_colum_right],
                     )
-                    if not pd.isna(d) and int(d) == match_value
+                    if is_valid_number(d) and int(d) == match_value
                 ]
 
             if combine_entries:
@@ -79,3 +80,7 @@ class MatchedMapping(Mapping):
         logger.info("read %s", result.num_entries_repr())
 
         return result
+
+
+def is_valid_number(number) -> bool:
+    return isinstance(number, Number) and not pd.isna(number)
