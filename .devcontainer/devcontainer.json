@@ -9,7 +9,7 @@
 			// Update 'VARIANT' to pick a Python version: 3, 3.10, 3.9, 3.8, 3.7, 3.6
 			// Append -bullseye or -buster to pin to an OS version.
 			// Use -bullseye variants on local on arm64/Apple Silicon.
-			"VARIANT": "3.11",
+			"VARIANT": "3.11-bullseye",
 			// Options
 			"NODE_VERSION": "none"
 		}
@@ -45,10 +45,11 @@
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "pip install -r requirements.txt -r requirements-dev.txt",
+	"postCreateCommand": "pip install -U pip && pip install -r requirements.txt -r requirements-dev.txt",
 	// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
 	"remoteUser": "vscode",
 	"mounts": [
-		"source=${localEnv:HOME}/dev/napkon/napkon-string-matching-data,target=/workspaces/napkon-string-matching-data,type=bind"
+		"source=${localEnv:HOME}/dev/napkon/napkon-string-matching-data,target=/workspaces/napkon-string-matching-data,type=bind",
+		"source=/mnt/c/Users/Alexander Schulze/Charité - Universitätsmedizin Berlin/GECCO-NAPKON - General/NAPKON v2/Mapping,target=/workspaces/data,type=bind"
 	]
 }
