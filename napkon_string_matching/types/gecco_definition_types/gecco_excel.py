@@ -5,14 +5,21 @@ from pathlib import Path
 from typing import Dict, List
 
 import pandas as pd
+
 from napkon_string_matching.types.comparable_data import ComparableColumns
-from napkon_string_matching.types.gecco_definition import Columns, GeccoDefinition
-from napkon_string_matching.types.gecco_definition_types.not_split_choices import NOT_SPLIT_CHOICES
+from napkon_string_matching.types.gecco_definition import (Columns,
+                                                           GeccoDefinition)
+from napkon_string_matching.types.gecco_definition_types.not_split_choices import \
+    NOT_SPLIT_CHOICES
 
 logger = logging.getLogger(__name__)
 
 
 class GeccoExcelDefinition(GeccoDefinition):
+    """
+    GECCO definition read from EXCEL files
+    """
+
     @classmethod
     def _read_definition(
         cls, file: str | Path, column_mapping: Dict[str, str], choice_sep: str, id_prefix: str = ""
@@ -92,6 +99,9 @@ class GeccoExcelDefinition(GeccoDefinition):
 
 
 def _strip_column(column: pd.Series) -> pd.Series:
+    """
+    Strip information from columns that should not be used
+    """
     return [
         re.sub(r"[\xa0]", "", str(entry)).replace("<br>", "").strip()
         if not pd.isna(entry)
@@ -101,6 +111,9 @@ def _strip_column(column: pd.Series) -> pd.Series:
 
 
 def _fill_id_gaps(id_column: pd.Series) -> List:
+    """
+    Fill missing IDs in the column but adding an increased suffix
+    """
     result = []
     length = len(id_column)
     regex = re.compile(r"(\d+-)(\d+)")
