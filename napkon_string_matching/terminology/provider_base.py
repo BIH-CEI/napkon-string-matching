@@ -5,6 +5,9 @@ import pandas as pd
 
 
 class ProviderBase(ABC):
+    """
+    Abstract base class for terminology providers
+    """
     def __init__(self) -> None:
         self._headings = None
         self._synonyms = None
