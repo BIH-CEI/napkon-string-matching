@@ -2,6 +2,10 @@
 
 This package provides all functionality to match entries from Datensatztabellen from the NAPKON project. This allows to find common questions and build the basis to generate or update the GECCOplus FHIR profiles.
 
+The process of the tool is coodintated in the `matching` module. It constructs the needed matching classes and performs the `variables`, `gecco` and `questionnaires` steps.
+
+THe matching itself is done by `Matcher`. It loads all data for Datensatztabellen, GECCO definitions, existing mappings and others from disk and triggers the comparision between different data types.
+
 ## `compare` Module
 
 Functions to compare two entries with each other. This is used when generating matches to decide if they match. The function is selected in the config using the `matching.score_func` key.
