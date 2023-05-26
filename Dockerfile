@@ -19,7 +19,9 @@ LABEL org.opencontainers.image.description Finds matches betwen questionnaires u
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN apk add --no-cache --virtual build-deps g++ musl-dev \
+    && pip install -r requirements.txt \
+    && apk del build-deps
 
 COPY main.py .
 
