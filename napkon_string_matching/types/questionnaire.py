@@ -6,7 +6,8 @@ import pandas as pd
 
 import napkon_string_matching.types.comparable as comp
 from napkon_string_matching.types.category import Category
-from napkon_string_matching.types.comparable_data import ComparableColumns, ComparableData
+from napkon_string_matching.types.comparable_data import (ComparableColumns,
+                                                          ComparableData)
 
 
 class Columns(Enum):
@@ -34,6 +35,9 @@ class QuestionnaireCategory(QuestionnaireBase, Category):
 
 
 class Questionnaire(QuestionnaireBase, ComparableData):
+    """
+    Base class for all kinds of questionnaires
+    """
     __column_mapping__ = {Columns.PARAMETER.value: comp.Columns.PARAMETER.value}
     __category_type__ = QuestionnaireCategory
 

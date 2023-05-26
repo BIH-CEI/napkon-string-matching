@@ -1,3 +1,4 @@
+
 NOT_SPLIT_CHOICES = [
     ["Ja", "Nein", "Unbekannt"],
     ["Ja", "Nein", "Keine Informationen verfügbar"],
@@ -121,3 +122,6 @@ NOT_SPLIT_CHOICES = [
         "normal",
     ],
 ]
+"""
+ List of choices from the GECCO definitions that should not be split into single entries
+"""

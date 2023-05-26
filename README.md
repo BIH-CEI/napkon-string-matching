@@ -3,6 +3,10 @@
 [![Python application](https://github.com/BIH-CEI/napkon-string-matching/actions/workflows/python-app.yml/badge.svg)](https://github.com/BIH-CEI/napkon-string-matching/actions/workflows/python-app.yml)
 [![Docker](https://github.com/BIH-CEI/napkon-string-matching/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/BIH-CEI/napkon-string-matching/actions/workflows/docker-publish.yml)
 
+## Requirements
+
+* Python >= 3.10
+
 ## Usage
 
 The script can be started from the command line like
@@ -15,9 +19,13 @@ python main.py [MODE] [OPTS..]
 
 The `MODE` argument allows to run the script in different modes. The default mode (if left out) is to generate matches between the cohorts specified in the configuration file (see below).
 
-`--convert-validated-mapping XLSX_FILE` generates a mapping file from a validated mapping in `XLSX_FILE`. This generates a whitelist and blacklist file. The whitelist file contains all mappings marked valid with `1`. The blacklist respective contains all invalid mappings marked with `0`.
+`--convert-validated-mapping XLSX_FILE` generates a mapping file from a validated mapping in `XLSX_FILE`. This generates a whitelist and blacklist file. The whitelist file contains all mappings marked valid with `1`. The blacklist respective contains all invalid mappings marked with `0`. If used with `--id-reference COMBINED_JSON` entries will have the same ID of an existing _match group_.
 
-`--generate-mapping-result-table JSON_FILE` generates a tabular version of a mapping. The mapping is read from `JSON_FILE` and written as an XLSX file.
+With `--generate-combined-mapping MAPPINGS_DIR` all mappings in `MAPPINGS_DIR` can be combined into a single file with mappings from all phases. Typically one can use this to combine all mappings from the whitelist folder of the generated mappings.
+
+`--generate-mapping-result-table JSON_FILE` generates a tabular version of a mapping. The mapping is read from `JSON_FILE` and written as an XLSX file. This can be used on a mapping from the whitelist of a specific phase or the combined mappings.
+
+`--print-statistics` outputs information about the number of potential matches, reduced number by already validated and excluded matches and the number of matches found per cohort.
 
 ### Options
 
@@ -28,6 +36,8 @@ Options (`OPTS`) can change the default behavoir.
 `--output-dir OUTPUT_DIR` sets the output directory to `OUTPUT_DIR`. This defaults to the current directory. Depending on the mode this can generate additional sub-direcories.
 
 `--output-name OUTPUT_NAME` configures the name of the output. Modes may use this to determine the file name of the output file.
+
+`--no-cache` will disable caching when generating matches. This will influence reading in the data and calculate intermedia result.
 
 ## Docker
 
@@ -109,3 +119,9 @@ input:
 output_dir: output
 cache_dir: cache
 ```
+
+## napkon_string_matching Package
+
+The tool uses the functionality from this package.
+
+For more information see [napkon_string_matching/](napkon_string_matching)

@@ -2,14 +2,12 @@ import logging
 from multiprocessing import Pool
 from typing import List
 
+from tqdm import tqdm
+
 from napkon_string_matching.terminology.mesh import (
-    TERMINOLOGY_REQUEST_HEADINGS,
-    TERMINOLOGY_REQUEST_TERMS,
-    TableRequest,
-)
+    TERMINOLOGY_REQUEST_HEADINGS, TERMINOLOGY_REQUEST_TERMS, TableRequest)
 from napkon_string_matching.terminology.provider import TerminologyProvider
 from napkon_string_matching.types.comparable_data import ComparableData
-from tqdm import tqdm
 
 CONFIG_FIELD_TERMINOLOGY = "terminology"
 
@@ -18,6 +16,9 @@ logger = logging.getLogger(__name__)
 
 
 class MatchPreparator:
+    """
+    Prepares data for the matching process
+    """
     def __init__(
         self,
         config: dict,
@@ -37,6 +38,11 @@ class MatchPreparator:
         verbose: bool = True,
         timeout=10,
     ):
+        """
+        Add generate token matches for `cs` entries using `TherminologyProviders`
+        configured in the config file. `score_threshold` sets the minimum threshold
+        that a match needs to have.
+        """
         if not self.terminology_provider.initialized:
             self.terminology_provider.initialize()
 

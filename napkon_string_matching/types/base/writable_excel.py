@@ -9,6 +9,13 @@ logger = logging.getLogger(__name__)
 
 class WritableExcel:
     def write_excel(self, file: str):
+        """
+        Write data to file in EXCEL format
+
+        Attributes
+        ---
+            file_path (str|Path):   file path to write to
+        """
         path = Path(file)
         if not path.parent.exists():
             path.parent.mkdir(parents=True)

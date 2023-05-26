@@ -7,14 +7,15 @@ classifiers = [
   "Operating System :: OS Independent",
 ]
 dependencies = [
-  "nltk>=3.7",
-  "numpy>=1.23.1",
-  "openpyxl>=3.0.10",
-  "pandas>=1.4.3",
-  "psycopg2-binary>=2.9.3",
-  "PyYAML>=6.0",
-  "rapidfuzz>=2.1.4",
-  "requests>=2.28.1",
+  "beautifulsoup4~=4.11.1",
+  "nltk~=3.7",
+  "numpy~=1.23.1",
+  "openpyxl~=3.0.10",
+  "pandas~=1.4.3",
+  "psycopg2-binary~=2.9.3",
+  "PyYAML~=6.0.0",
+  "rapidfuzz~=2.1.4",
+  "requests~=2.28.1",
 ]
 description = "Match different questions from the NAPKON project"
 name = "napkon_string_matching"

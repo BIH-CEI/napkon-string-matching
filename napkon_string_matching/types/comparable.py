@@ -36,6 +36,9 @@ DATA_NAME = "data"
 
 
 class Comparable(ReadableJson, WritableJson):
+    """
+    This class hold the information to be compared. In contrast to `ComparableData` this class only holds the data used during the comparison.
+    """
     left_name: str = None
     right_name: str = None
     data: Data = None

@@ -1,11 +1,17 @@
 from pathlib import Path
 
 from napkon_string_matching.types.gecco_definition import GeccoDefinition
-from napkon_string_matching.types.gecco_definition_types.gecco83 import Gecco83Definition
-from napkon_string_matching.types.gecco_definition_types.geccoplus import GeccoPlusDefinition
+from napkon_string_matching.types.gecco_definition_types.gecco83 import \
+    Gecco83Definition
+from napkon_string_matching.types.gecco_definition_types.geccoplus import \
+    GeccoPlusDefinition
 
 
 class GeccoCombinedDefinition(Gecco83Definition, GeccoPlusDefinition):
+    """
+    Class that can read definitions for GECCO83 and GECCOplus
+    """
+
     @staticmethod
     def read_original_format(
         gecco83_file: str | Path,

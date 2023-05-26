@@ -12,6 +12,9 @@ logger = logging.getLogger(__name__)
 
 
 class MatchedMapping(Mapping):
+    """
+    Data type the holds the information read from a validated mapping table
+    """
     @classmethod
     def read_excel(
         cls,

@@ -1,6 +1,7 @@
 from typing import List, Tuple
 
 import pandas as pd
+
 from napkon_string_matching.terminology.mesh import MeshProvider
 from napkon_string_matching.terminology.provider_base import ProviderBase
 
@@ -8,7 +9,14 @@ CONFIG_FIELD_MESH = "mesh"
 
 
 class TerminologyProvider:
+    """
+    Provides combined information from different termonologies
+    """
     def __init__(self, config) -> None:
+        """
+        A terminology provider, that holds muliple providers for different terminologies.
+        The providers are initialized from the config.
+        """
         self.config = config
 
         self.providers: List[ProviderBase] = []
@@ -37,7 +45,10 @@ class TerminologyProvider:
         self,
         term: List[str],
         score_threshold: float = 0.1,
-    ) -> List[Tuple[str, str, float]]:
+    ) -> List[Tuple[str, str, float]] | None:
+        """
+        Get matches for `term` from different terminologies
+        """
         results = []
         for provider in self.providers:
             results += provider.get_matches(term, score_threshold)
