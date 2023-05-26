@@ -7,7 +7,8 @@ import pandas as pd
 import napkon_string_matching.types.comparable as comp
 from napkon_string_matching.types.base.writable_excel import WritableExcel
 from napkon_string_matching.types.category import Category
-from napkon_string_matching.types.comparable_data import ComparableColumns, ComparableData
+from napkon_string_matching.types.comparable_data import (ComparableColumns,
+                                                          ComparableData)
 
 
 class Columns(Enum):
@@ -29,6 +30,9 @@ class GeccoCategory(GeccoBase, Category):
 
 
 class GeccoDefinition(GeccoBase, ComparableData, WritableExcel):
+    """
+    Definitions for the GECCO dataset
+    """
     __column_mapping__ = {}
     __category_type__ = GeccoCategory
 

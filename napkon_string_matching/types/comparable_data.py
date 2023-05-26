@@ -11,12 +11,9 @@ from nltk.tokenize import word_tokenize
 from tqdm import tqdm
 
 import napkon_string_matching.compare.score_functions
-from napkon_string_matching.types.comparable import (
-    COLUMN_NAMES,
-    QUESTION_OUTPUT,
-    Columns,
-    Comparable,
-)
+from napkon_string_matching.types.comparable import (COLUMN_NAMES,
+                                                     QUESTION_OUTPUT, Columns,
+                                                     Comparable)
 from napkon_string_matching.types.data import Data, gen_hash
 from napkon_string_matching.types.mapping import Mapping
 
@@ -42,6 +39,9 @@ class ComparableColumns(Enum):
 
 
 class ComparableData(Data):
+    """
+    Class that allows to compare different types of data. This data can be derived from Datensatztabellen or GECCO definitions by inheriting this class.
+    """
     __slots__ = [column.name.lower() for column in ComparableColumns]
     __column_mapping__ = {}
     __category_type__ = None

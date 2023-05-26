@@ -10,6 +10,9 @@ logger = logging.getLogger(__name__)
 
 
 class MappingEntry:
+    """
+    Mapping between entries from `DatasetTable`s or `GeccoDefinition`s that define the same concept.
+    """
     def __init__(self, data: Dict[str, List[str]] | None = None) -> None:
         self._mappings: Dict[str, List[str]] = data if data is not None else {}
 
@@ -70,6 +73,9 @@ class MappingEntry:
 
 
 class Mapping(ReadableJson, WritableJson):
+    """
+    Mapping between `DatasetTable`s or `GeccoDefinition`s
+    """
     def __init__(self, data: Dict[str, Dict[str, List[str]]] | None = None) -> None:
         self._mappings: Dict[str, MappingEntry] = (
             {key: MappingEntry(data=entry) for key, entry in data.items()}
